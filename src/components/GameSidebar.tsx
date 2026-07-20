@@ -54,10 +54,15 @@ export function GameSidebar({
   selectedCardLabel,
 }: GameSidebarProps) {
   return (
-    <aside className="sticky top-6 flex flex-col gap-4">
+    <aside className="sticky top-6 flex flex-col gap-4 p-4 rounded-xl border-l-[14px] border-y-[6px] border-r-[6px] border-[#251b12] bg-[#120e0a] shadow-[0_4px_12px_rgba(0,0,0,0.5),inset_2px_0_4px_rgba(0,0,0,0.5)] overflow-hidden relative">
+      {/* Spine line indicator */}
+      <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-[#100a06] opacity-80" />
+
       {/* Setup section */}
-      <div className="bg-game-panel border border-game-border rounded-2xl p-5">
-        <h2 className="text-base font-semibold text-game-text mt-0 mb-4">Setup</h2>
+      <div className="bg-[#18130e] border border-[#2d2319] rounded-lg p-5 shadow-[inset_0_0_8px_rgba(0,0,0,0.5)] z-10">
+        <h2 className="text-base font-semibold text-game-text font-display mt-0 mb-4 tracking-wider uppercase border-b border-[#3d3124] pb-2 flex items-center gap-2">
+          <span className="text-game-accent text-lg">📜</span> Setup
+        </h2>
         <div className="flex flex-col gap-3">
           <label className={labelClass}>
             Redraw cycles
@@ -120,8 +125,10 @@ export function GameSidebar({
       </div>
 
       {/* Status section */}
-      <div className="bg-game-panel border border-game-border rounded-2xl p-5">
-        <h2 className="text-base font-semibold text-game-text mt-0 mb-4">Status</h2>
+      <div className="bg-[#18130e] border border-[#2d2319] rounded-lg p-5 shadow-[inset_0_0_8px_rgba(0,0,0,0.5)] z-10">
+        <h2 className="text-base font-semibold text-game-text font-display mt-0 mb-4 tracking-wider uppercase border-b border-[#3d3124] pb-2 flex items-center gap-2">
+          <span className="text-game-accent text-lg">☥</span> Status
+        </h2>
         <dl className="flex flex-col gap-2 text-sm">
           <div>
             <dt className="text-game-muted">Status</dt>

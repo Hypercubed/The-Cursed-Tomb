@@ -9,26 +9,17 @@ export default {
     extend: {
       // 2.3 Custom colors matching the current dark theme
       colors: {
-        // Background: #111827
-        'game-bg': '#111827',
-        // Panel: #1f2937
-        'game-panel': '#1f2937',
-        // Border: #374151
-        'game-border': '#374151',
-        // Accent: #d97706 (amber-600)
+        'game-bg': '#0d0a07',
+        'game-panel': '#1c1510',
+        'game-border': '#3c3228',
         'game-accent': '#d97706',
-        // Accent focus ring: #fbbf24 (amber-400)
         'game-accent-light': '#fbbf24',
-        // Accent dark: #92400e (amber-800)
-        'game-accent-dark': '#92400e',
-        // Red suit color: #f87171
-        'game-red': '#f87171',
-        // Muted text: #9ca3af
-        'game-muted': '#9ca3af',
-        // Light text: #f9fafb
-        'game-text': '#f9fafb',
-        // Card text: #f8fafc
-        'game-card-text': '#f8fafc',
+        'game-accent-dark': '#78350f',
+        'game-red': '#ef4444',
+        'game-card-bg': '#2d241d',
+        'game-muted': '#8a7f72',
+        'game-text': '#eae6df',
+        'game-card-text': '#eae6df',
       },
       fontFamily: {
         display: ['Cinzel', 'Georgia', 'serif'],

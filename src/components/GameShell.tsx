@@ -8,6 +8,7 @@ interface GameShellProps {
 export function GameShell({ sidebar, children }: GameShellProps) {
   return (
     <div className="min-h-screen p-6">
+      <div className="torch-overlay" />
       <div className="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
         <div>{sidebar}</div>
         <div>{children}</div>
