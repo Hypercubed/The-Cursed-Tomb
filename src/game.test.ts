@@ -4,11 +4,12 @@ import {
   canAnyMove,
   checkForWin,
   createDeck,
+  cyclePile,
   dealPyramid,
+  drawCard,
   initializeGame,
   isBlocked,
   playCard,
-  redraw,
   startGame,
   visibleCards,
 } from './game';
@@ -54,7 +55,7 @@ describe('game model', () => {
 
   it('allows redraws to move cards into discard without decrementing cycle count while draw pile remains', () => {
     const state = initializeGame('pyramid-only', 2);
-    const after = redraw(state);
+    const after = drawCard(state);
     expect(after.drawPile.length).toBe(state.drawPile.length - 1);
     expect(after.discardPile.length).toBe(1);
     expect(after.redrawsRemaining).toBe(2);
@@ -62,8 +63,8 @@ describe('game model', () => {
 
   it('allows multiple redraw draws when redraw limit is 2', () => {
     const state = initializeGame('pyramid-only', 2);
-    const afterFirst = redraw(state);
-    const afterSecond = redraw(afterFirst);
+    const afterFirst = drawCard(state);
+    const afterSecond = drawCard(afterFirst);
     expect(afterSecond.drawPile.length).toBe(state.drawPile.length - 2);
     expect(afterSecond.discardPile.length).toBe(2);
     expect(afterSecond.redrawsRemaining).toBe(2);
@@ -73,11 +74,11 @@ describe('game model', () => {
     const state = initializeGame('pyramid-only', 1);
     let current = state;
     for (let i = 0; i < state.drawPile.length; i += 1) {
-      current = redraw(current);
+      current = drawCard(current);
     }
     expect(current.drawPile.length).toBe(0);
     expect(current.discardPile.length).toBe(24);
-    const cycled = redraw(current);
+    const cycled = cyclePile(current);
     expect(cycled.drawPile.length).toBe(24);
     expect(cycled.discardPile.length).toBe(0);
     expect(cycled.redrawsRemaining).toBe(0);
@@ -85,7 +86,7 @@ describe('game model', () => {
 
   it('allows selecting the top discard card after redraw', () => {
     const state = initializeGame('pyramid-only', 1);
-    const afterRedraw = redraw(state);
+    const afterRedraw = drawCard(state);
     const topDiscard = afterRedraw.discardPile[0];
     const nextState = playCard(afterRedraw, topDiscard.id);
     expect(nextState.selectedCardId).toBe(topDiscard.id);
@@ -93,7 +94,7 @@ describe('game model', () => {
 
   it('removes discard card when used with a visible pyramid pair', () => {
     const state = createDeterministicGameState('pyramid-only', 1);
-    const afterRedraw = redraw(state);
+    const afterRedraw = drawCard(state);
     const topDiscard = afterRedraw.discardPile[0];
     const visible = visibleCards(afterRedraw.pyramid);
     const match = visible.find((card) => card.rank + topDiscard.rank === 13);
@@ -102,6 +103,42 @@ describe('game model', () => {
     const selected = playCard(afterRedraw, topDiscard.id);
     const result = playCard(selected, match!.id);
     expect(result.discardPile.some((card) => card.id === topDiscard.id)).toBe(false);
+  });
+
+  it('playCard pair validation uses live removed state - selecting a removed card then clicking a valid partner does not remove the partner', () => {
+    const state = createDeterministicGameState('pyramid-only', 1);
+    
+    // Create a custom state with known cards that sum to 13 (6 and 7)
+    const customState = {
+      ...state,
+      pyramid: state.pyramid.map((row, rowIndex) => 
+        row.map((card, cardIndex) => {
+          // Set the last row cards to 6 and 7 (they're visible)
+          if (rowIndex === 6 && cardIndex === 0) return { ...card, rank: 6 as const, id: 'test6', removed: false };
+          if (rowIndex === 6 && cardIndex === 1) return { ...card, rank: 7 as const, id: 'test7', removed: false };
+          return card;
+        })
+      ),
+    };
+    
+    const customVisible = visibleCards(customState.pyramid);
+    const card6 = customVisible.find((c) => c.rank === 6);
+    const card7 = customVisible.find((c) => c.rank === 7);
+    expect(card6).toBeDefined();
+    expect(card7).toBeDefined();
+
+    // Select card 6
+    let currentState = playCard(customState, card6!.id);
+    expect(currentState.selectedCardId).toBe(card6!.id);
+
+    // Select card 7 to form a pair - both should be removed
+    currentState = playCard(currentState, card7!.id);
+    expect(currentState.pyramid.flat().find((c) => c.id === card6!.id)?.removed).toBe(true);
+    expect(currentState.pyramid.flat().find((c) => c.id === card7!.id)?.removed).toBe(true);
+
+    // Now try to select card 6 again (which is now removed) - should not work
+    currentState = playCard(currentState, card6!.id);
+    expect(currentState.selectedCardId).toBeNull();
   });
 
   it('does not win complete victory until draw and discard are also cleared', () => {
@@ -126,5 +163,88 @@ describe('game model', () => {
 
     const fullyCleared = { ...pyramidCleared, drawPile: [], discardPile: [] };
     expect(checkForWin(fullyCleared)).toBe('won');
+  });
+
+  it('loss detection for finite-redraw exhaustion - checkForWin returns lost when draw pile is empty, redraws are 0, and no moves available', () => {
+    const state = startGame('pyramid-only', 0);
+    const noMovesState = {
+      ...state,
+      drawPile: [],
+      discardPile: [],
+      pyramid: state.pyramid.map((row) => row.map((card) => ({ ...card, rank: 2 as const }))), // All 2s, no pairs sum to 13, no Kings
+    };
+    expect(checkForWin(noMovesState)).toBe('lost');
+  });
+
+  it('infinite-redraw deadlock loss - construct state with no valid moves across visible pyramid and full discard, draw pile empty, redraws null, verify checkForWin returns lost', () => {
+    const state = startGame('pyramid-only', null);
+    const deadlockState = {
+      ...state,
+      drawPile: [],
+      discardPile: state.discardPile.map((card) => ({ ...card, rank: 2 as const })), // All 2s in discard
+      pyramid: state.pyramid.map((row) => row.map((card) => ({ ...card, rank: 2 as const }))), // All 2s in pyramid
+    };
+    expect(checkForWin(deadlockState)).toBe('lost');
+  });
+
+  it('drawCard moves top card to discard without decrementing redrawsRemaining', () => {
+    const state = initializeGame('pyramid-only', 3);
+    const after = drawCard(state);
+    expect(after.drawPile.length).toBe(state.drawPile.length - 1);
+    expect(after.discardPile.length).toBe(1);
+    expect(after.redrawsRemaining).toBe(3);
+  });
+
+  it('cyclePile moves discard to draw pile and decrements finite redrawsRemaining', () => {
+    const state = initializeGame('pyramid-only', 2);
+    let current = state;
+    for (let i = 0; i < state.drawPile.length; i += 1) {
+      current = drawCard(current);
+    }
+    expect(current.drawPile.length).toBe(0);
+    expect(current.discardPile.length).toBe(24);
+    const cycled = cyclePile(current);
+    expect(cycled.drawPile.length).toBe(24);
+    expect(cycled.discardPile.length).toBe(0);
+    expect(cycled.redrawsRemaining).toBe(1);
+  });
+
+  it('cyclePile with redrawsRemaining === null leaves counter as null', () => {
+    const state = initializeGame('pyramid-only', null);
+    let current = state;
+    for (let i = 0; i < state.drawPile.length; i += 1) {
+      current = drawCard(current);
+    }
+    expect(current.drawPile.length).toBe(0);
+    expect(current.discardPile.length).toBe(24);
+    const cycled = cyclePile(current);
+    expect(cycled.drawPile.length).toBe(24);
+    expect(cycled.discardPile.length).toBe(0);
+    expect(cycled.redrawsRemaining).toBeNull();
+  });
+
+  it('cyclePile with redrawsRemaining === 0 returns state unchanged', () => {
+    const state = initializeGame('pyramid-only', 0);
+    let current = state;
+    for (let i = 0; i < state.drawPile.length; i += 1) {
+      current = drawCard(current);
+    }
+    expect(current.drawPile.length).toBe(0);
+    expect(current.discardPile.length).toBe(24);
+    const cycled = cyclePile(current);
+    expect(cycled.drawPile.length).toBe(0);
+    expect(cycled.discardPile.length).toBe(24);
+    expect(cycled.redrawsRemaining).toBe(0);
+  });
+
+  it('lone King removal from pyramid via playCard', () => {
+    const state = createDeterministicGameState('pyramid-only', 1);
+    const visible = visibleCards(state.pyramid);
+    const king = visible.find((card) => card.rank === 13);
+    expect(king).toBeDefined();
+
+    const result = playCard(state, king!.id);
+    const kingState = result.pyramid.flat().find((c) => c.id === king!.id);
+    expect(kingState?.removed).toBe(true);
   });
 });

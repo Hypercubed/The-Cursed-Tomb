@@ -139,6 +139,36 @@ export function moveCardToDiscard(state: GameState): GameState {
   };
 }
 
+export function drawCard(state: GameState): GameState {
+  const nextState = moveCardToDiscard(state);
+  return {
+    ...nextState,
+    status: checkForWin(nextState),
+  };
+}
+
+export function cyclePile(state: GameState): GameState {
+  if (state.discardPile.length === 0) {
+    return state;
+  }
+
+  if (state.redrawsRemaining === 0) {
+    return state;
+  }
+
+  const nextState = {
+    ...state,
+    drawPile: state.discardPile,
+    discardPile: [],
+    redrawsRemaining: state.redrawsRemaining === null ? null : state.redrawsRemaining - 1,
+  };
+
+  return {
+    ...nextState,
+    status: checkForWin(nextState),
+  };
+}
+
 export function cardIsVisible(card: Card, state: GameState): boolean {
   if (card.removed) return false;
   const location = getCardLocation(card.id, state);
@@ -178,12 +208,19 @@ export function checkForWin(state: GameState): 'won' | 'lost' | 'in-progress' {
     return 'lost';
   }
 
+  if (state.redrawsRemaining === null && state.drawPile.length === 0) {
+    const canMoveWithFullDiscard = canAnyMove(state, state.discardPile);
+    if (!canMoveWithFullDiscard) {
+      return 'lost';
+    }
+  }
+
   return 'in-progress';
 }
 
-export function canAnyMove(state: GameState): boolean {
+export function canAnyMove(state: GameState, extraCards: Card[] = []): boolean {
   const visible = visibleCards(state.pyramid);
-  const available = [...visible, ...state.discardPile.slice(0, 1)];
+  const available = [...visible, ...state.discardPile.slice(0, 1), ...extraCards];
   for (let i = 0; i < available.length; i += 1) {
     if (available[i].rank === 13) return true;
     for (let j = i + 1; j < available.length; j += 1) {
@@ -227,7 +264,7 @@ export function playCard(state: GameState, cardId: string): GameState {
     if (!state.selectedCardId || state.selectedCardId === card.id) {
       return selectCard(state, cardId);
     }
-    const selectedCard = state.deck.find((item) => item.id === state.selectedCardId);
+    const selectedCard = getCardById(state.selectedCardId, state);
     if (!selectedCard || !canRemovePair(card, selectedCard)) return state;
     let nextState = removeCard(state, card.id);
     nextState = removeCard(nextState, selectedCard.id);
@@ -248,7 +285,7 @@ export function playCard(state: GameState, cardId: string): GameState {
     if (!state.selectedCardId || state.selectedCardId === cardId) {
       return selectCard(state, cardId);
     }
-    const selectedCard = state.deck.find((item) => item.id === state.selectedCardId);
+    const selectedCard = getCardById(state.selectedCardId, state);
     if (!selectedCard || !canRemovePair(discardCard, selectedCard)) return state;
     let nextState = removeCard(state, selectedCard.id);
     nextState = {
@@ -260,36 +297,6 @@ export function playCard(state: GameState, cardId: string): GameState {
   }
 
   return state;
-}
-
-export function redraw(state: GameState): GameState {
-  if (state.drawPile.length > 0) {
-    const nextState = moveCardToDiscard(state);
-    return {
-      ...nextState,
-      status: checkForWin(nextState),
-    };
-  }
-
-  if (state.discardPile.length === 0) {
-    return state;
-  }
-
-  if (state.redrawsRemaining === 0) {
-    return state;
-  }
-
-  const nextState = {
-    ...state,
-    drawPile: state.discardPile,
-    discardPile: [],
-    redrawsRemaining: state.redrawsRemaining === null ? null : state.redrawsRemaining - 1,
-  };
-
-  return {
-    ...nextState,
-    status: checkForWin(nextState),
-  };
 }
 
 export function startGame(winCondition: WinCondition, redraws: number | null): GameState {
