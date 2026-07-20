@@ -8,3 +8,15 @@
   color-scheme: dark;
   font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
+
+/* Subtle stone-like background texture — purely decorative */
+body {
+  background-color: #111827;
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(255, 255, 255, 0.015) 2px,
+    rgba(255, 255, 255, 0.015) 4px
+  );
+}

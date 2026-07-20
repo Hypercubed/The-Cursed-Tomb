@@ -15,10 +15,12 @@ export default {
         'game-panel': '#1f2937',
         // Border: #374151
         'game-border': '#374151',
-        // Accent: #60a5fa
-        'game-accent': '#60a5fa',
-        // Accent focus ring: #93c5fd
-        'game-accent-light': '#93c5fd',
+        // Accent: #d97706 (amber-600)
+        'game-accent': '#d97706',
+        // Accent focus ring: #fbbf24 (amber-400)
+        'game-accent-light': '#fbbf24',
+        // Accent dark: #92400e (amber-800)
+        'game-accent-dark': '#92400e',
         // Red suit color: #f87171
         'game-red': '#f87171',
         // Muted text: #9ca3af
@@ -27,6 +29,9 @@ export default {
         'game-text': '#f9fafb',
         // Card text: #f8fafc
         'game-card-text': '#f8fafc',
+      },
+      fontFamily: {
+        display: ['Cinzel', 'Georgia', 'serif'],
       },
     },
   },
