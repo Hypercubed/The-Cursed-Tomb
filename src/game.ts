@@ -306,3 +306,12 @@ export function startGame(winCondition: WinCondition, redraws: number | null): G
     status: 'in-progress',
   };
 }
+
+export function resignGame(state: GameState): GameState {
+  if (state.status !== 'in-progress') return state;
+  return {
+    ...state,
+    status: 'lost',
+  };
+}
+

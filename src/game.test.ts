@@ -10,6 +10,7 @@ import {
   initializeGame,
   isBlocked,
   playCard,
+  resignGame,
   startGame,
   visibleCards,
 } from './game';
@@ -246,5 +247,12 @@ describe('game model', () => {
     const result = playCard(state, king!.id);
     const kingState = result.pyramid.flat().find((c) => c.id === king!.id);
     expect(kingState?.removed).toBe(true);
+  });
+
+  it('resigning ends the game as a loss', () => {
+    const state = startGame('pyramid-only', null);
+    expect(state.status).toBe('in-progress');
+    const resigned = resignGame(state);
+    expect(resigned.status).toBe('lost');
   });
 });

@@ -5,6 +5,7 @@ import {
   getCardById,
   isBlocked,
   playCard,
+  resignGame,
   startGame,
   WinCondition,
   GameState,
@@ -63,6 +64,10 @@ function App() {
     setGame(initialState);
   };
 
+  const handleResign = () => {
+    setGame((state) => resignGame(state));
+  };
+
   const canDraw = game.drawPile.length > 0;
   const canCycle =
     game.drawPile.length === 0 &&
@@ -85,6 +90,7 @@ function App() {
       onWinConditionChange={setSelectedWinCondition}
       onStart={handleStart}
       onRestart={handleRestart}
+      onResign={handleResign}
       statusLabel={statusLabel}
       redrawsRemaining={game.redrawsRemaining}
       drawPileCount={game.drawPile.length}

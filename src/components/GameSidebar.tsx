@@ -21,6 +21,7 @@ interface GameSidebarProps {
   onWinConditionChange: (value: WinCondition) => void;
   onStart: () => void;
   onRestart: () => void;
+  onResign: () => void;
   // Status panel
   statusLabel: string;
   redrawsRemaining: number | null;
@@ -45,6 +46,7 @@ export function GameSidebar({
   onWinConditionChange,
   onStart,
   onRestart,
+  onResign,
   statusLabel,
   redrawsRemaining,
   drawPileCount,
@@ -102,6 +104,15 @@ export function GameSidebar({
           >
             Start game
           </button>
+          {gameStatus === 'in-progress' && (
+            <button
+              type="button"
+              className="appearance-none bg-transparent border border-red-900/50 hover:border-game-red hover:text-game-red text-red-400 rounded-lg text-sm cursor-pointer font-[inherit] px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed transition-[border-color,color] duration-[120ms]"
+              onClick={onResign}
+            >
+              Resign
+            </button>
+          )}
           <button type="button" className={buttonClass} onClick={onRestart}>
             Reset
           </button>
