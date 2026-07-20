@@ -47,11 +47,11 @@ A selected card SHALL display an accent-coloured border and a subtle glow shadow
 - **THEN** the card border SHALL transition to the `game-accent` colour
 
 ### Requirement: Blocked and removed cards have distinct disabled states
-Cards that are blocked (covered by other pyramid cards) SHALL render at reduced opacity. Removed cards SHALL be invisible but MAY still occupy space to preserve row alignment (row collapse is handled at the layout level).
+Cards that are blocked (covered by other pyramid cards) SHALL render at 100% opacity. Removed cards SHALL be invisible but MAY still occupy space to preserve row alignment (row collapse is handled at the layout level).
 
-#### Scenario: Blocked card renders at reduced opacity
+#### Scenario: Blocked card renders at 100% opacity
 - **WHEN** a card is blocked by a child card in the pyramid
-- **THEN** the card SHALL render at reduced opacity (≤ 60%) and show a not-allowed cursor
+- **THEN** the card SHALL render at 100% opacity and show a not-allowed cursor
 
 #### Scenario: Removed card is invisible
 - **WHEN** a card has been removed from the pyramid

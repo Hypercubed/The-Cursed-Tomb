@@ -43,7 +43,7 @@ export function PlayingCard({
     // Button reset
     'appearance-none font-[inherit] cursor-pointer select-none',
     // Generic disabled
-    'disabled:opacity-50 disabled:cursor-not-allowed',
+    'disabled:opacity-100 disabled:cursor-not-allowed',
     // Focus-visible ring
     'focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-game-accent-light focus-visible:outline-offset-[3px]',
     // Suit colour — applied to the whole card so all text inherits
@@ -54,8 +54,11 @@ export function PlayingCard({
       : 'border-game-border',
     // Hover (only meaningful on interactive cards, but safe to always include)
     'hover:border-game-accent',
+    // Positioning and stacking
+    'relative',
+    selected ? 'z-20' : 'hover:z-10 z-0',
     // Blocked state (when not removed)
-    blocked && !removed ? 'opacity-50 cursor-not-allowed' : '',
+    blocked && !removed ? 'opacity-100 cursor-not-allowed' : '',
     // Removed state — invisible but keeps layout space
     removed ? 'invisible' : '',
   ]

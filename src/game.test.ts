@@ -86,7 +86,7 @@ describe('game model', () => {
   });
 
   it('allows selecting the top discard card after redraw', () => {
-    const state = initializeGame('pyramid-only', 1);
+    const state = createDeterministicGameState('pyramid-only', 1);
     const afterRedraw = drawCard(state);
     const topDiscard = afterRedraw.discardPile[0];
     const nextState = playCard(afterRedraw, topDiscard.id);

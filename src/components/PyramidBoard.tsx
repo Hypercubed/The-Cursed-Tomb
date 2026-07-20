@@ -16,9 +16,9 @@ export function PyramidBoard({
   onCardClick,
 }: PyramidBoardProps): React.ReactElement {
   return (
-    <div className="flex flex-col gap-3 items-center py-4">
+    <div className="flex flex-col items-center py-4">
       {pyramid.map((row, rowIndex) => (
-        <div className="flex gap-2 justify-center" key={rowIndex}>
+        <div className={`flex gap-2 justify-center${rowIndex > 0 ? ' -mt-12' : ''}`} key={rowIndex}>
           {row.map((card) => {
             const blocked = isBlocked(card.id, pyramid);
             const isPlayable = !card.removed && !blocked && status === 'in-progress';
