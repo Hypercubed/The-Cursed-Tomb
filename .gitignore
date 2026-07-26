@@ -3,7 +3,8 @@ node_modules
 
 .agent
 .gemini
-.github
+.github/skills
+.github/prompts
 .vscode
 .windsurf
 .kiro
