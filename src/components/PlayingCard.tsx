@@ -7,6 +7,10 @@ interface PlayingCardProps {
   selected?: boolean;
   blocked?: boolean;
   disabled?: boolean;
+  animatingMatch?: boolean;
+  animatingError?: boolean;
+  animatingCollapse?: boolean;
+  style?: React.CSSProperties;
   onClick?: () => void;
 }
 
@@ -60,6 +64,10 @@ export function PlayingCard({
   selected = false,
   blocked = false,
   disabled = false,
+  animatingMatch = false,
+  animatingError = false,
+  animatingCollapse = false,
+  style,
   onClick,
 }: PlayingCardProps): React.ReactElement {
   const red = isRedSuit(suit);
@@ -67,12 +75,13 @@ export function PlayingCard({
 
   const classes = [
     // Base layout + sizing
-    'w-[72px] min-h-[96px] rounded-xl border p-2',
+    'w-12 min-h-[64px] sm:w-[72px] sm:min-h-[96px] lg:w-[88px] lg:min-h-[116px] xl:w-[96px] xl:min-h-[128px] 2xl:w-[108px] 2xl:min-h-[144px]',
+    'rounded-lg sm:rounded-xl border p-1 sm:p-2 lg:p-2.5',
     'grid grid-rows-[auto_1fr_auto] overflow-hidden',
     // Base colors (Weathered Basalt Slate)
     'bg-game-card-bg disabled:bg-game-card-bg',
     // Inner border simulation
-    'before:absolute before:inset-[3px] before:border before:border-game-border/30 before:rounded-[8px] before:pointer-events-none',
+    'before:absolute before:inset-[2px] sm:before:inset-[3px] before:border before:border-amber-900/20 before:rounded-[6px] sm:before:rounded-[8px] before:pointer-events-none',
     // Transition
     'transition-[border-color,box-shadow,transform] duration-[120ms] ease-in-out',
     // Button reset
@@ -85,17 +94,21 @@ export function PlayingCard({
     red ? 'text-game-red' : 'text-game-card-text',
     // Border: selected vs default
     selected
-      ? 'border-game-accent shadow-[0_0_12px_rgba(217,119,6,0.45),inset_0_0_6px_rgba(251,191,36,0.15)] scale-[1.03]'
-      : 'border-game-border disabled:border-game-border',
+      ? 'border-game-accent animate-card-pulse shadow-[0_0_14px_rgba(217,119,6,0.55),inset_0_0_6px_rgba(251,191,36,0.2)] scale-[1.03]'
+      : 'border-amber-900/30 disabled:border-amber-900/20',
+    // Animations
+    animatingMatch ? 'animate-card-dissolve pointer-events-none z-30' : '',
+    animatingError ? 'animate-card-shake border-red-500/80 z-20' : '',
+    animatingCollapse ? 'animate-pyramid-collapse pointer-events-none' : '',
     // Hover
-    'hover:border-game-accent hover:shadow-[0_0_8px_rgba(217,119,6,0.2)]',
+    'hover:border-game-accent hover:shadow-[0_0_10px_rgba(217,119,6,0.3)]',
     // Positioning and stacking
     'relative',
-    selected ? 'z-20' : 'hover:z-10 z-0',
-    // Blocked state (when not removed) - retains 100% opacity per specs, but uses darker styling
-    blocked && !removed ? 'opacity-100 cursor-not-allowed brightness-[0.65]' : '',
+    selected || animatingMatch || animatingError ? 'z-20' : 'hover:z-10 z-0',
+    // Blocked state (when not removed) - retains 100% opacity per specs, but uses translucent overlay
+    blocked && !removed ? 'cursor-not-allowed' : '',
     // Removed state — invisible but keeps layout space
-    removed ? 'invisible' : '',
+    removed && !animatingMatch ? 'invisible' : '',
   ]
     .filter(Boolean)
     .join(' ');
@@ -106,23 +119,29 @@ export function PlayingCard({
       className={classes}
       disabled={disabled || blocked || removed}
       onClick={onClick}
+      style={style}
       aria-pressed={selected}
     >
-      {/* Top-left corner: rank + suit, small, stacked, left-aligned */}
-      <div className="flex flex-col items-start leading-none text-[0.65rem] font-bold z-10">
+      {/* Blocked state translucent stone veil overlay */}
+      {blocked && !removed && (
+        <div className="absolute inset-0 bg-stone-900/30 rounded-lg sm:rounded-xl pointer-events-none z-30" />
+      )}
+
+      {/* Top-left corner index: rank + standard suit character */}
+      <div className="flex flex-col items-start leading-none text-[0.65rem] sm:text-xs lg:text-sm font-black z-10 select-none">
         <span>{label}</span>
-        <SuitIcon suit={suit} className="w-[10px] h-[10px] mt-0.5" />
+        <span className="text-[0.6rem] sm:text-xs mt-0.5 font-normal leading-none">{suit}</span>
       </div>
 
-      {/* Centre row: large suit symbol for visual richness */}
+      {/* Centre row: large thematic Egyptian SVG icon */}
       <div className="flex items-center justify-center select-none z-10">
-        <SuitIcon suit={suit} className="w-[26px] h-[26px] opacity-85" />
+        <SuitIcon suit={suit} className="w-4 h-4 sm:w-[30px] sm:h-[30px] lg:w-9 lg:h-9 xl:w-10 xl:h-10 opacity-90" />
       </div>
 
-      {/* Bottom-right corner: rank + suit, small, stacked, right-aligned, upright */}
-      <div className="flex flex-col items-end leading-none text-[0.65rem] font-bold z-10">
+      {/* Bottom-right corner index: rank + standard suit character, rotated 180 degrees */}
+      <div className="flex flex-col items-start leading-none text-[0.65rem] sm:text-xs lg:text-sm font-black z-10 select-none rotate-180">
         <span>{label}</span>
-        <SuitIcon suit={suit} className="w-[10px] h-[10px] mt-0.5" />
+        <span className="text-[0.6rem] sm:text-xs mt-0.5 font-normal leading-none">{suit}</span>
       </div>
     </button>
   );

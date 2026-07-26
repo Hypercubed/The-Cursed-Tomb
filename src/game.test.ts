@@ -7,6 +7,10 @@ import {
   cyclePile,
   dealPyramid,
   drawCard,
+  getActiveRankCounts,
+  getRemainingPairStats,
+  getRemovedCardIds,
+  getRemovedCardsCount,
   initializeGame,
   isBlocked,
   playCard,
@@ -15,7 +19,7 @@ import {
   visibleCards,
 } from './game';
 
-function createDeterministicGameState(winCondition: 'pyramid-only' | 'complete-victory', redraws: number | null): GameState {
+function createDeterministicGameState(redraws: number | null): GameState {
   const deck = createDeck();
   const pyramid = dealPyramid(deck);
   const remaining = deck.slice(28).map((card) => ({ ...card }));
@@ -26,7 +30,6 @@ function createDeterministicGameState(winCondition: 'pyramid-only' | 'complete-v
     discardPile: [],
     selectedCardId: null,
     redrawsRemaining: redraws,
-    winCondition,
     status: 'in-progress',
   };
 }
@@ -55,7 +58,7 @@ describe('game model', () => {
   });
 
   it('allows redraws to move cards into discard without decrementing cycle count while draw pile remains', () => {
-    const state = initializeGame('pyramid-only', 2);
+    const state = initializeGame(2);
     const after = drawCard(state);
     expect(after.drawPile.length).toBe(state.drawPile.length - 1);
     expect(after.discardPile.length).toBe(1);
@@ -63,7 +66,7 @@ describe('game model', () => {
   });
 
   it('allows multiple redraw draws when redraw limit is 2', () => {
-    const state = initializeGame('pyramid-only', 2);
+    const state = initializeGame(2);
     const afterFirst = drawCard(state);
     const afterSecond = drawCard(afterFirst);
     expect(afterSecond.drawPile.length).toBe(state.drawPile.length - 2);
@@ -72,7 +75,7 @@ describe('game model', () => {
   });
 
   it('resets the discard pile back into draw pile after cycling', () => {
-    const state = initializeGame('pyramid-only', 1);
+    const state = initializeGame(1);
     let current = state;
     for (let i = 0; i < state.drawPile.length; i += 1) {
       current = drawCard(current);
@@ -86,7 +89,7 @@ describe('game model', () => {
   });
 
   it('allows selecting the top discard card after redraw', () => {
-    const state = createDeterministicGameState('pyramid-only', 1);
+    const state = createDeterministicGameState(1);
     const afterRedraw = drawCard(state);
     const topDiscard = afterRedraw.discardPile[0];
     const nextState = playCard(afterRedraw, topDiscard.id);
@@ -94,7 +97,7 @@ describe('game model', () => {
   });
 
   it('removes discard card when used with a visible pyramid pair', () => {
-    const state = createDeterministicGameState('pyramid-only', 1);
+    const state = createDeterministicGameState(1);
     const afterRedraw = drawCard(state);
     const topDiscard = afterRedraw.discardPile[0];
     const visible = visibleCards(afterRedraw.pyramid);
@@ -107,7 +110,7 @@ describe('game model', () => {
   });
 
   it('playCard pair validation uses live removed state - selecting a removed card then clicking a valid partner does not remove the partner', () => {
-    const state = createDeterministicGameState('pyramid-only', 1);
+    const state = createDeterministicGameState(1);
     
     // Create a custom state with known cards that sum to 13 (6 and 7)
     const customState = {
@@ -142,54 +145,47 @@ describe('game model', () => {
     expect(currentState.selectedCardId).toBeNull();
   });
 
-  it('does not win complete victory until draw and discard are also cleared', () => {
-    const state = startGame('complete-victory', 1);
+  it('declares partial victory when pyramid is cleared but deck has cards remaining', () => {
+    const state = startGame(1);
     const doneState = { ...state, pyramid: state.pyramid.map((row) => row.map((card) => ({ ...card, removed: true }))) };
-    expect(checkForWin(doneState)).toBe('in-progress');
+    expect(checkForWin(doneState)).toBe('partial-victory');
   });
 
-  it('considers pyramid-only win only when pyramid is cleared', () => {
-    const state = startGame('pyramid-only', 0);
-    const blockedPyramid = { ...state, pyramid: state.pyramid.map((row) => row.map((card) => ({ ...card, removed: true }))) };
-    expect(checkForWin(blockedPyramid)).toBe('won');
-
-    const partialPyramid = { ...state, pyramid: state.pyramid.map((row, rowIndex) => row.map((card, cardIndex) => (rowIndex === 6 && cardIndex === 0 ? { ...card, removed: false } : { ...card, removed: true }))) };
-    expect(checkForWin(partialPyramid)).toBe('in-progress');
+  it('declares complete victory when both pyramid and deck are cleared', () => {
+    const state = startGame(1);
+    const fullyCleared = {
+      ...state,
+      pyramid: state.pyramid.map((row) => row.map((card) => ({ ...card, removed: true }))),
+      drawPile: [],
+      discardPile: [],
+    };
+    expect(checkForWin(fullyCleared)).toBe('complete-victory');
   });
 
-  it('requires complete victory to clear both pyramid and draw/discard piles', () => {
-    const state = startGame('complete-victory', 1);
-    const pyramidCleared = { ...state, pyramid: state.pyramid.map((row) => row.map((card) => ({ ...card, removed: true }))) };
-    expect(checkForWin(pyramidCleared)).toBe('in-progress');
-
-    const fullyCleared = { ...pyramidCleared, drawPile: [], discardPile: [] };
-    expect(checkForWin(fullyCleared)).toBe('won');
-  });
-
-  it('loss detection for finite-redraw exhaustion - checkForWin returns lost when draw pile is empty, redraws are 0, and no moves available', () => {
-    const state = startGame('pyramid-only', 0);
+  it('loss detection for finite-redraw exhaustion - checkForWin returns pyramid-collapse when draw pile is empty, redraws are 0, and no moves available', () => {
+    const state = startGame(0);
     const noMovesState = {
       ...state,
       drawPile: [],
       discardPile: [],
       pyramid: state.pyramid.map((row) => row.map((card) => ({ ...card, rank: 2 as const }))), // All 2s, no pairs sum to 13, no Kings
     };
-    expect(checkForWin(noMovesState)).toBe('lost');
+    expect(checkForWin(noMovesState)).toBe('pyramid-collapse');
   });
 
-  it('infinite-redraw deadlock loss - construct state with no valid moves across visible pyramid and full discard, draw pile empty, redraws null, verify checkForWin returns lost', () => {
-    const state = startGame('pyramid-only', null);
+  it('infinite-redraw deadlock loss - construct state with no valid moves across visible pyramid and full discard, draw pile empty, redraws null, verify checkForWin returns pyramid-collapse', () => {
+    const state = startGame(null);
     const deadlockState = {
       ...state,
       drawPile: [],
       discardPile: state.discardPile.map((card) => ({ ...card, rank: 2 as const })), // All 2s in discard
       pyramid: state.pyramid.map((row) => row.map((card) => ({ ...card, rank: 2 as const }))), // All 2s in pyramid
     };
-    expect(checkForWin(deadlockState)).toBe('lost');
+    expect(checkForWin(deadlockState)).toBe('pyramid-collapse');
   });
 
   it('drawCard moves top card to discard without decrementing redrawsRemaining', () => {
-    const state = initializeGame('pyramid-only', 3);
+    const state = initializeGame(3);
     const after = drawCard(state);
     expect(after.drawPile.length).toBe(state.drawPile.length - 1);
     expect(after.discardPile.length).toBe(1);
@@ -197,7 +193,7 @@ describe('game model', () => {
   });
 
   it('cyclePile moves discard to draw pile and decrements finite redrawsRemaining', () => {
-    const state = initializeGame('pyramid-only', 2);
+    const state = initializeGame(2);
     let current = state;
     for (let i = 0; i < state.drawPile.length; i += 1) {
       current = drawCard(current);
@@ -211,7 +207,7 @@ describe('game model', () => {
   });
 
   it('cyclePile with redrawsRemaining === null leaves counter as null', () => {
-    const state = initializeGame('pyramid-only', null);
+    const state = initializeGame(null);
     let current = state;
     for (let i = 0; i < state.drawPile.length; i += 1) {
       current = drawCard(current);
@@ -225,7 +221,7 @@ describe('game model', () => {
   });
 
   it('cyclePile with redrawsRemaining === 0 returns state unchanged', () => {
-    const state = initializeGame('pyramid-only', 0);
+    const state = initializeGame(0);
     let current = state;
     for (let i = 0; i < state.drawPile.length; i += 1) {
       current = drawCard(current);
@@ -239,7 +235,7 @@ describe('game model', () => {
   });
 
   it('lone King removal from pyramid via playCard', () => {
-    const state = createDeterministicGameState('pyramid-only', 1);
+    const state = createDeterministicGameState(1);
     const visible = visibleCards(state.pyramid);
     const king = visible.find((card) => card.rank === 13);
     expect(king).toBeDefined();
@@ -249,10 +245,53 @@ describe('game model', () => {
     expect(kingState?.removed).toBe(true);
   });
 
-  it('resigning ends the game as a loss', () => {
-    const state = startGame('pyramid-only', null);
+  it('resigning ends the game as a pyramid collapse', () => {
+    const state = startGame(null);
     expect(state.status).toBe('in-progress');
     const resigned = resignGame(state);
-    expect(resigned.status).toBe('lost');
+    expect(resigned.status).toBe('pyramid-collapse');
+  });
+
+  it('correctly tracks removed cards count and IDs', () => {
+    const state = createDeterministicGameState(1);
+    expect(getRemovedCardIds(state).size).toBe(0);
+    expect(getRemovedCardsCount(state)).toEqual({ count: 0, total: 52, percentage: 0 });
+
+    const visible = visibleCards(state.pyramid);
+    const king = visible.find((card) => card.rank === 13);
+    expect(king).toBeDefined();
+
+    const afterKing = playCard(state, king!.id);
+    expect(getRemovedCardIds(afterKing).has(king!.id)).toBe(true);
+    expect(getRemovedCardsCount(afterKing)).toEqual({ count: 1, total: 52, percentage: 2 });
+  });
+
+  it('computes active rank counts and remaining pair stats', () => {
+    const state = createDeterministicGameState(1);
+    const rankCounts = getActiveRankCounts(state);
+    for (let r = 1; r <= 13; r += 1) {
+      expect(rankCounts[r as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13]).toBe(4);
+    }
+
+    const pairStats = getRemainingPairStats(state);
+    expect(pairStats).toHaveLength(7);
+    expect(pairStats[0]).toEqual({
+      label: 'Kings (13)',
+      rank1: 13,
+      rank1Label: 'K',
+      active1: 4,
+      remainingPairs: 4,
+    });
+    expect(pairStats[1]).toEqual({
+      label: 'Q + A',
+      rank1: 12,
+      rank1Label: 'Q',
+      active1: 4,
+      rank2: 1,
+      rank2Label: 'A',
+      active2: 4,
+      remainingPairs: 4,
+    });
   });
 });
+

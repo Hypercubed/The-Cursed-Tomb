@@ -33,10 +33,10 @@ body {
   z-index: 50;
   background: radial-gradient(
     circle at center,
-    transparent 55%,
-    rgba(13, 10, 7, 0.15) 75%,
-    rgba(13, 10, 7, 0.55) 90%,
-    rgba(13, 10, 7, 0.75) 100%
+    transparent 65%,
+    rgba(13, 10, 7, 0.10) 80%,
+    rgba(13, 10, 7, 0.35) 92%,
+    rgba(13, 10, 7, 0.50) 100%
   );
   animation: torch-flicker 8s infinite alternate ease-in-out;
 }
@@ -57,5 +57,109 @@ body {
   100% {
     opacity: 1.0;
     transform: scale(1.02);
+  }
+}
+
+/* Card Selection Pulse */
+@keyframes card-pulse {
+  0%, 100% {
+    transform: scale(1.03);
+    box-shadow: 0 0 14px rgba(217, 119, 6, 0.55), inset 0 0 6px rgba(251, 191, 36, 0.2);
+  }
+  50% {
+    transform: scale(1.07);
+    box-shadow: 0 0 22px rgba(245, 158, 11, 0.85), inset 0 0 10px rgba(251, 191, 36, 0.45);
+  }
+}
+
+.animate-card-pulse {
+  animation: card-pulse 1.4s infinite ease-in-out;
+}
+
+/* Card Match Dissolve */
+@keyframes card-dissolve {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+    filter: brightness(1) drop-shadow(0 0 0px rgba(245, 158, 11, 0));
+  }
+  40% {
+    opacity: 0.9;
+    transform: scale(1.12);
+    filter: brightness(1.6) drop-shadow(0 0 16px rgba(245, 158, 11, 0.9));
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.7) translateY(-14px);
+    filter: brightness(2) drop-shadow(0 0 24px rgba(251, 191, 36, 1));
+  }
+}
+
+.animate-card-dissolve {
+  animation: card-dissolve 250ms forwards ease-out;
+}
+
+/* Invalid Pair Error Shake */
+@keyframes card-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px) rotate(-2deg); border-color: rgba(239, 68, 68, 0.85); box-shadow: 0 0 12px rgba(239, 68, 68, 0.5); }
+  40% { transform: translateX(6px) rotate(2deg); border-color: rgba(239, 68, 68, 0.85); box-shadow: 0 0 12px rgba(239, 68, 68, 0.5); }
+  60% { transform: translateX(-4px) rotate(-1deg); border-color: rgba(239, 68, 68, 0.85); box-shadow: 0 0 10px rgba(239, 68, 68, 0.4); }
+  80% { transform: translateX(4px) rotate(1deg); border-color: rgba(239, 68, 68, 0.85); box-shadow: 0 0 10px rgba(239, 68, 68, 0.4); }
+}
+
+.animate-card-shake {
+  animation: card-shake 300ms ease-in-out;
+}
+
+/* Tomb Victory Golden Shimmer / Glow */
+@keyframes tomb-victory-glow {
+  0% {
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.25), inset 0 0 15px rgba(245, 158, 11, 0.15);
+  }
+  50% {
+    box-shadow: 0 0 50px rgba(245, 158, 11, 0.7), inset 0 0 35px rgba(251, 191, 36, 0.35);
+  }
+  100% {
+    box-shadow: 0 0 25px rgba(245, 158, 11, 0.3), inset 0 0 20px rgba(245, 158, 11, 0.2);
+  }
+}
+
+.animate-victory-glow {
+  animation: tomb-victory-glow 2.5s infinite alternate ease-in-out;
+}
+
+/* Pyramid Collapse Lose Animation */
+@keyframes pyramid-collapse {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  30% {
+    transform: translateY(6px) rotate(var(--collapse-rotate, -4deg));
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100px) rotate(var(--collapse-rotate-end, 18deg));
+    opacity: 1;
+    filter: grayscale(0.5);
+  }
+}
+
+.animate-pyramid-collapse {
+  animation: pyramid-collapse 800ms forwards cubic-bezier(0.55, 0.055, 0.675, 0.19);
+  animation-delay: var(--collapse-delay, 0ms);
+}
+
+/* Reduced Motion Overrides */
+@media (prefers-reduced-motion: reduce) {
+  .animate-card-pulse,
+  .animate-card-dissolve,
+  .animate-card-shake,
+  .animate-victory-glow,
+  .animate-pyramid-collapse,
+  .torch-overlay {
+    animation: none !important;
+    transition: none !important;
   }
 }

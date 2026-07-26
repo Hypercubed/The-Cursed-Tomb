@@ -9,7 +9,12 @@ export interface Card {
   selected: boolean;
 }
 
-export type WinCondition = 'pyramid-only' | 'complete-victory';
+export type GameStatus =
+  | 'ready'
+  | 'in-progress'
+  | 'complete-victory'
+  | 'partial-victory'
+  | 'pyramid-collapse';
 
 export interface GameState {
   deck: Card[];
@@ -18,8 +23,7 @@ export interface GameState {
   discardPile: Card[];
   selectedCardId: string | null;
   redrawsRemaining: number | null;
-  winCondition: WinCondition;
-  status: 'ready' | 'in-progress' | 'won' | 'lost';
+  status: GameStatus;
 }
 
 const suits: Suit[] = ['♠', '♥', '♦', '♣'];
@@ -101,7 +105,7 @@ export function canRemoveSingle(card: Card): boolean {
   return !card.removed && card.rank === 13;
 }
 
-export function initializeGame(winCondition: WinCondition, redraws: number | null): GameState {
+export function initializeGame(redraws: number | null): GameState {
   const shuffledDeck = shuffle(createDeck());
   const pyramid = dealPyramid(shuffledDeck);
   const remaining = shuffledDeck.slice(28).map((card) => ({ ...card }));
@@ -112,7 +116,6 @@ export function initializeGame(winCondition: WinCondition, redraws: number | nul
     discardPile: [],
     selectedCardId: null,
     redrawsRemaining: redraws,
-    winCondition,
     status: 'ready',
   };
 }
@@ -188,30 +191,28 @@ export function getRemainingPyramidCards(state: GameState): Card[] {
   return state.pyramid.flat().filter((card) => !card.removed);
 }
 
-export function checkForWin(state: GameState): 'won' | 'lost' | 'in-progress' {
+export function checkForWin(state: GameState): GameStatus {
   const remainingPyramid = getRemainingPyramidCards(state).length;
   const hasPyramidCards = remainingPyramid > 0;
-  const canMove = canAnyMove(state);
 
   if (!hasPyramidCards) {
-    if (state.winCondition === 'complete-victory') {
-      const discardEmpty = state.discardPile.length === 0;
-      if (state.drawPile.length === 0 && discardEmpty) {
-        return 'won';
-      }
-      return 'in-progress';
+    const discardEmpty = state.discardPile.length === 0;
+    const drawEmpty = state.drawPile.length === 0;
+    if (drawEmpty && discardEmpty) {
+      return 'complete-victory';
     }
-    return 'won';
+    return 'partial-victory';
   }
 
+  const canMove = canAnyMove(state);
   if (!canMove && state.drawPile.length === 0 && state.redrawsRemaining === 0) {
-    return 'lost';
+    return 'pyramid-collapse';
   }
 
   if (state.redrawsRemaining === null && state.drawPile.length === 0) {
     const canMoveWithFullDiscard = canAnyMove(state, state.discardPile);
     if (!canMoveWithFullDiscard) {
-      return 'lost';
+      return 'pyramid-collapse';
     }
   }
 
@@ -299,8 +300,8 @@ export function playCard(state: GameState, cardId: string): GameState {
   return state;
 }
 
-export function startGame(winCondition: WinCondition, redraws: number | null): GameState {
-  const nextState = initializeGame(winCondition, redraws);
+export function startGame(redraws: number | null): GameState {
+  const nextState = initializeGame(redraws);
   return {
     ...nextState,
     status: 'in-progress',
@@ -311,7 +312,163 @@ export function resignGame(state: GameState): GameState {
   if (state.status !== 'in-progress') return state;
   return {
     ...state,
-    status: 'lost',
+    status: 'pyramid-collapse',
   };
 }
+
+export function getRemovedCardIds(state: GameState): Set<string> {
+  const activeIds = new Set<string>();
+
+  for (const row of state.pyramid) {
+    for (const card of row) {
+      if (!card.removed) {
+        activeIds.add(card.id);
+      }
+    }
+  }
+
+  for (const card of state.drawPile) {
+    activeIds.add(card.id);
+  }
+
+  for (const card of state.discardPile) {
+    activeIds.add(card.id);
+  }
+
+  const removed = new Set<string>();
+  const suitsList: Suit[] = ['♠', '♥', '♦', '♣'];
+  const ranksList: Rank[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
+
+  for (const suit of suitsList) {
+    for (const rank of ranksList) {
+      const id = `${suit}${rank}`;
+      if (!activeIds.has(id)) {
+        removed.add(id);
+      }
+    }
+  }
+
+  return removed;
+}
+
+export function getRemovedCardsCount(state: GameState): { count: number; total: number; percentage: number } {
+  const count = getRemovedCardIds(state).size;
+  const total = 52;
+  const percentage = Math.round((count / total) * 100);
+  return { count, total, percentage };
+}
+
+export function getActiveRankCounts(state: GameState): Record<Rank, number> {
+  const activeIds = new Set<string>();
+  for (const row of state.pyramid) {
+    for (const card of row) {
+      if (!card.removed) activeIds.add(card.id);
+    }
+  }
+  for (const card of state.drawPile) activeIds.add(card.id);
+  for (const card of state.discardPile) activeIds.add(card.id);
+
+  const counts: Record<Rank, number> = {
+    1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0,
+  };
+
+  const suitsList: Suit[] = ['♠', '♥', '♦', '♣'];
+  const ranksList: Rank[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
+
+  for (const suit of suitsList) {
+    for (const rank of ranksList) {
+      const id = `${suit}${rank}`;
+      if (activeIds.has(id)) {
+        counts[rank] += 1;
+      }
+    }
+  }
+
+  return counts;
+}
+
+export interface PairStat {
+  label: string;
+  rank1: Rank;
+  rank1Label: string;
+  active1: number;
+  rank2?: Rank;
+  rank2Label?: string;
+  active2?: number;
+  remainingPairs: number;
+}
+
+export function getRemainingPairStats(state: GameState): PairStat[] {
+  const counts = getActiveRankCounts(state);
+  return [
+    {
+      label: 'Kings (13)',
+      rank1: 13,
+      rank1Label: 'K',
+      active1: counts[13],
+      remainingPairs: counts[13],
+    },
+    {
+      label: 'Q + A',
+      rank1: 12,
+      rank1Label: 'Q',
+      active1: counts[12],
+      rank2: 1,
+      rank2Label: 'A',
+      active2: counts[1],
+      remainingPairs: Math.min(counts[12], counts[1]),
+    },
+    {
+      label: 'J + 2',
+      rank1: 11,
+      rank1Label: 'J',
+      active1: counts[11],
+      rank2: 2,
+      rank2Label: '2',
+      active2: counts[2],
+      remainingPairs: Math.min(counts[11], counts[2]),
+    },
+    {
+      label: '10 + 3',
+      rank1: 10,
+      rank1Label: '10',
+      active1: counts[10],
+      rank2: 3,
+      rank2Label: '3',
+      active2: counts[3],
+      remainingPairs: Math.min(counts[10], counts[3]),
+    },
+    {
+      label: '9 + 4',
+      rank1: 9,
+      rank1Label: '9',
+      active1: counts[9],
+      rank2: 4,
+      rank2Label: '4',
+      active2: counts[4],
+      remainingPairs: Math.min(counts[9], counts[4]),
+    },
+    {
+      label: '8 + 5',
+      rank1: 8,
+      rank1Label: '8',
+      active1: counts[8],
+      rank2: 5,
+      rank2Label: '5',
+      active2: counts[5],
+      remainingPairs: Math.min(counts[8], counts[5]),
+    },
+    {
+      label: '7 + 6',
+      rank1: 7,
+      rank1Label: '7',
+      active1: counts[7],
+      rank2: 6,
+      rank2Label: '6',
+      active2: counts[6],
+      remainingPairs: Math.min(counts[7], counts[6]),
+    },
+  ];
+}
+
 
