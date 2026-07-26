@@ -1,6 +1,11 @@
 dist
 node_modules
 
+# Local environment variable overrides (never commit)
+.env
+.env.local
+.env.*.local
+
 .agent
 .gemini
 .github/skills

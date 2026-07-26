@@ -26,6 +26,8 @@ jobs:
 
       - run: npm ci
       - run: npm run build   # adjust to your build command
+        env:
+          VITE_SHOW_DEBUG: "false"
 
       - uses: actions/upload-pages-artifact@v3
         with:

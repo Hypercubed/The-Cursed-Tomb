@@ -260,20 +260,22 @@ function App() {
 
   return (
     <>
-      <DebugPanel
-        game={game}
-        isPlaying={isPlaying}
-        isThinking={isThinking}
-        strategy={strategy}
-        speedMs={speedMs}
-        moveCount={moveCount}
-        onForceWin={handleForceWin}
-        onForceLoss={handleForceLoss}
-        onStepOne={stepOne}
-        onTogglePlay={togglePlay}
-        onSpeedChange={setSpeedMs}
-        onStrategyChange={setStrategy}
-      />
+      {import.meta.env.VITE_SHOW_DEBUG === 'true' && (
+        <DebugPanel
+          game={game}
+          isPlaying={isPlaying}
+          isThinking={isThinking}
+          strategy={strategy}
+          speedMs={speedMs}
+          moveCount={moveCount}
+          onForceWin={handleForceWin}
+          onForceLoss={handleForceLoss}
+          onStepOne={stepOne}
+          onTogglePlay={togglePlay}
+          onSpeedChange={setSpeedMs}
+          onStrategyChange={setStrategy}
+        />
+      )}
       <GameShell header={header} sidebar={sidebar} gameStatus={game.status}>
         {/* Board: only shown when game is active */}
         {game.status !== 'ready' && (
