@@ -1,10 +1,10 @@
 import { GameState } from '../game';
 
 const redrawOptions = [
-  { label: '0', value: 0 },
-  { label: '1', value: 1 },
-  { label: '2', value: 2 },
-  { label: 'Infinite', value: null },
+  { label: 'Survivalist (Hard) — 0 Redeals', value: 0 },
+  { label: 'Archaeologist (Normal) — 1 Redeal', value: 1 },
+  { label: 'Explorer (Easy) — 2 Redeals', value: 2 },
+  { label: 'Novice (Sandbox) — Unlimited', value: null },
 ] as const;
 
 interface GameSidebarProps {
@@ -73,7 +73,7 @@ export function GameSidebar({
         </h2>
         <div className="flex flex-col gap-3">
           <label className={labelClass}>
-            Redraw cycles
+            Difficulty
             <select
               className={selectClass}
               disabled={isGameRunning}

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-The Cursed Tomb: Legacy Edition (v1.8) -- Campaign Simulator
+The Cursed Tomb (v1.8) -- Campaign Simulator
 =============================================================
 
 Simulates full CAMPAIGNS (not single rounds) of the Cursed Tomb ruleset:
@@ -57,7 +57,7 @@ RED = {'H', 'D'}
 BLACK = {'S', 'C'}
 SUITS = ['S', 'H', 'D', 'C']
 TARGET = 13
-ROWS = 7  # Legacy Edition always deals a 7-row / 28-card pyramid
+ROWS = 7  # always deals a 7-row / 28-card pyramid
 
 
 @dataclass
@@ -387,7 +387,7 @@ def run_many_campaigns(difficulty, campaigns, seed, flags, max_rounds, verbose=F
         if verbose:
             print(f"campaign {i + 1:>4}: {result['result']:<22} rounds={result['rounds']}")
 
-    print(f"\n=== The Cursed Tomb: Legacy Edition -- Campaign Simulation ===")
+    print(f"\n=== The Cursed Tomb -- Campaign Simulation ===")
     print(f"difficulty:          {difficulty} (max_redeals={max_redeals})")
     print(f"scars:               {'on' if flags.scars else 'off'}")
     print(f"curses:              {'on' if flags.curses else 'off'}")
@@ -412,7 +412,7 @@ def run_many_campaigns(difficulty, campaigns, seed, flags, max_rounds, verbose=F
 
 
 def parse_args():
-    p = argparse.ArgumentParser(description="The Cursed Tomb: Legacy Edition campaign simulator")
+    p = argparse.ArgumentParser(description="The Cursed Tomb: campaign simulator")
     p.add_argument("--campaigns", type=int, default=200, help="number of campaigns to simulate")
     p.add_argument("--difficulty", choices=list(DIFFICULTIES.keys()), default="archaeologist")
     p.add_argument("--seed", type=int, default=None)

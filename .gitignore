@@ -1,5 +1,6 @@
 dist
 node_modules
+__pycache__
 
 # Local environment variable overrides (never commit)
 .env
