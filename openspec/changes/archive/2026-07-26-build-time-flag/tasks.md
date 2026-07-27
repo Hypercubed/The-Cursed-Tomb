@@ -12,4 +12,4 @@
 ## 3. CI / GitHub Actions
 
 - [x] 3.1 In `.github/workflows/deploy.yml`, add `env: VITE_SHOW_DEBUG: "false"` to the `npm run build` step
-- [ ] 3.2 Confirm the workflow still passes and the deployed page shows no DebugPanel
+- [x] 3.2 Confirm the workflow still passes and the deployed page shows no DebugPanel
