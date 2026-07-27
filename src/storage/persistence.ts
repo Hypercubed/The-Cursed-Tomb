@@ -1,4 +1,4 @@
-import { GameState, GameStatus } from '../game';
+import { GameState, GameStatus, CampaignState } from '../game';
 import { StorageAdapter, LocalStorageAdapter, InMemoryAdapter } from './adapters';
 
 export interface StoredSettings {
@@ -10,6 +10,12 @@ export interface StoredGameState {
   version: 1;
   savedAt: number;
   state: GameState;
+}
+
+export interface StoredCampaignState {
+  version: 1;
+  savedAt: number;
+  campaign: CampaignState;
 }
 
 export interface StoredStats {
@@ -34,6 +40,7 @@ export interface StoredCampaignStats extends CampaignStats {
 
 const SETTINGS_KEY = 'cursed_tomb_settings';
 const GAME_STATE_KEY = 'cursed_tomb_game_state';
+const CAMPAIGN_STATE_KEY = 'cursed_tomb_active_campaign_state';
 const STATS_KEY = 'cursed_tomb_stats';
 const CAMPAIGN_STATS_KEY = 'cursed_tomb_campaign_stats';
 
@@ -135,6 +142,41 @@ export class PersistenceManager {
   clearGameState(): void {
     try {
       this.adapter.removeItem(GAME_STATE_KEY);
+    } catch {
+      // Ignore
+    }
+  }
+
+  getCampaignState(): CampaignState | null {
+    try {
+      const raw = this.adapter.getItem(CAMPAIGN_STATE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (parsed && parsed.version === 1 && parsed.campaign) {
+        return parsed.campaign;
+      }
+    } catch {
+      // Ignore
+    }
+    return null;
+  }
+
+  saveCampaignState(campaign: CampaignState): void {
+    const payload: StoredCampaignState = {
+      version: 1,
+      savedAt: Date.now(),
+      campaign,
+    };
+    try {
+      this.adapter.setItem(CAMPAIGN_STATE_KEY, JSON.stringify(payload));
+    } catch {
+      // Ignore
+    }
+  }
+
+  clearCampaignState(): void {
+    try {
+      this.adapter.removeItem(CAMPAIGN_STATE_KEY);
     } catch {
       // Ignore
     }

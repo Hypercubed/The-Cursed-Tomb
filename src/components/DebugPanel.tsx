@@ -12,6 +12,7 @@ interface DebugPanelProps {
   onForceWin: () => void;
   onForceLoss: () => void;
   onStepOne: () => void;
+  onAutoplayRound?: () => void;
   onTogglePlay: () => void;
   onSpeedChange: (speed: number) => void;
   onStrategyChange: (strategy: SolverStrategy) => void;
@@ -36,6 +37,7 @@ export function DebugPanel({
   onForceWin,
   onForceLoss,
   onStepOne,
+  onAutoplayRound,
   onTogglePlay,
   onSpeedChange,
   onStrategyChange,
@@ -110,7 +112,7 @@ export function DebugPanel({
 
   return (
     <div
-      className={`fixed right-0 top-3 sm:top-6 lg:top-8 z-50 flex items-start transition-transform duration-300 ease-in-out ${
+      className={`fixed right-0 top-3 sm:top-6 lg:top-8 z-[60] flex items-start transition-transform duration-300 ease-in-out ${
         isOpen ? 'translate-x-0' : 'translate-x-[calc(100%-44px)]'
       }`}
     >
@@ -207,6 +209,18 @@ export function DebugPanel({
                   {isPlaying ? '⏸ Pause' : '▶ Autoplay'}
                 </button>
               </div>
+
+              {onAutoplayRound && (
+                <button
+                  type="button"
+                  className="w-full appearance-none bg-amber-950/80 border border-amber-800 text-amber-200 rounded-lg text-xs cursor-pointer font-[inherit] px-3 py-1.5 hover:bg-amber-900 transition-colors font-medium flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={onAutoplayRound}
+                  disabled={isPlaying || isBusy || !isGameRunning}
+                  title="Autoplay and finish the current round without starting the next round"
+                >
+                  <span>⚡</span> Autoplay Round
+                </button>
+              )}
 
               <label className="flex flex-col gap-1 text-xs text-game-muted">
                 Speed

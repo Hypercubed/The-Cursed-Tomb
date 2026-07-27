@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect, useCallback } from 'react';
+import { RoundSummaryModal } from './components/RoundSummaryModal';
 import {
   canRemovePair,
   cyclePile,
@@ -10,7 +11,16 @@ import {
   playCard,
   resignGame,
   startGame,
+  createCampaign,
+  advanceCampaignRound,
+  applyEndOfWeekLifecycle,
+  computeRoundLifecycleEffects,
+  moveWasteToVault,
+  movePyramidToVault,
   GameState,
+  GameMode,
+  CampaignState,
+  RoundLifecycleEffects,
 } from './game';
 import { useAutoplay } from './hooks/useAutoplay';
 import { forceWin, forceLoss } from './solver';
@@ -21,6 +31,7 @@ import { PyramidBoard } from './components/PyramidBoard';
 import { DrawZone } from './components/DrawZone';
 import { MatchedCardsModal } from './components/MatchedCardsModal';
 import { ResetConfirmationModal } from './components/ResetConfirmationModal';
+import { CampaignSetupModal } from './components/CampaignSetupModal';
 import { defaultPersistenceManager, StoredStats, StoredCampaignStats } from './storage/persistence';
 
 const initialState: GameState = {
@@ -31,10 +42,17 @@ const initialState: GameState = {
   selectedCardId: null,
   redrawsRemaining: null,
   status: 'ready',
+  mode: 'standard',
 };
 
 function App() {
+  const [campaign, setCampaign] = useState<CampaignState | null>(() => {
+    return defaultPersistenceManager.getCampaignState();
+  });
+
   const [game, setGame] = useState<GameState>(() => {
+    const activeCampaign = defaultPersistenceManager.getCampaignState();
+    if (activeCampaign) return activeCampaign.currentRound;
     return defaultPersistenceManager.getGameState() ?? initialState;
   });
 
@@ -54,11 +72,17 @@ function App() {
     return defaultPersistenceManager.getSettings().selectedRedraw;
   });
 
+  const [selectedMode, setSelectedMode] = useState<GameMode>('cursed-tomb');
+  const [volatileCollapse, setVolatileCollapse] = useState<boolean>(false);
+
   const [animatingMatchIds, setAnimatingMatchIds] = useState<string[]>([]);
   const [animatingErrorIds, setAnimatingErrorIds] = useState<string[]>([]);
 
   const [isMatchedCardsModalOpen, setIsMatchedCardsModalOpen] = useState(false);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+  const [isCampaignSetupModalOpen, setIsCampaignSetupModalOpen] = useState(() => game.status === 'ready');
+  const [isRoundSummaryModalOpen, setIsRoundSummaryModalOpen] = useState(false);
+  const [roundEffects, setRoundEffects] = useState<RoundLifecycleEffects | null>(null);
 
   const handleStart = useCallback(() => {
     setGame((currentState) => {
@@ -67,10 +91,49 @@ function App() {
         setStats(updated);
         setCampaignStats(updatedCampaign);
       }
-      return startGame(selectedRedraw);
+      return startGame(selectedRedraw, selectedMode);
     });
     setHasRecordedOutcome(false);
-  }, [hasRecordedOutcome, selectedRedraw]);
+    setRoundEffects(null);
+    setIsRoundSummaryModalOpen(false);
+  }, [hasRecordedOutcome, selectedRedraw, selectedMode]);
+
+  const handleStartCampaign = useCallback(
+    (difficulty: number | null, mode: GameMode = 'cursed-tomb', volatile: boolean = false) => {
+      setSelectedRedraw(difficulty);
+      setSelectedMode(mode);
+      setVolatileCollapse(volatile);
+      defaultPersistenceManager.saveSettings(difficulty);
+
+      if (mode === 'cursed-tomb') {
+        const newCampaign = createCampaign(mode, difficulty, volatile);
+        setCampaign(newCampaign);
+        setGame(newCampaign.currentRound);
+        defaultPersistenceManager.saveCampaignState(newCampaign);
+      } else {
+        setCampaign(null);
+        defaultPersistenceManager.clearCampaignState();
+        setGame(startGame(difficulty, mode));
+      }
+
+      setHasRecordedOutcome(false);
+      setRoundEffects(null);
+      setIsRoundSummaryModalOpen(false);
+      setIsCampaignSetupModalOpen(false);
+    },
+    []
+  );
+
+  const handleNextCampaignRound = useCallback(() => {
+    if (!campaign) return;
+    const nextCampaign = advanceCampaignRound(campaign);
+    setCampaign(nextCampaign);
+    setGame(nextCampaign.currentRound);
+    defaultPersistenceManager.saveCampaignState(nextCampaign);
+    setHasRecordedOutcome(false);
+    setRoundEffects(null);
+    setIsRoundSummaryModalOpen(false);
+  }, [campaign]);
 
   const {
     isPlaying,
@@ -80,25 +143,30 @@ function App() {
     moveCount,
     togglePlay,
     stepOne,
+    stepToConclusion,
     resetCount,
     setSpeedMs,
     setStrategy,
   } = useAutoplay(game, setGame, handleStart);
-
 
   // Sync settings when modified
   useEffect(() => {
     defaultPersistenceManager.saveSettings(selectedRedraw);
   }, [selectedRedraw]);
 
-  // Sync game state when modified
+  // Sync game and campaign state when modified
   useEffect(() => {
     if (game.status === 'ready') {
       defaultPersistenceManager.clearGameState();
     } else {
       defaultPersistenceManager.saveGameState(game);
     }
-  }, [game]);
+
+    if (campaign) {
+      const updatedCampaign = { ...campaign, currentRound: game };
+      defaultPersistenceManager.saveCampaignState(updatedCampaign);
+    }
+  }, [game, campaign]);
 
   // Record outcome statistics when game status changes to an end state
   useEffect(() => {
@@ -113,8 +181,17 @@ function App() {
       setStats(updated);
       setCampaignStats(updatedCampaign);
       setHasRecordedOutcome(true);
+
+      if (campaign && game.mode === 'cursed-tomb') {
+        const activeCampaign = { ...campaign, currentRound: game };
+        const nextCampaignState = applyEndOfWeekLifecycle(activeCampaign);
+        const effects = computeRoundLifecycleEffects(campaign.masterDeck, nextCampaignState.masterDeck, game, game.mode);
+        setCampaign(nextCampaignState);
+        setRoundEffects(effects);
+        setIsRoundSummaryModalOpen(true);
+      }
     }
-  }, [game.status, hasRecordedOutcome]);
+  }, [game.status, hasRecordedOutcome, campaign, game]);
 
   const topDiscard = game.discardPile[0] ?? null;
 
@@ -134,10 +211,16 @@ function App() {
     if (game.status !== 'in-progress') return;
     if (animatingMatchIds.length > 0) return;
 
+    // Handle Spades/Hearts targeting actions
+    if (game.interactionMode && game.interactionMode !== 'normal') {
+      setGame((state) => playCard(state, cardId));
+      return;
+    }
+
     const targetCard = getCardById(cardId, game);
     if (!targetCard) return;
 
-    // Single King match
+    // Single King match / Functional Value 13
     if (targetCard.rank === 13) {
       setAnimatingMatchIds([cardId]);
       setTimeout(() => {
@@ -150,8 +233,7 @@ function App() {
     // If another card is currently selected
     if (game.selectedCardId && game.selectedCardId !== cardId) {
       const selectedCard = getCardById(game.selectedCardId, game);
-      if (selectedCard && canRemovePair(targetCard, selectedCard)) {
-        // Valid pair match dissolve animation
+      if (selectedCard && canRemovePair(targetCard, selectedCard, game.mode)) {
         const matchIds = [selectedCard.id, targetCard.id];
         setAnimatingMatchIds(matchIds);
         setTimeout(() => {
@@ -160,7 +242,6 @@ function App() {
         }, 220);
         return;
       } else {
-        // Invalid pair error shake animation
         const errorIds = [game.selectedCardId, cardId];
         setAnimatingErrorIds(errorIds);
         setTimeout(() => {
@@ -171,7 +252,6 @@ function App() {
       }
     }
 
-    // Toggle selection
     setGame((state) => playCard(state, cardId));
   };
 
@@ -182,20 +262,31 @@ function App() {
     });
   };
 
+  const handleMoveToVault = () => {
+    setGame((state) => moveWasteToVault(state));
+  };
+
+  const handleMovePyramidToVault = (cardId: string) => {
+    setGame((state) => movePyramidToVault(state, cardId));
+  };
+
   const handleRestart = () => {
     setIsResetModalOpen(true);
   };
 
   const handleConfirmReset = () => {
     defaultPersistenceManager.clearGameState();
+    defaultPersistenceManager.clearCampaignState();
     const clearedStats = defaultPersistenceManager.resetStats();
     const clearedCampaign = defaultPersistenceManager.resetCampaignStats();
+    setCampaign(null);
     setStats(clearedStats);
     setCampaignStats(clearedCampaign);
     setHasRecordedOutcome(true);
     resetCount();
     setGame(initialState);
     setIsResetModalOpen(false);
+    setIsCampaignSetupModalOpen(true);
   };
 
   const handleCancelReset = () => {
@@ -225,8 +316,8 @@ function App() {
     <GameSidebar
       selectedRedraw={selectedRedraw}
       gameStatus={game.status}
-      onRedrawChange={setSelectedRedraw}
       onStart={handleStart}
+      onOpenSetupModal={() => setIsCampaignSetupModalOpen(true)}
       onRestart={handleRestart}
       onResign={handleResign}
       removedCardsCount={removedCardsCount}
@@ -245,12 +336,30 @@ function App() {
             The Cursed Tomb
           </h1>
           <p className="text-xs sm:text-sm text-game-muted hidden sm:block">
-            Ancient Egyptian Pyramid Solitaire
+            Ancient Egyptian Solitaire Campaign {campaign ? `• Round ${campaign.roundNumber}` : ''}
           </p>
         </div>
       </div>
       <div className="flex items-center gap-3">
-        <div className="px-3 py-1.5 bg-[#18130e] border border-[#2d2319] rounded-lg text-xs sm:text-sm font-medium text-game-muted flex items-center gap-2">
+        {roundEffects && game.status !== 'in-progress' && (
+          <button
+            type="button"
+            onClick={() => setIsRoundSummaryModalOpen(true)}
+            className="px-3 py-1.5 bg-[#18130e] border border-amber-800/80 text-amber-300 rounded-lg text-xs font-semibold hover:bg-[#251d14] transition-colors flex items-center gap-1 cursor-pointer"
+          >
+            <span>🏺</span> View Round Effects
+          </button>
+        )}
+        {campaign && game.status !== 'in-progress' && (
+          <button
+            type="button"
+            onClick={handleNextCampaignRound}
+            className="px-3 py-1.5 bg-amber-950 border border-amber-700 text-amber-300 rounded-lg text-xs font-semibold hover:bg-amber-900 transition-colors flex items-center gap-1 cursor-pointer"
+          >
+            <span>📜</span> Next Round ({campaign.roundNumber + 1})
+          </button>
+        )}
+        <div className="px-[#0c0906] px-3 py-1.5 bg-[#18130e] border border-[#2d2319] rounded-lg text-xs sm:text-sm font-medium text-game-muted flex items-center gap-2">
           <span>Status:</span>
           <span className="text-game-text font-semibold">{statusLabel}</span>
         </div>
@@ -271,6 +380,7 @@ function App() {
           onForceWin={handleForceWin}
           onForceLoss={handleForceLoss}
           onStepOne={stepOne}
+          onAutoplayRound={stepToConclusion}
           onTogglePlay={togglePlay}
           onSpeedChange={setSpeedMs}
           onStrategyChange={setStrategy}
@@ -285,9 +395,13 @@ function App() {
               pyramid={game.pyramid}
               selectedCardId={game.selectedCardId}
               status={game.status}
+              vaultCard={game.vaultCard}
+              interactionMode={game.interactionMode}
+              mode={game.mode}
               animatingMatchIds={animatingMatchIds}
               animatingErrorIds={animatingErrorIds}
               onCardClick={handleCardClick}
+              onMovePyramidToVault={handleMovePyramidToVault}
             />
 
             {/* Draw zone — separate container below the pyramid */}
@@ -295,6 +409,7 @@ function App() {
               <DrawZone
                 drawPileCount={game.drawPile.length}
                 topDiscard={topDiscard}
+                vaultCard={game.vaultCard}
                 selectedCardId={game.selectedCardId}
                 redrawsRemaining={game.redrawsRemaining}
                 canDraw={canDraw}
@@ -304,6 +419,7 @@ function App() {
                 animatingErrorIds={animatingErrorIds}
                 onDraw={handleDraw}
                 onCardClick={handleCardClick}
+                onMoveToVault={handleMoveToVault}
               />
             </div>
           </div>
@@ -311,8 +427,17 @@ function App() {
 
         {/* Pre-game prompt */}
         {game.status === 'ready' && (
-          <div className="bg-game-panel border border-game-border rounded-2xl p-8 text-center text-game-muted">
-            Configure the game in the sidebar and press <strong className="text-game-text">Explore Pyramid</strong> to begin.
+          <div className="bg-game-panel border border-game-border rounded-2xl p-8 text-center text-game-muted flex flex-col items-center gap-3">
+            <p className="m-0">
+              Select your campaign difficulty and game mode in the setup modal to begin.
+            </p>
+            <button
+              type="button"
+              onClick={() => setIsCampaignSetupModalOpen(true)}
+              className="appearance-none bg-amber-950/80 border border-amber-800 text-amber-300 rounded-lg text-sm cursor-pointer font-[inherit] px-5 py-2 hover:bg-amber-900 hover:text-amber-100 transition-colors font-medium flex items-center gap-2"
+            >
+              <span>📜</span> Open Campaign Setup
+            </button>
           </div>
         )}
       </GameShell>
@@ -322,12 +447,40 @@ function App() {
         onClose={() => setIsMatchedCardsModalOpen(false)}
         removedCardIds={removedCardsSet}
         pairStats={pairStats}
+        masterDeck={campaign?.masterDeck}
+        mode={game.mode}
       />
 
       <ResetConfirmationModal
         isOpen={isResetModalOpen}
         onConfirm={handleConfirmReset}
         onCancel={handleCancelReset}
+      />
+
+      <RoundSummaryModal
+        isOpen={isRoundSummaryModalOpen}
+        onClose={() => setIsRoundSummaryModalOpen(false)}
+        status={game.status}
+        mode={game.mode}
+        roundNumber={campaign?.roundNumber ?? 1}
+        effects={roundEffects}
+        onNextRound={campaign && campaign.status === 'active' ? handleNextCampaignRound : undefined}
+        onOpenVault={() => {
+          setIsRoundSummaryModalOpen(false);
+          setIsMatchedCardsModalOpen(true);
+        }}
+      />
+
+      <CampaignSetupModal
+        isOpen={isCampaignSetupModalOpen}
+        onClose={() => setIsCampaignSetupModalOpen(false)}
+        selectedDifficulty={selectedRedraw}
+        onSelectDifficulty={setSelectedRedraw}
+        selectedMode={selectedMode}
+        onSelectMode={setSelectedMode}
+        volatileCollapse={volatileCollapse}
+        onToggleVolatileCollapse={setVolatileCollapse}
+        onStartCampaign={handleStartCampaign}
       />
     </>
   );

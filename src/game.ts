@@ -1,13 +1,25 @@
 export type Suit = '♠' | '♥' | '♦' | '♣';
 export type Rank = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13;
 
+export type AttritionStage = 0 | 1 | 2 | 3 | 4 | 5;
+export type RewardStage = 0 | 1 | 2;
+export type GameMode = 'standard' | 'cursed-tomb';
+
 export interface Card {
   id: string;
   suit: Suit;
   rank: Rank;
   removed: boolean;
   selected: boolean;
+  attritionStage: AttritionStage;
+  rewardStage: RewardStage;
+  blessed: boolean;
+  faceDown?: boolean;
+  spadesRevealed?: boolean;
+  tempImmune?: boolean;
 }
+
+export type CursedCard = Card;
 
 export type GameStatus =
   | 'ready'
@@ -24,10 +36,43 @@ export interface GameState {
   selectedCardId: string | null;
   redrawsRemaining: number | null;
   status: GameStatus;
+  mode: GameMode;
+  vaultCard?: Card | null;
+  interactionMode?: 'normal' | 'targeting-spades' | 'targeting-hearts';
+  pendingHeroCardId?: string | null;
+  lastClearedPair?: Card[];
+}
+
+export interface CampaignState {
+  mode: GameMode;
+  difficulty: number | null;
+  volatileCollapse: boolean;
+  masterDeck: CursedCard[];
+  graveyard: CursedCard[];
+  currentRound: GameState;
+  roundNumber: number;
+  status: 'active' | 'defeat';
+  defeatReason?: 'starvation' | 'volatile-collapse';
 }
 
 const suits: Suit[] = ['♠', '♥', '♦', '♣'];
 const ranks: Rank[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
+
+export function getFunctionalValue(card: Card, mode: GameMode = 'standard'): number {
+  if (mode !== 'cursed-tomb') return card.rank;
+  if (card.attritionStage < 3) return card.rank;
+  if (card.suit === '♥' || card.suit === '♦') {
+    return card.rank + 1;
+  }
+  return card.rank - 1;
+}
+
+export function getEffectiveValueForPair(card: Card, partner: Card, mode: GameMode = 'standard'): number {
+  if (mode === 'cursed-tomb' && partner.blessed && partner.suit === '♣') {
+    return card.rank;
+  }
+  return getFunctionalValue(card, mode);
+}
 
 export function createDeck(): Card[] {
   const cards: Card[] = [];
@@ -39,6 +84,11 @@ export function createDeck(): Card[] {
         rank,
         removed: false,
         selected: false,
+        attritionStage: 0,
+        rewardStage: 0,
+        blessed: false,
+        faceDown: false,
+        tempImmune: false,
       });
     }
   }
@@ -52,6 +102,36 @@ export function shuffle<T>(items: T[]): T[] {
     [result[i], result[j]] = [result[j], result[i]];
   }
   return result;
+}
+
+export function updateRedCurseFaceDownState(pyramid: Card[][], mode: GameMode = 'standard'): Card[][] {
+  if (mode !== 'cursed-tomb') return pyramid;
+
+  return pyramid.map((row, r) => {
+    return row.map((card, c) => {
+      if (r === 0) return { ...card, faceDown: false };
+
+      const parentRow = pyramid[r - 1];
+      const parent1 = c > 0 ? parentRow[c - 1] : null;
+      const parent2 = c < parentRow.length ? parentRow[c] : null;
+
+      const parent1RedCurse =
+        parent1 && !parent1.removed && parent1.attritionStage === 4 && (parent1.suit === '♥' || parent1.suit === '♦');
+      const parent2RedCurse =
+        parent2 && !parent2.removed && parent2.attritionStage === 4 && (parent2.suit === '♥' || parent2.suit === '♦');
+
+      if (parent1RedCurse || parent2RedCurse) {
+        // Face-down card is revealed as soon as it becomes exposed (playable) or if manually revealed by Spades Tunnel
+        const blocked = isBlocked(card.id, pyramid);
+        if (!blocked || card.spadesRevealed) {
+          return { ...card, faceDown: false };
+        }
+        return { ...card, faceDown: true };
+      } else {
+        return { ...card, faceDown: false };
+      }
+    });
+  });
 }
 
 export function dealPyramid(deck: Card[]): Card[][] {
@@ -81,7 +161,7 @@ export function isBlocked(cardId: string, pyramid: Card[][]): boolean {
 export function visibleCards(pyramid: Card[][]): Card[] {
   const visible: Card[] = [];
   for (let row = 0; row < pyramid.length; row += 1) {
-    const cards = pyramid[row].filter((card) => !card.removed && !isBlocked(card.id, pyramid));
+    const cards = pyramid[row].filter((card) => !card.removed && !card.faceDown && !isBlocked(card.id, pyramid));
     visible.push(...cards);
   }
   return visible;
@@ -92,22 +172,58 @@ export function getCardById(cardId: string, state: GameState): Card | undefined 
   if (pyramidCard) return pyramidCard;
   const drawCard = state.drawPile.find((card) => card.id === cardId);
   if (drawCard) return drawCard;
+  if (state.vaultCard && state.vaultCard.id === cardId) return state.vaultCard;
   return state.discardPile.find((card) => card.id === cardId);
 }
 
-export function canRemovePair(first: Card, second: Card): boolean {
+export function canRemovePair(
+  first: Card,
+  second: Card,
+  mode: GameMode = 'standard',
+  firstLoc?: 'pyramid' | 'draw' | 'discard' | 'vault',
+  secondLoc?: 'pyramid' | 'draw' | 'discard' | 'vault'
+): boolean {
   if (first.removed || second.removed) return false;
   if (first.id === second.id) return false;
-  return first.rank + second.rank === 13;
+  if (first.faceDown || second.faceDown) return false;
+
+  if (mode === 'cursed-tomb') {
+    if (first.attritionStage === 4 && (first.suit === '♠' || first.suit === '♣')) {
+      if (firstLoc && firstLoc !== 'pyramid') return false;
+      if (secondLoc && secondLoc !== 'pyramid') return false;
+    }
+    if (second.attritionStage === 4 && (second.suit === '♠' || second.suit === '♣')) {
+      if (firstLoc && firstLoc !== 'pyramid') return false;
+      if (secondLoc && secondLoc !== 'pyramid') return false;
+    }
+  }
+
+  const val1 = getEffectiveValueForPair(first, second, mode);
+  const val2 = getEffectiveValueForPair(second, first, mode);
+
+  return val1 + val2 === 13;
 }
 
-export function canRemoveSingle(card: Card): boolean {
-  return !card.removed && card.rank === 13;
+export function canRemoveSingle(card: Card, mode: GameMode = 'standard'): boolean {
+  if (card.removed || card.faceDown) return false;
+  return getFunctionalValue(card, mode) === 13;
 }
 
-export function initializeGame(redraws: number | null): GameState {
-  const shuffledDeck = shuffle(createDeck());
-  const pyramid = dealPyramid(shuffledDeck);
+export function initializeGame(
+  redraws: number | null,
+  mode: GameMode = 'standard',
+  masterDeck?: CursedCard[],
+  graveyard?: CursedCard[]
+): GameState {
+  const activeDeck = masterDeck
+    ? masterDeck.filter((c) => c.attritionStage < 5 && (!graveyard || !graveyard.some((g) => g.id === c.id)))
+    : createDeck();
+
+  const shuffledDeck = shuffle(activeDeck);
+  let pyramid = dealPyramid(shuffledDeck);
+  if (mode === 'cursed-tomb') {
+    pyramid = updateRedCurseFaceDownState(pyramid, mode);
+  }
   const remaining = shuffledDeck.slice(28).map((card) => ({ ...card }));
   return {
     deck: shuffledDeck.map((card) => ({ ...card })),
@@ -117,16 +233,25 @@ export function initializeGame(redraws: number | null): GameState {
     selectedCardId: null,
     redrawsRemaining: redraws,
     status: 'ready',
+    mode,
+    vaultCard: null,
+    interactionMode: 'normal',
+    pendingHeroCardId: null,
+    lastClearedPair: [],
   };
 }
 
-export function getCardLocation(cardId: string, state: GameState): { zone: 'pyramid' | 'draw' | 'discard' | 'none'; row?: number; index?: number } {
+export function getCardLocation(
+  cardId: string,
+  state: GameState
+): { zone: 'pyramid' | 'draw' | 'discard' | 'vault' | 'none'; row?: number; index?: number } {
   for (let row = 0; row < state.pyramid.length; row += 1) {
     const index = state.pyramid[row].findIndex((card) => card.id === cardId);
     if (index !== -1) return { zone: 'pyramid', row, index };
   }
   const drawIndex = state.drawPile.findIndex((card) => card.id === cardId);
   if (drawIndex !== -1) return { zone: 'draw', index: drawIndex };
+  if (state.vaultCard && state.vaultCard.id === cardId) return { zone: 'vault' };
   const discardIndex = state.discardPile.findIndex((card) => card.id === cardId);
   if (discardIndex !== -1) return { zone: 'discard', index: discardIndex };
   return { zone: 'none' };
@@ -139,6 +264,49 @@ export function moveCardToDiscard(state: GameState): GameState {
     ...state,
     drawPile: rest,
     discardPile: [nextCard, ...state.discardPile],
+  };
+}
+
+export function moveWasteToVault(state: GameState): GameState {
+  if (state.discardPile.length === 0) return state;
+  const topDiscard = state.discardPile[0];
+  if (!topDiscard.blessed || topDiscard.suit !== '♦' || state.vaultCard) {
+    return state;
+  }
+  const [movedCard, ...remainingDiscard] = state.discardPile;
+  return {
+    ...state,
+    discardPile: remainingDiscard,
+    vaultCard: movedCard,
+  };
+}
+
+export function movePyramidToVault(state: GameState, cardId: string): GameState {
+  if (state.vaultCard) return state;
+
+  const card = state.pyramid.flat().find((c) => c.id === cardId);
+  if (!card || card.removed || card.faceDown || isBlocked(card.id, state.pyramid)) {
+    return state;
+  }
+
+  if (!card.blessed || card.suit !== '♦') {
+    return state;
+  }
+
+  const nextPyramid = state.pyramid.map((row) =>
+    row.map((c) => (c.id === cardId ? { ...c, removed: true } : c))
+  );
+
+  const nextState: GameState = {
+    ...state,
+    pyramid: nextPyramid,
+    vaultCard: card,
+    selectedCardId: state.selectedCardId === cardId ? null : state.selectedCardId,
+  };
+
+  return {
+    ...nextState,
+    status: checkForWin(nextState),
   };
 }
 
@@ -173,7 +341,7 @@ export function cyclePile(state: GameState): GameState {
 }
 
 export function cardIsVisible(card: Card, state: GameState): boolean {
-  if (card.removed) return false;
+  if (card.removed || card.faceDown) return false;
   const location = getCardLocation(card.id, state);
   if (location.zone === 'pyramid') {
     return !isBlocked(card.id, state.pyramid);
@@ -182,7 +350,10 @@ export function cardIsVisible(card: Card, state: GameState): boolean {
     return location.index === 0;
   }
   if (location.zone === 'draw') {
-    return card.rank === 13;
+    return canRemoveSingle(card, state.mode);
+  }
+  if (location.zone === 'vault') {
+    return true;
   }
   return false;
 }
@@ -196,7 +367,7 @@ export function checkForWin(state: GameState): GameStatus {
   const hasPyramidCards = remainingPyramid > 0;
 
   if (!hasPyramidCards) {
-    const discardEmpty = state.discardPile.length === 0;
+    const discardEmpty = state.discardPile.length === 0 && !state.vaultCard;
     const drawEmpty = state.drawPile.length === 0;
     if (drawEmpty && discardEmpty) {
       return 'complete-victory';
@@ -221,11 +392,36 @@ export function checkForWin(state: GameState): GameStatus {
 
 export function canAnyMove(state: GameState, extraCards: Card[] = []): boolean {
   const visible = visibleCards(state.pyramid);
-  const available = [...visible, ...state.discardPile.slice(0, 1), ...extraCards];
+  const topDiscard = state.discardPile[0] ?? null;
+  const vaultCard = state.vaultCard ?? null;
+
+  const available: { card: Card; location: 'pyramid' | 'draw' | 'discard' | 'vault' }[] = [
+    ...visible.map((card) => ({ card, location: 'pyramid' as const })),
+  ];
+  if (topDiscard) {
+    available.push({ card: topDiscard, location: 'discard' });
+  }
+  if (vaultCard) {
+    available.push({ card: vaultCard, location: 'vault' });
+  }
+  for (const card of extraCards) {
+    available.push({ card, location: 'discard' });
+  }
+
   for (let i = 0; i < available.length; i += 1) {
-    if (available[i].rank === 13) return true;
+    if (canRemoveSingle(available[i].card, state.mode)) return true;
     for (let j = i + 1; j < available.length; j += 1) {
-      if (canRemovePair(available[i], available[j])) return true;
+      if (
+        canRemovePair(
+          available[i].card,
+          available[j].card,
+          state.mode,
+          available[i].location,
+          available[j].location
+        )
+      ) {
+        return true;
+      }
     }
   }
   return false;
@@ -246,29 +442,107 @@ export function selectCard(state: GameState, cardId: string): GameState {
 function removeCard(state: GameState, cardId: string): GameState {
   return {
     ...state,
-    pyramid: state.pyramid.map((row) => row.map((card) => (card.id === cardId ? { ...card, removed: true, selected: false } : card))),
+    pyramid: state.pyramid.map((row) =>
+      row.map((card) => (card.id === cardId ? { ...card, removed: true, selected: false } : card))
+    ),
     discardPile: state.discardPile.filter((card) => card.id !== cardId),
     drawPile: state.drawPile.filter((card) => card.id !== cardId),
+    vaultCard: state.vaultCard?.id === cardId ? null : state.vaultCard,
     selectedCardId: null,
   };
 }
 
+function handleHeroBlessings(state: GameState, clearedCards: Card[]): GameState {
+  let interactionMode: 'normal' | 'targeting-spades' | 'targeting-hearts' = state.interactionMode || 'normal';
+  let pendingHeroCardId: string | null = state.pendingHeroCardId || null;
+
+  for (const card of clearedCards) {
+    if (card.blessed) {
+      if (card.suit === '♥') {
+        const visiblePyramid = visibleCards(state.pyramid);
+        if (visiblePyramid.length > 0) {
+          interactionMode = 'targeting-hearts';
+          pendingHeroCardId = card.id;
+        }
+      } else if (card.suit === '♠') {
+        const hasFaceDown = state.pyramid.flat().some((c) => !c.removed && c.faceDown);
+        if (hasFaceDown) {
+          interactionMode = 'targeting-spades';
+          pendingHeroCardId = card.id;
+        }
+      }
+    }
+  }
+
+  return {
+    ...state,
+    interactionMode,
+    pendingHeroCardId,
+  };
+}
+
+export function applyTargetingAction(state: GameState, targetCardId: string): GameState {
+  if (state.interactionMode === 'targeting-hearts') {
+    const updatedPyramid = state.pyramid.map((row) =>
+      row.map((card) => (card.id === targetCardId ? { ...card, tempImmune: true } : card))
+    );
+    return {
+      ...state,
+      pyramid: updatedPyramid,
+      interactionMode: 'normal',
+      pendingHeroCardId: null,
+    };
+  }
+
+  if (state.interactionMode === 'targeting-spades') {
+    const updatedPyramid = state.pyramid.map((row) =>
+      row.map((card) => (card.id === targetCardId ? { ...card, faceDown: false, spadesRevealed: true } : card))
+    );
+    return {
+      ...state,
+      pyramid: updatedPyramid,
+      interactionMode: 'normal',
+      pendingHeroCardId: null,
+    };
+  }
+
+  return state;
+}
+
 export function playCard(state: GameState, cardId: string): GameState {
+  if (state.interactionMode && state.interactionMode !== 'normal') {
+    return applyTargetingAction(state, cardId);
+  }
+
   const located = getCardLocation(cardId, state);
+
   if (located.zone === 'pyramid') {
     const card = state.pyramid[located.row!][located.index!];
-    if (isBlocked(card.id, state.pyramid)) return state;
-    if (card.rank === 13) {
-      const nextState = removeCard(state, card.id);
+    if (isBlocked(card.id, state.pyramid) || card.faceDown) return state;
+
+    if (canRemoveSingle(card, state.mode)) {
+      let nextState = removeCard(state, card.id);
+      nextState.lastClearedPair = [card];
+      nextState.pyramid = updateRedCurseFaceDownState(nextState.pyramid, state.mode);
+      nextState = handleHeroBlessings(nextState, [card]);
       return { ...nextState, status: checkForWin(nextState) };
     }
+
     if (!state.selectedCardId || state.selectedCardId === card.id) {
       return selectCard(state, cardId);
     }
+
     const selectedCard = getCardById(state.selectedCardId, state);
-    if (!selectedCard || !canRemovePair(card, selectedCard)) return state;
+    const selectedLoc = selectedCard ? getCardLocation(selectedCard.id, state).zone : 'none';
+    if (!selectedCard || !canRemovePair(card, selectedCard, state.mode, 'pyramid', selectedLoc === 'none' ? undefined : selectedLoc)) {
+      return state;
+    }
+
     let nextState = removeCard(state, card.id);
     nextState = removeCard(nextState, selectedCard.id);
+    nextState.lastClearedPair = [card, selectedCard];
+    nextState.pyramid = updateRedCurseFaceDownState(nextState.pyramid, state.mode);
+    nextState = handleHeroBlessings(nextState, [card, selectedCard]);
     nextState.status = checkForWin(nextState);
     return nextState;
   }
@@ -280,31 +554,335 @@ export function playCard(state: GameState, cardId: string): GameState {
   if (located.zone === 'discard') {
     const discardCard = state.discardPile.find((item) => item.id === cardId);
     if (!discardCard) return state;
-    if (discardCard.rank === 13) {
-      return { ...state, discardPile: state.discardPile.filter((card) => card.id !== cardId), status: checkForWin(state) };
+
+    if (canRemoveSingle(discardCard, state.mode)) {
+      let nextState: GameState = {
+        ...state,
+        discardPile: state.discardPile.filter((card) => card.id !== cardId),
+        lastClearedPair: [discardCard],
+      };
+      nextState = handleHeroBlessings(nextState, [discardCard]);
+      return { ...nextState, status: checkForWin(nextState) };
     }
+
     if (!state.selectedCardId || state.selectedCardId === cardId) {
       return selectCard(state, cardId);
     }
+
     const selectedCard = getCardById(state.selectedCardId, state);
-    if (!selectedCard || !canRemovePair(discardCard, selectedCard)) return state;
-    let nextState = removeCard(state, selectedCard.id);
+    const selectedLoc = selectedCard ? getCardLocation(selectedCard.id, state).zone : 'none';
+    if (!selectedCard || !canRemovePair(discardCard, selectedCard, state.mode, 'discard', selectedLoc === 'none' ? undefined : selectedLoc)) {
+      return state;
+    }
+
+    let nextState: GameState = removeCard(state, selectedCard.id);
     nextState = {
       ...nextState,
       discardPile: nextState.discardPile.filter((card) => card.id !== cardId),
-      status: checkForWin(nextState),
+      lastClearedPair: [discardCard, selectedCard],
     };
+    nextState.pyramid = updateRedCurseFaceDownState(nextState.pyramid, state.mode);
+    nextState = handleHeroBlessings(nextState, [discardCard, selectedCard]);
+    nextState.status = checkForWin(nextState);
+    return nextState;
+  }
+
+  if (located.zone === 'vault') {
+    const vaultCard = state.vaultCard;
+    if (!vaultCard) return state;
+
+    if (canRemoveSingle(vaultCard, state.mode)) {
+      let nextState: GameState = {
+        ...state,
+        vaultCard: null,
+        lastClearedPair: [vaultCard],
+      };
+      nextState = handleHeroBlessings(nextState, [vaultCard]);
+      return { ...nextState, status: checkForWin(nextState) };
+    }
+
+    if (!state.selectedCardId || state.selectedCardId === cardId) {
+      return selectCard(state, cardId);
+    }
+
+    const selectedCard = getCardById(state.selectedCardId, state);
+    const selectedLoc = selectedCard ? getCardLocation(selectedCard.id, state).zone : 'none';
+    if (!selectedCard || !canRemovePair(vaultCard, selectedCard, state.mode, 'vault', selectedLoc === 'none' ? undefined : selectedLoc)) {
+      return state;
+    }
+
+    let nextState: GameState = removeCard(state, selectedCard.id);
+    nextState = {
+      ...nextState,
+      vaultCard: null,
+      lastClearedPair: [vaultCard, selectedCard],
+    };
+    nextState.pyramid = updateRedCurseFaceDownState(nextState.pyramid, state.mode);
+    nextState = handleHeroBlessings(nextState, [vaultCard, selectedCard]);
+    nextState.status = checkForWin(nextState);
     return nextState;
   }
 
   return state;
 }
 
-export function startGame(redraws: number | null): GameState {
-  const nextState = initializeGame(redraws);
+export function startGame(redraws: number | null, mode: GameMode = 'standard'): GameState {
+  const nextState = initializeGame(redraws, mode);
   return {
     ...nextState,
     status: 'in-progress',
+  };
+}
+
+export function createCampaign(
+  mode: GameMode = 'standard',
+  difficulty: number | null = 1,
+  volatileCollapse: boolean = false,
+  existingMasterDeck?: CursedCard[],
+  existingGraveyard?: CursedCard[],
+  roundNumber: number = 1
+): CampaignState {
+  const masterDeck = existingMasterDeck ?? createDeck();
+  const graveyard = existingGraveyard ?? [];
+  const currentRound = startGame(difficulty, mode);
+  
+  let status: 'active' | 'defeat' = 'active';
+  let defeatReason: 'starvation' | 'volatile-collapse' | undefined;
+
+  if (mode === 'cursed-tomb') {
+    const activeCount = masterDeck.filter((c) => c.attritionStage < 5 && !graveyard.some((g) => g.id === c.id)).length;
+    if (activeCount < 28) {
+      status = 'defeat';
+      defeatReason = 'starvation';
+    }
+  }
+
+  return {
+    mode,
+    difficulty,
+    volatileCollapse,
+    masterDeck,
+    graveyard,
+    currentRound,
+    roundNumber,
+    status,
+    defeatReason,
+  };
+}
+
+export function applyEndOfWeekLifecycle(campaign: CampaignState): CampaignState {
+  const round = campaign.currentRound;
+  const mode = campaign.mode;
+  if (mode !== 'cursed-tomb') return campaign;
+
+  let masterDeck = campaign.masterDeck.map((c) => ({ ...c }));
+  let graveyard = campaign.graveyard.map((c) => ({ ...c }));
+
+  if (round.status === 'pyramid-collapse') {
+    const bottleneckCards = visibleCards(round.pyramid);
+    for (const bCard of bottleneckCards) {
+      const idx = masterDeck.findIndex((c) => c.id === bCard.id);
+      if (idx !== -1) {
+        const target = masterDeck[idx];
+        if (target.rewardStage !== 2 && !bCard.tempImmune) {
+          target.attritionStage = Math.min(5, target.attritionStage + 1) as AttritionStage;
+        }
+      }
+    }
+  } else if (round.status === 'complete-victory' || round.status === 'partial-victory') {
+    const lastPair = round.lastClearedPair ?? [];
+    if (lastPair.length === 2) {
+      const c1 = lastPair[0];
+      const c2 = lastPair[1];
+      const val1 = getFunctionalValue(c1, mode);
+      const val2 = getFunctionalValue(c2, mode);
+
+      let heroCard = c1;
+      let anchorCard = c2;
+      if (val2 > val1) {
+        heroCard = c2;
+        anchorCard = c1;
+      }
+
+      const hIdx = masterDeck.findIndex((c) => c.id === heroCard.id);
+      if (hIdx !== -1) {
+        masterDeck[hIdx].blessed = true;
+      }
+
+      const aIdx = masterDeck.findIndex((c) => c.id === anchorCard.id);
+      if (aIdx !== -1) {
+        if (masterDeck[aIdx].attritionStage === 0) {
+          masterDeck[aIdx].rewardStage = Math.min(2, masterDeck[aIdx].rewardStage + 1) as RewardStage;
+        }
+      }
+    } else if (lastPair.length === 1) {
+      const kCard = lastPair[0];
+      const kIdx = masterDeck.findIndex((c) => c.id === kCard.id);
+      if (kIdx !== -1) {
+        if (masterDeck[kIdx].attritionStage === 0) {
+          masterDeck[kIdx].rewardStage = Math.min(2, masterDeck[kIdx].rewardStage + 1) as RewardStage;
+        }
+      }
+    }
+  }
+
+  for (const card of masterDeck) {
+    if (card.attritionStage === 5 && !graveyard.some((g) => g.id === card.id)) {
+      graveyard.push({ ...card });
+    }
+  }
+
+  const activeDeck = masterDeck.filter((c) => c.attritionStage < 5);
+  let status: 'active' | 'defeat' = campaign.status;
+  let defeatReason = campaign.defeatReason;
+
+  if (activeDeck.length < 28) {
+    status = 'defeat';
+    defeatReason = 'starvation';
+  }
+
+  if (campaign.volatileCollapse) {
+    for (let r = 1; r <= 13; r += 1) {
+      const entombedCount = graveyard.filter((c) => c.rank === r && c.attritionStage === 5).length;
+      if (entombedCount === 4) {
+        status = 'defeat';
+        defeatReason = 'volatile-collapse';
+        break;
+      }
+    }
+  }
+
+  return {
+    ...campaign,
+    masterDeck,
+    graveyard,
+    status,
+    defeatReason,
+  };
+}
+
+export interface FinalClearDetails {
+  lastClearedPair: Card[];
+  heroCard?: Card;
+  heroAlreadyBlessed?: boolean;
+  anchorCard?: Card;
+  anchorBlockedByScar?: boolean;
+  anchorAlreadyMaxed?: boolean;
+  isSoloKing?: boolean;
+}
+
+export interface RoundLifecycleEffects {
+  blessed: Card[];
+  anchored: Card[];
+  cursed: Card[];
+  scarred: Card[];
+  entombed: Card[];
+  clearDetails?: FinalClearDetails;
+}
+
+export function computeRoundLifecycleEffects(
+  beforeDeck: Card[],
+  afterDeck: Card[],
+  round?: GameState,
+  mode: GameMode = 'cursed-tomb'
+): RoundLifecycleEffects {
+  const blessed: Card[] = [];
+  const anchored: Card[] = [];
+  const cursed: Card[] = [];
+  const scarred: Card[] = [];
+  const entombed: Card[] = [];
+
+  for (const afterCard of afterDeck) {
+    const beforeCard = beforeDeck.find((c) => c.id === afterCard.id);
+    if (!beforeCard) continue;
+
+    if (!beforeCard.blessed && afterCard.blessed) {
+      blessed.push(afterCard);
+    }
+
+    if (beforeCard.rewardStage < afterCard.rewardStage) {
+      anchored.push(afterCard);
+    }
+
+    if (beforeCard.attritionStage < 4 && afterCard.attritionStage === 4) {
+      cursed.push(afterCard);
+    }
+
+    if (afterCard.attritionStage > beforeCard.attritionStage && afterCard.attritionStage < 4) {
+      scarred.push(afterCard);
+    }
+
+    if (beforeCard.attritionStage < 5 && afterCard.attritionStage === 5) {
+      entombed.push(afterCard);
+    }
+  }
+
+  let clearDetails: FinalClearDetails | undefined;
+  if (round && (round.status === 'complete-victory' || round.status === 'partial-victory')) {
+    const lastPair = round.lastClearedPair ?? [];
+    if (lastPair.length === 2) {
+      const c1 = lastPair[0];
+      const c2 = lastPair[1];
+      const val1 = getFunctionalValue(c1, mode);
+      const val2 = getFunctionalValue(c2, mode);
+
+      let heroCard = c1;
+      let anchorCard = c2;
+      if (val2 > val1) {
+        heroCard = c2;
+        anchorCard = c1;
+      }
+
+      const beforeHero = beforeDeck.find((c) => c.id === heroCard.id);
+      const beforeAnchor = beforeDeck.find((c) => c.id === anchorCard.id);
+
+      clearDetails = {
+        lastClearedPair: lastPair,
+        heroCard,
+        heroAlreadyBlessed: Boolean(beforeHero?.blessed),
+        anchorCard,
+        anchorBlockedByScar: (beforeAnchor?.attritionStage ?? 0) > 0,
+        anchorAlreadyMaxed: (beforeAnchor?.rewardStage ?? 0) >= 2,
+        isSoloKing: false,
+      };
+    } else if (lastPair.length === 1) {
+      const kCard = lastPair[0];
+      const beforeKing = beforeDeck.find((c) => c.id === kCard.id);
+
+      clearDetails = {
+        lastClearedPair: lastPair,
+        anchorCard: kCard,
+        anchorBlockedByScar: (beforeKing?.attritionStage ?? 0) > 0,
+        anchorAlreadyMaxed: (beforeKing?.rewardStage ?? 0) >= 2,
+        isSoloKing: true,
+      };
+    }
+  }
+
+  return { blessed, anchored, cursed, scarred, entombed, clearDetails };
+}
+
+export function advanceCampaignRound(campaign: CampaignState): CampaignState {
+  const updatedCampaign = applyEndOfWeekLifecycle(campaign);
+  if (updatedCampaign.status === 'defeat') {
+    return updatedCampaign;
+  }
+
+  const newRoundNumber = updatedCampaign.roundNumber + 1;
+  const newRound = initializeGame(
+    updatedCampaign.difficulty,
+    updatedCampaign.mode,
+    updatedCampaign.masterDeck,
+    updatedCampaign.graveyard
+  );
+
+  return {
+    ...updatedCampaign,
+    roundNumber: newRoundNumber,
+    currentRound: {
+      ...newRound,
+      status: 'in-progress',
+    },
   };
 }
 

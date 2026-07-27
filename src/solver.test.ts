@@ -207,8 +207,8 @@ describe('solver', () => {
             removed: rIdx !== 0,
           }))
         ),
-        drawPile: [{ id: '♣1', suit: '♣', rank: 1, removed: false, selected: false }],
-        discardPile: [{ id: '♦1', suit: '♦', rank: 1, removed: false, selected: false }],
+        drawPile: [{ id: '♣1', suit: '♣', rank: 1, removed: false, selected: false, attritionStage: 0, rewardStage: 0, blessed: false }],
+        discardPile: [{ id: '♦1', suit: '♦', rank: 1, removed: false, selected: false, attritionStage: 0, rewardStage: 0, blessed: false }],
       };
       expect(evaluateWinnability(partialState)).toBe('partial-victory');
     });
@@ -243,6 +243,28 @@ describe('solver', () => {
       const perfectNext = findNextPerfectMove(deadlockedState);
       expect(perfectNext).not.toBeNull();
       expect(perfectNext!.status).toBe('pyramid-collapse');
+    });
+
+    it('findNextGreedyMove executes pyramid to vault move for exposed Diamond Hero', () => {
+      const game = startGame(1);
+      const customPyramid = game.pyramid.map((row, rIdx) => {
+        if (rIdx === 6) {
+          return row.map((card, cIdx) => {
+            if (cIdx === 0) {
+              return { ...card, suit: '♦' as const, rank: 5 as const, blessed: true };
+            }
+            return { ...card, rank: 1 as const };
+          });
+        }
+        return row;
+      });
+      const state: GameState = { ...game, pyramid: customPyramid, vaultCard: null };
+
+      const nextState = findNextGreedyMove(state);
+      expect(nextState).not.toBeNull();
+      expect(nextState!.vaultCard).toBeDefined();
+      expect(nextState!.vaultCard?.suit).toBe('♦');
+      expect(nextState!.pyramid[6][0].removed).toBe(true);
     });
   });
 });

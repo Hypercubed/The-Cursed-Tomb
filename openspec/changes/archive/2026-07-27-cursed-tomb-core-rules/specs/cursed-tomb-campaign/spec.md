@@ -49,7 +49,7 @@ The game SHALL enforce structural traps for Stage 4 Cursed cards.
 
 #### Scenario: Red Curse deals overlapping card face-down
 - **WHEN** a card with a Red Curse (Attrition Stage 4, Red suit) is dealt into the pyramid
-- **THEN** the card physically overlapping directly beneath it SHALL be dealt face-down AND SHALL flip face-up only when the Red Cursed card is cleared
+- **THEN** card(s) placed into the next lower row beneath it SHALL be dealt face-down AND SHALL flip face-up when they become exposed (playable) or via a Spades blessing (Note: Red Curses have no mechanical face-down effect when dealt in the last or second-to-last row)
 
 #### Scenario: Black Curse restricts pairing to pyramid
 - **WHEN** a card with a Black Curse (Attrition Stage 4, Black suit) is exposed

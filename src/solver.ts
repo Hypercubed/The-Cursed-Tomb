@@ -3,9 +3,12 @@ import {
   Card,
   visibleCards,
   canRemovePair,
+  canRemoveSingle,
   playCard,
   drawCard,
   cyclePile,
+  moveWasteToVault,
+  movePyramidToVault,
   checkForWin,
   resignGame,
   getRemainingPyramidCards,
@@ -34,15 +37,21 @@ export function isGamePlayable(state: GameState): boolean {
     const visiblePyramid = visibleCards(simState.pyramid);
     const topDiscard = simState.discardPile[0] ?? null;
 
-    // 1. Check King
-    if (visiblePyramid.some((card) => card.rank === 13) || (topDiscard && topDiscard.rank === 13)) {
+    // 0. Check Vault moves
+    if (!simState.vaultCard) {
+      if (topDiscard && topDiscard.blessed && topDiscard.suit === '♦') return true;
+      if (visiblePyramid.some((card) => card.blessed && card.suit === '♦')) return true;
+    }
+
+    // 1. Check King / Functional 13
+    if (visiblePyramid.some((card) => canRemoveSingle(card, simState.mode)) || (topDiscard && canRemoveSingle(topDiscard, simState.mode))) {
       return true;
     }
 
     // 2. Check Pyramid pairs
     for (let i = 0; i < visiblePyramid.length; i += 1) {
       for (let j = i + 1; j < visiblePyramid.length; j += 1) {
-        if (canRemovePair(visiblePyramid[i], visiblePyramid[j])) {
+        if (canRemovePair(visiblePyramid[i], visiblePyramid[j], simState.mode, 'pyramid', 'pyramid')) {
           return true;
         }
       }
@@ -51,7 +60,7 @@ export function isGamePlayable(state: GameState): boolean {
     // 3. Check Pyramid + Discard pair
     if (topDiscard) {
       for (const card of visiblePyramid) {
-        if (canRemovePair(topDiscard, card)) {
+        if (canRemovePair(topDiscard, card, simState.mode, 'discard', 'pyramid')) {
           return true;
         }
       }
@@ -85,15 +94,20 @@ export function findNextGreedyMove(state: GameState): GameState | null {
   const visiblePyramid = visibleCards(state.pyramid);
   const topDiscard = state.discardPile[0] ?? null;
 
+  // 0. Waste to Vault
+  if (!state.vaultCard && topDiscard && topDiscard.blessed && topDiscard.suit === '♦') {
+    return moveWasteToVault({ ...state, selectedCardId: null });
+  }
+
   // 1. Single King in Pyramid
-  const pyramidKing = visiblePyramid.find((card) => card.rank === 13);
+  const pyramidKing = visiblePyramid.find((card) => canRemoveSingle(card, state.mode));
   if (pyramidKing) {
     const cleanState = state.selectedCardId ? { ...state, selectedCardId: null } : state;
     return playCard(cleanState, pyramidKing.id);
   }
 
   // 1b. Single King on Discard
-  if (topDiscard && topDiscard.rank === 13) {
+  if (topDiscard && canRemoveSingle(topDiscard, state.mode)) {
     const cleanState = state.selectedCardId ? { ...state, selectedCardId: null } : state;
     return playCard(cleanState, topDiscard.id);
   }
@@ -103,7 +117,7 @@ export function findNextGreedyMove(state: GameState): GameState | null {
     for (let j = i + 1; j < visiblePyramid.length; j += 1) {
       const cardA = visiblePyramid[i];
       const cardB = visiblePyramid[j];
-      if (canRemovePair(cardA, cardB)) {
+      if (canRemovePair(cardA, cardB, state.mode, 'pyramid', 'pyramid')) {
         const step1 = playCard({ ...state, selectedCardId: null }, cardA.id);
         const step2 = playCard(step1, cardB.id);
         return step2;
@@ -111,10 +125,18 @@ export function findNextGreedyMove(state: GameState): GameState | null {
     }
   }
 
+  // 2b. Pyramid to Vault
+  if (!state.vaultCard) {
+    const pyramidDiamond = visiblePyramid.find((card) => card.blessed && card.suit === '♦');
+    if (pyramidDiamond) {
+      return movePyramidToVault({ ...state, selectedCardId: null }, pyramidDiamond.id);
+    }
+  }
+
   // 3. Pyramid + Discard Pair
   if (topDiscard) {
     for (const card of visiblePyramid) {
-      if (canRemovePair(topDiscard, card)) {
+      if (canRemovePair(topDiscard, card, state.mode, 'discard', 'pyramid')) {
         const step1 = playCard({ ...state, selectedCardId: null }, topDiscard.id);
         const step2 = playCard(step1, card.id);
         return step2;
@@ -156,15 +178,27 @@ export function getLegalNextStates(state: GameState): GameState[] {
   const topDiscard = cleanState.discardPile[0] ?? null;
   const nextStates: GameState[] = [];
 
+  // 0. Vault moves
+  if (!cleanState.vaultCard) {
+    if (topDiscard && topDiscard.blessed && topDiscard.suit === '♦') {
+      nextStates.push(moveWasteToVault(cleanState));
+    }
+    for (const card of visiblePyramid) {
+      if (card.blessed && card.suit === '♦') {
+        nextStates.push(movePyramidToVault(cleanState, card.id));
+      }
+    }
+  }
+
   // 1. Single Kings in Pyramid
   for (const card of visiblePyramid) {
-    if (card.rank === 13) {
+    if (canRemoveSingle(card, cleanState.mode)) {
       nextStates.push(playCard(cleanState, card.id));
     }
   }
 
   // 1b. Single King on Discard
-  if (topDiscard && topDiscard.rank === 13) {
+  if (topDiscard && canRemoveSingle(topDiscard, cleanState.mode)) {
     nextStates.push(playCard(cleanState, topDiscard.id));
   }
 
@@ -173,7 +207,7 @@ export function getLegalNextStates(state: GameState): GameState[] {
     for (let j = i + 1; j < visiblePyramid.length; j += 1) {
       const cardA = visiblePyramid[i];
       const cardB = visiblePyramid[j];
-      if (canRemovePair(cardA, cardB)) {
+      if (canRemovePair(cardA, cardB, cleanState.mode, 'pyramid', 'pyramid')) {
         const step1 = playCard(cleanState, cardA.id);
         const step2 = playCard(step1, cardB.id);
         nextStates.push(step2);
@@ -184,7 +218,7 @@ export function getLegalNextStates(state: GameState): GameState[] {
   // 3. Pyramid + Discard Pairs
   if (topDiscard) {
     for (const card of visiblePyramid) {
-      if (canRemovePair(topDiscard, card)) {
+      if (canRemovePair(topDiscard, card, cleanState.mode, 'discard', 'pyramid')) {
         const step1 = playCard(cleanState, topDiscard.id);
         const step2 = playCard(step1, card.id);
         nextStates.push(step2);

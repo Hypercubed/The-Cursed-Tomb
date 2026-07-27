@@ -11,8 +11,8 @@ interface GameSidebarProps {
   // Setup controls
   selectedRedraw: number | null;
   gameStatus: GameState['status'];
-  onRedrawChange: (value: number | null) => void;
   onStart: () => void;
+  onOpenSetupModal?: () => void;
   onRestart: () => void;
   onResign: () => void;
   // Progress & Stats panel
@@ -36,16 +36,19 @@ interface GameSidebarProps {
 const buttonClass =
   'appearance-none bg-transparent border border-game-border rounded-lg text-game-text text-sm cursor-pointer font-[inherit] px-4 py-2 hover:border-game-accent disabled:opacity-50 disabled:cursor-not-allowed transition-[border-color] duration-[120ms]';
 
-const selectClass =
-  'mt-1 bg-game-bg border border-game-border rounded-lg px-2 py-1 text-game-text text-sm disabled:opacity-50 disabled:cursor-not-allowed';
-
-const labelClass = 'flex flex-col gap-1 text-sm text-game-muted';
+const getDifficultyLabel = (value: number | null) => {
+  if (value === null) return 'Novice (Sandbox)';
+  if (value === 2) return 'Explorer (Easy)';
+  if (value === 1) return 'Archaeologist (Normal)';
+  if (value === 0) return 'Survivalist (Hard)';
+  return `${value} Redeal(s)`;
+};
 
 export function GameSidebar({
   selectedRedraw,
   gameStatus,
-  onRedrawChange,
   onStart,
+  onOpenSetupModal,
   onRestart,
   onResign,
   removedCardsCount,
@@ -53,13 +56,11 @@ export function GameSidebar({
   campaignStats,
   onOpenMatchedCardsModal,
 }: GameSidebarProps) {
-  const isGameRunning = gameStatus === 'in-progress';
   const complete = stats?.completeVictories ?? 0;
   const partial = stats?.partialVictories ?? 0;
   const collapses = stats?.pyramidCollapses ?? 0;
   const totalVictories = complete + partial;
   const totalGames = totalVictories + collapses;
-  const clearRate = totalGames > 0 ? Math.round((totalVictories / totalGames) * 100) : 0;
 
   return (
     <aside className="sticky top-6 flex flex-col gap-4 p-4 rounded-xl border-l-[14px] border-y-[6px] border-r-[6px] border-[#251b12] bg-[#120e0a] shadow-[0_4px_12px_rgba(0,0,0,0.5),inset_2px_0_4px_rgba(0,0,0,0.5)] overflow-hidden relative">
@@ -71,38 +72,37 @@ export function GameSidebar({
         <h2 className="text-base font-semibold text-game-text font-display mt-0 mb-4 tracking-wider uppercase border-b border-[#3d3124] pb-2 flex items-center gap-2">
           <span className="text-game-accent text-lg">📜</span> Setup
         </h2>
-        <div className="flex flex-col gap-3">
-          <label className={labelClass}>
-            Difficulty
-            <select
-              className={selectClass}
-              disabled={isGameRunning}
-              value={selectedRedraw === null ? 'infinite' : String(selectedRedraw)}
-              onChange={(e) =>
-                onRedrawChange(e.target.value === 'infinite' ? null : Number(e.target.value))
-              }
-            >
-              {redrawOptions.map((option) => (
-                <option
-                  key={option.label}
-                  value={option.value === null ? 'infinite' : String(option.value)}
-                >
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
+        
+        <div className="flex flex-col gap-1.5 text-sm mb-4">
+          <span className="text-game-muted text-xs">Selected Difficulty</span>
+          <div className="flex items-center justify-between bg-[#120e0a] px-3 py-2 rounded border border-[#251e16] text-xs font-mono">
+            <span className="text-amber-400 font-medium">{getDifficultyLabel(selectedRedraw)}</span>
+            <span className="text-game-muted">
+              {selectedRedraw === null ? '∞ Redeals' : `${selectedRedraw} Redeal${selectedRedraw === 1 ? '' : 's'}`}
+            </span>
+          </div>
         </div>
 
-        <div className="flex flex-col gap-2 mt-4">
-          <button
-            type="button"
-            className={buttonClass}
-            onClick={onStart}
-            disabled={gameStatus === 'in-progress' || (campaignStats?.isVictory ?? false)}
-          >
-            Explore Pyramid
-          </button>
+        <div className="flex flex-col gap-2">
+          {gameStatus === 'ready' && onOpenSetupModal ? (
+            <button
+              type="button"
+              className={buttonClass}
+              onClick={onOpenSetupModal}
+            >
+              Campaign Setup
+            </button>
+          ) : (
+            <button
+              type="button"
+              className={buttonClass}
+              onClick={onStart}
+              disabled={gameStatus === 'in-progress' || (campaignStats?.isVictory ?? false)}
+            >
+              Explore Pyramid
+            </button>
+          )}
+
           {gameStatus === 'in-progress' && (
             <button
               type="button"

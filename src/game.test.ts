@@ -1,21 +1,28 @@
 import { describe, expect, it } from 'vitest';
-import type { GameState } from './game';
+import type { GameState, CursedCard } from './game';
 import {
   canAnyMove,
+  canRemovePair,
+  canRemoveSingle,
   checkForWin,
+  createCampaign,
   createDeck,
   cyclePile,
   dealPyramid,
   drawCard,
   getActiveRankCounts,
+  getFunctionalValue,
   getRemainingPairStats,
   getRemovedCardIds,
   getRemovedCardsCount,
+  applyEndOfWeekLifecycle,
   initializeGame,
   isBlocked,
+  movePyramidToVault,
   playCard,
   resignGame,
   startGame,
+  updateRedCurseFaceDownState,
   visibleCards,
 } from './game';
 
@@ -31,6 +38,7 @@ function createDeterministicGameState(redraws: number | null): GameState {
     selectedCardId: null,
     redrawsRemaining: redraws,
     status: 'in-progress',
+    mode: 'standard',
   };
 }
 
@@ -291,6 +299,141 @@ describe('game model', () => {
       rank2Label: 'A',
       active2: 4,
       remainingPairs: 4,
+    });
+  });
+});
+
+describe('Cursed Tomb campaign mechanics', () => {
+  it('calculates functional value based on scars and game mode', () => {
+    const redQueen = { id: '♥12', suit: '♥' as const, rank: 12 as const, removed: false, selected: false, attritionStage: 3 as const, rewardStage: 0 as const, blessed: false };
+    const blackTen = { id: '♠10', suit: '♠' as const, rank: 10 as const, removed: false, selected: false, attritionStage: 3 as const, rewardStage: 0 as const, blessed: false };
+    const normalFive = { id: '♦5', suit: '♦' as const, rank: 5 as const, removed: false, selected: false, attritionStage: 1 as const, rewardStage: 0 as const, blessed: false };
+
+    // Standard mode ignores scars
+    expect(getFunctionalValue(redQueen, 'standard')).toBe(12);
+    expect(getFunctionalValue(blackTen, 'standard')).toBe(10);
+
+    // Cursed tomb mode applies scar shifts
+    expect(getFunctionalValue(redQueen, 'cursed-tomb')).toBe(13); // +1 Red Scar
+    expect(getFunctionalValue(blackTen, 'cursed-tomb')).toBe(9);  // -1 Black Scar
+    expect(getFunctionalValue(normalFive, 'cursed-tomb')).toBe(5);
+  });
+
+  it('allows solo King removal for Red Scarred Queen (Functional Value 13)', () => {
+    const redQueen = { id: '♥12', suit: '♥' as const, rank: 12 as const, removed: false, selected: false, attritionStage: 4 as const, rewardStage: 0 as const, blessed: false };
+    expect(canRemoveSingle(redQueen, 'cursed-tomb')).toBe(true);
+  });
+
+  it('restricts Black Cursed cards from pairing with Stock or Waste', () => {
+    const blackCurseTen = { id: '♠10', suit: '♠' as const, rank: 10 as const, removed: false, selected: false, attritionStage: 4 as const, rewardStage: 0 as const, blessed: false };
+    const pyramidFour = { id: '♦4', suit: '♦' as const, rank: 4 as const, removed: false, selected: false, attritionStage: 0 as const, rewardStage: 0 as const, blessed: false };
+
+    // Pyramid to Pyramid pairing is allowed
+    expect(canRemovePair(blackCurseTen, pyramidFour, 'cursed-tomb', 'pyramid', 'pyramid')).toBe(true);
+    // Pyramid to Waste pairing is blocked for Black Curse
+    expect(canRemovePair(blackCurseTen, pyramidFour, 'cursed-tomb', 'discard', 'pyramid')).toBe(false);
+  });
+
+  it('applies Attrition Phase to exposed pyramid bottlenecks on collapse', () => {
+    const campaign = createCampaign('cursed-tomb', 1, false);
+    campaign.currentRound.status = 'pyramid-collapse';
+
+    const updated = applyEndOfWeekLifecycle(campaign);
+    const exposedCards = visibleCards(campaign.currentRound.pyramid);
+    expect(exposedCards.length).toBeGreaterThan(0);
+
+    const firstExposed = exposedCards[0];
+    const updatedCard = updated.masterDeck.find((c: CursedCard) => c.id === firstExposed.id);
+    expect(updatedCard?.attritionStage).toBe(1);
+  });
+
+  it('applies Reward Phase to cleared final pair', () => {
+    const campaign = createCampaign('cursed-tomb', 1, false);
+    const cardHigh = { id: '♥8', suit: '♥' as const, rank: 8 as const, removed: true, selected: false, attritionStage: 0 as const, rewardStage: 0 as const, blessed: false };
+    const cardLow = { id: '♦5', suit: '♦' as const, rank: 5 as const, removed: true, selected: false, attritionStage: 0 as const, rewardStage: 0 as const, blessed: false };
+
+    campaign.currentRound.status = 'partial-victory';
+    campaign.currentRound.lastClearedPair = [cardHigh, cardLow];
+
+    const updated = applyEndOfWeekLifecycle(campaign);
+    const updatedHigh = updated.masterDeck.find((c: CursedCard) => c.id === cardHigh.id);
+    const updatedLow = updated.masterDeck.find((c: CursedCard) => c.id === cardLow.id);
+
+    expect(updatedHigh?.blessed).toBe(true);
+    expect(updatedLow?.rewardStage).toBe(1);
+  });
+
+  it('triggers Starvation defeat when fewer than 28 active cards remain', () => {
+    const campaign = createCampaign('cursed-tomb', 1, false);
+    // Move 25 cards to Stage 5
+    for (let i = 0; i < 25; i += 1) {
+      campaign.masterDeck[i].attritionStage = 5;
+    }
+    const updated = applyEndOfWeekLifecycle(campaign);
+    expect(updated.status).toBe('defeat');
+    expect(updated.defeatReason).toBe('starvation');
+  });
+
+  it('locks next lower row cards face-down when parent has Red Curse and reveals them when exposed', () => {
+    const deck = createDeck();
+    const pyramid = dealPyramid(deck);
+    // Mark row 4 card (index 0) as Red Curse (Stage 4, Hearts)
+    pyramid[4][0].attritionStage = 4;
+    pyramid[4][0].suit = '♥';
+
+    const lockedPyramid = updateRedCurseFaceDownState(pyramid, 'cursed-tomb');
+    // Card at row 5 index 0 should be locked face-down while covered by row 6
+    expect(lockedPyramid[5][0].faceDown).toBe(true);
+
+    // Remove row 6 cards covering row 5 index 0
+    lockedPyramid[6][0].removed = true;
+    lockedPyramid[6][1].removed = true;
+    const unlockedPyramid = updateRedCurseFaceDownState(lockedPyramid, 'cursed-tomb');
+    // Once exposed (playable), card at row 5 index 0 flips face-up
+    expect(unlockedPyramid[5][0].faceDown).toBe(false);
+  });
+
+  describe('movePyramidToVault', () => {
+    it('moves an exposed Blessed Diamond card from the pyramid to the vault', () => {
+      const state = createDeterministicGameState(2);
+      // Row 6 index 0 is exposed at the bottom of the pyramid
+      const exposedCard = state.pyramid[6][0];
+      exposedCard.blessed = true;
+      exposedCard.suit = '♦';
+
+      const nextState = movePyramidToVault(state, exposedCard.id);
+      expect(nextState.vaultCard).toEqual(exposedCard);
+      expect(nextState.pyramid[6][0].removed).toBe(true);
+    });
+
+    it('rejects moving blocked cards or non-diamond / unblessed cards to vault', () => {
+      const state = createDeterministicGameState(2);
+      // Row 0 index 0 is blocked by lower rows
+      const blockedCard = state.pyramid[0][0];
+      blockedCard.blessed = true;
+      blockedCard.suit = '♦';
+
+      const stateBlocked = movePyramidToVault(state, blockedCard.id);
+      expect(stateBlocked.vaultCard).toBeUndefined();
+
+      // Exposed card but unblessed
+      const exposedCard = state.pyramid[6][1];
+      exposedCard.blessed = false;
+      exposedCard.suit = '♦';
+      const stateUnblessed = movePyramidToVault(state, exposedCard.id);
+      expect(stateUnblessed.vaultCard).toBeUndefined();
+    });
+
+    it('rejects moving pyramid card to vault if vault already contains a card', () => {
+      const state = createDeterministicGameState(2);
+      state.vaultCard = { ...state.pyramid[6][2] };
+      const exposedCard = state.pyramid[6][0];
+      exposedCard.blessed = true;
+      exposedCard.suit = '♦';
+
+      const nextState = movePyramidToVault(state, exposedCard.id);
+      expect(nextState.vaultCard).toEqual(state.vaultCard);
+      expect(nextState.pyramid[6][0].removed).toBe(false);
     });
   });
 });

@@ -270,6 +270,21 @@ def play_round(pool, rng, max_redeals, flags, max_moves=4000):
             progress_this_pass = True
             continue
 
+        # Check Pyramid Diamond Hero self-vaulting if no immediate removal candidate took priority
+        if flags.blessings:
+            vaulted_p_card = False
+            for i in exp:
+                card = pyr[i]
+                if card.blessed and card.suit == 'D':
+                    removed.add(i)
+                    vault.append(card)
+                    moves_played += 1
+                    progress_this_pass = True
+                    vaulted_p_card = True
+                    break
+            if vaulted_p_card:
+                continue
+
         # no removal move available -- draw, or redeal, or freeze
         if stock:
             drawn = stock.pop(0)

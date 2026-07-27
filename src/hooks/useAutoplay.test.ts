@@ -20,6 +20,7 @@ describe('useAutoplay', () => {
       selectedCardId: null,
       redrawsRemaining: null,
       status: 'ready',
+      mode: 'standard',
     };
     const setGame = vi.fn();
     const onStartNewGame = vi.fn();
@@ -43,6 +44,7 @@ describe('useAutoplay', () => {
       selectedCardId: null,
       redrawsRemaining: null,
       status: 'complete-victory',
+      mode: 'standard',
     };
     const onStartNewGame = vi.fn();
 

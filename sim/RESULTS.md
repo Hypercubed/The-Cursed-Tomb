@@ -67,19 +67,18 @@ This section simulates campaigns with **all Cursed Tomb rules active**: scars, c
 
 **Sample size:** 1,000 campaigns per difficulty, max 1,000 rounds each
 
-| Difficulty          | Redraws | Victory Rate | Collapse Rate | Avg Rounds to Resolve | Median Rounds |
-|:--------------------|:-------:|:------------:|:-------------:|:----------------------:|:-------------:|
-| Survivalist         | 0       |    0.00%     |    100.00%    |         94.2           |      93.0     |
-| Archaeologist       | 1       |    0.70%     |     99.30%    |        131.9           |     130.0     |
-| Explorer            | 2       |    3.90%     |     96.10%    |        164.1           |     164.0     |
-| Novice              | ∞       |    6.40%     |     93.60%    |        169.7           |     174.0     |
+| Difficulty          | Redraws | Victory Rate | Collapse Rate | Avg Rounds to Resolve |
+|:--------------------|:-------:|:------------:|:-------------:|:----------------------:|
+| Survivalist         | 0       |    0.00%     |    100.00%    |         94.1           |
+| Archaeologist       | 1       |    1.30%     |     98.70%    |        127.8           |
+| Explorer            | 2       |    6.90%     |     93.10%    |        156.4           |
+| Novice              | ∞       |   10.90%     |     89.10%    |        160.8           |
 
 ### Observations
 
-- **Collapse is the dominant failure mode.** With attrition active, cards progressively scar, curse, and entomb until the deck cannot support a full pyramid. Even with infinite redraws (Novice), 94% of campaigns collapse rather than time out.
-- **Victory rates are extremely low.** Even with infinite redraws (Novice), victory rate is only 6.4%. This is dramatically harder than the base game (Part 2 showed 5.5% for Explorer with only 2 redraws but no attrition).
-- **More redraws meaningfully improve victory odds.** Going from Survivalist (0 redraws, 0% victory) to Novice (∞ redraws, 6.4% victory) shows that additional passes through the stock help, but attrition remains the primary constraint.
-- **The legacy mechanics fundamentally change the game.** Comparing Part 2 (no attrition) to Part 3 (full rules), Explorer victory rate drops from 5.5% to 3.9% — a 29% reduction. Scars, curses, and blessings create a much harsher survival challenge.
+- **Collapse remains the primary failure mode.** Even with Pyramid Diamond Self-Vaulting, ~93% of Explorer campaigns collapse due to card attrition, maintaining the game's core survival challenge.
+- **Pyramid Self-Vaulting improves win rates meaningfully.** Enabling exposed Diamond Heroes (`♦ [O]`) to move directly from the Pyramid into the Vault increases Explorer victory rates from 3.90% to 6.90% (+77% relative boost) and Novice mode victory rates from 6.40% to 10.90%.
+- **Faster campaign resolutions.** Average rounds to resolve Explorer victory/collapse decreased from 164.1 to 156.4 rounds as players gain tactical unblocking opportunities.
 
 ---
 
