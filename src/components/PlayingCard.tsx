@@ -91,6 +91,19 @@ function getUpperRightTooltip(suit: string, attritionStage: number, rank: number
   return '';
 }
 
+export function InkBleedFilterDef() {
+  return (
+    <svg className="sr-only pointer-events-none" aria-hidden="true" width="0" height="0">
+      <defs>
+        <filter id="ink-bleed" x="-20%" y="-20%" width="140%" height="140%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" result="noise" />
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.4" xChannelSelector="R" yChannelSelector="G" />
+        </filter>
+      </defs>
+    </svg>
+  );
+}
+
 function SlashedRank({ label, stage, funcValLabel }: { label: string; stage: number; funcValLabel: string | null }) {
   if (stage === 5) {
     return <span title="Entombed (💀)">💀</span>;
@@ -101,39 +114,79 @@ function SlashedRank({ label, stage, funcValLabel }: { label: string; stage: num
       {/* Base rank number - stays in exact fixed position */}
       <span>{label}</span>
 
-      {/* Unified Blue SVG Scar Overlay for Stages 1-4 */}
+      {/* Unified Blue Organic SVG Scar Overlay for Stages 1-4 */}
       {stage >= 1 && (
         <svg
           aria-hidden="true"
-          className="absolute -inset-x-1 -inset-y-0.5 w-[calc(100%+8px)] h-[calc(100%+4px)] pointer-events-none overflow-visible z-20"
-          viewBox="0 0 100 100"
+          className="absolute -inset-x-2 -inset-y-1 w-[calc(100%+16px)] h-[calc(100%+8px)] pointer-events-none overflow-visible z-20"
+          viewBox="-15 -5 130 110"
           preserveAspectRatio="none"
         >
-          {/* Stage 1: Left vertical line */}
-          <line x1="8" y1="5" x2="8" y2="95" stroke="#2563eb" strokeWidth="18" strokeLinecap="round" />
+          {/* Stage 1: Left vertical line with organic stroke wobble */}
+          <path
+            d="M 14 5 Q 6 50 12 95"
+            stroke="#1d4ed8"
+            strokeWidth="18"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            filter="url(#ink-bleed)"
+            className="drop-shadow-[0_0_2px_rgba(37,99,235,0.4)]"
+          />
 
-          {/* Stage 2: Right vertical line */}
+          {/* Stage 2: Right vertical line with organic stroke wobble */}
           {stage >= 2 && (
-            <line x1="92" y1="5" x2="92" y2="95" stroke="#2563eb" strokeWidth="18" strokeLinecap="round" />
+            <path
+              d="M 86 5 Q 94 50 88 95"
+              stroke="#1d4ed8"
+              strokeWidth="18"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              filter="url(#ink-bleed)"
+              className="drop-shadow-[0_0_2px_rgba(37,99,235,0.4)]"
+            />
           )}
 
-          {/* Stage 3: Backslash \ connecting top-left (8,5) to bottom-right (92,95) forming 'N' */}
+          {/* Stage 3: Backslash \ with organic curve */}
           {stage >= 3 && (
-            <line x1="8" y1="5" x2="92" y2="95" stroke="#2563eb" strokeWidth="18" strokeLinecap="round" />
+            <path
+              d="M 12 4 C 36 32 64 65 88 96"
+              stroke="#1d4ed8"
+              strokeWidth="18"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              filter="url(#ink-bleed)"
+              className="drop-shadow-[0_0_2px_rgba(37,99,235,0.4)]"
+            />
           )}
 
-          {/* Stage 4: Forward slash / connecting bottom-left (8,95) to top-right (92,5) forming '|X|' */}
+          {/* Stage 4: Forward slash / forming '|X|' */}
           {stage >= 4 && (
-            <line x1="8" y1="95" x2="92" y2="5" stroke="#2563eb" strokeWidth="18" strokeLinecap="round" />
+            <path
+              d="M 10 96 C 34 66 66 34 90 4"
+              stroke="#1d4ed8"
+              strokeWidth="18"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              filter="url(#ink-bleed)"
+              className="drop-shadow-[0_0_2px_rgba(37,99,235,0.4)]"
+            />
           )}
         </svg>
       )}
 
-      {/* Modified value written in blue ink to the right of the scar box (handwritten style, aligned even with top of base rank) */}
+      {/* Modified value written in blue ink to the right of the scar box */}
       {stage >= 3 && funcValLabel && (
         <span
-          className="absolute left-full ml-1.5 sm:ml-2 top-[-2px] text-[0.825rem] sm:text-sm lg:text-base text-blue-600 font-black leading-none whitespace-nowrap"
-          style={{ fontFamily: '"Caveat", "Architects Daughter", "Comic Sans MS", cursive, sans-serif' }}
+          className="absolute left-full ml-1 sm:ml-1.5 top-[-6px] sm:top-[-8px] lg:top-[-9px] text-[0.95rem] sm:text-base lg:text-lg xl:text-xl font-black leading-none whitespace-nowrap"
+          style={{
+            fontFamily: '"Caveat", "Architects Daughter", "Comic Sans MS", cursive, sans-serif',
+            color: '#1e3a8a',
+            WebkitTextStroke: '0.6px #1d4ed8',
+            textShadow: '0 0 1px #1d4ed8, 0 0 2px rgba(29,78,216,0.8)',
+            fontWeight: 900,
+            transform: 'rotate(-4deg)',
+            filter: 'url(#ink-bleed)',
+          }}
           title={`Modified Effective Value: ${funcValLabel}`}
         >
           {funcValLabel}
@@ -160,20 +213,21 @@ function SuitPip({
       <span className="text-[0.65rem] sm:text-xs font-normal leading-none relative flex items-center justify-center">
         <span>{suit}</span>
 
-        {/* Blessed Hero Mark: Unified Blue Circle Ring */}
+        {/* Blessed Hero Mark: Hand-Drawn Organic Blue Circle Ring */}
         {blessed && (
           <svg
             aria-hidden="true"
             className="absolute -inset-[40%] w-[180%] h-[180%] pointer-events-none overflow-visible z-10"
             viewBox="0 0 100 100"
           >
-            <circle
-              cx="50"
-              cy="50"
-              r="46"
-              stroke="#2563eb"
-              strokeWidth="18"
+            <path
+              d="M 50 6 C 20 4, 3 30, 4 64 C 5 92, 34 98, 68 96 C 96 92, 98 62, 95 34 C 92 8, 60 5, 42 7"
+              stroke="#1d4ed8"
+              strokeWidth="16"
               fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              filter="url(#ink-bleed)"
               className="drop-shadow-[0_0_3px_rgba(37,99,235,0.6)]"
             />
           </svg>
@@ -204,51 +258,48 @@ function AnchorBadge({
       aria-label={badgeTitle}
     >
       <span className="text-[0.65rem] sm:text-xs font-black leading-none relative flex items-center justify-center text-blue-600">
-        {/* Stage 1: Fortifying Horizontal Stroke */}
+        {/* Stage 1: Fortifying Horizontal Pen Stroke */}
         {isFortifying && (
           <svg
             aria-hidden="true"
             className="w-3.5 h-3.5 sm:w-4 sm:h-4 pointer-events-none overflow-visible"
             viewBox="0 0 100 100"
           >
-            <line
-              x1="10"
-              y1="50"
-              x2="90"
-              y2="50"
-              stroke="#2563eb"
-              strokeWidth="20"
+            <path
+              d="M 8 51 Q 50 47 92 53"
+              stroke="#1d4ed8"
+              strokeWidth="18"
               strokeLinecap="round"
+              strokeLinejoin="round"
+              filter="url(#ink-bleed)"
               className="drop-shadow-[0_0_2px_rgba(37,99,235,0.4)]"
             />
           </svg>
         )}
 
-        {/* Stage 2: Anchored Cross (+) */}
+        {/* Stage 2: Anchored Cross (+) Pen Strokes */}
         {rewardStage >= 2 && (
           <svg
             aria-hidden="true"
             className="w-3.5 h-3.5 sm:w-4 sm:h-4 pointer-events-none overflow-visible"
             viewBox="0 0 100 100"
           >
-            <line
-              x1="10"
-              y1="50"
-              x2="90"
-              y2="50"
-              stroke="#2563eb"
-              strokeWidth="20"
+            <path
+              d="M 8 51 Q 50 47 92 53"
+              stroke="#1d4ed8"
+              strokeWidth="18"
               strokeLinecap="round"
+              strokeLinejoin="round"
+              filter="url(#ink-bleed)"
               className="drop-shadow-[0_0_2px_rgba(37,99,235,0.4)]"
             />
-            <line
-              x1="50"
-              y1="10"
-              x2="50"
-              y2="90"
-              stroke="#2563eb"
-              strokeWidth="20"
+            <path
+              d="M 49 8 Q 52 50 47 92"
+              stroke="#1d4ed8"
+              strokeWidth="18"
               strokeLinecap="round"
+              strokeLinejoin="round"
+              filter="url(#ink-bleed)"
               className="drop-shadow-[0_0_2px_rgba(37,99,235,0.4)]"
             />
           </svg>
@@ -336,8 +387,9 @@ export function PlayingCard({
     'w-12 h-[64px] sm:w-[72px] sm:h-[96px] lg:w-[88px] lg:h-[116px] xl:w-[96px] xl:h-[128px] 2xl:w-[108px] 2xl:h-[144px]',
     'rounded-lg sm:rounded-xl border p-1 sm:p-2 lg:p-2.5',
     'grid grid-rows-[auto_1fr_auto] overflow-hidden',
-    faceDown ? 'bg-[#1a1510] border-[#3a2d1d]' : 'bg-game-card-bg disabled:bg-game-card-bg',
+    faceDown ? 'bg-[#1a1510] border-[#3a2d1d]' : 'card-paper-texture disabled:bg-game-card-bg',
     'before:absolute before:inset-[2px] sm:before:inset-[3px] before:border before:border-amber-900/20 before:rounded-[6px] sm:before:rounded-[8px] before:pointer-events-none',
+    'card-tabletop-tilt',
     'transition-[border-color,box-shadow,transform] duration-[120ms] ease-in-out',
     'appearance-none font-[inherit] cursor-pointer select-none',
     'disabled:opacity-100 disabled:cursor-not-allowed',
@@ -353,7 +405,7 @@ export function PlayingCard({
     'relative',
     selected || animatingMatch || animatingError ? 'z-20' : 'z-0',
     blocked && !removed ? 'cursor-not-allowed' : '',
-    removed && !animatingMatch ? 'invisible' : '',
+    removed && !animatingMatch ? 'invisible pointer-events-none' : 'pointer-events-auto',
   ]
     .filter(Boolean)
     .join(' ');
@@ -388,6 +440,7 @@ export function PlayingCard({
       {blocked && !removed && (
         <div className="absolute inset-0 bg-stone-900/30 rounded-lg sm:rounded-xl pointer-events-none z-30" />
       )}
+      <InkBleedFilterDef />
 
       {/* Top row: Top-left corner index & Top-right immunity badge */}
       <div className="flex justify-between items-start">

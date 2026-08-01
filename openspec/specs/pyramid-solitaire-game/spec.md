@@ -84,3 +84,10 @@ Cards that have been removed from the pyramid SHALL NOT reserve visual space in 
 #### Scenario: Removed card collapses in layout
 - **WHEN** a card is removed from the pyramid
 - **THEN** it SHALL no longer occupy space in its row's flex layout
+
+### Requirement: Selection clearing via state handler
+The game engine SHALL expose a function to deselect the currently active card explicitly.
+
+#### Scenario: Deselecting card resets selection
+- **WHEN** `deselectCard` is called
+- **THEN** `selectedCardId` SHALL become `null`

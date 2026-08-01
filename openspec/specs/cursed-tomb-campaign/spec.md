@@ -11,6 +11,10 @@ The campaign SHALL maintain a persistent master deck of 52 cards across multiple
 - **WHEN** a round ends and a new round begins
 - **THEN** cards dealt into the new pyramid SHALL retain all ink marks (Scars, Curses, Blessings, Anchors) earned in previous rounds
 
+#### Scenario: Card mutations persist across debug autoplay resets
+- **WHEN** a game reset or autoplay auto-start occurs during an active campaign
+- **THEN** cards dealt into the active pyramid SHALL maintain all ink marks (Scars, Curses, Blessings, Anchors) from the campaign's master deck rather than resetting to a default 52-card deck
+
 ### Requirement: Functional Value scaling and Retrospective Anchors
 The game SHALL calculate card pairing values dynamically, applying a +1 value shift for Red Scars (stage 3+ Hearts/Diamonds) and a -1 value shift for Black Scars (stage 3+ Spades/Clubs). Functional values SHALL wrap circularly between 1 (Ace) and 13 (King). An Anchor (`[+]`) SHALL prevent future attrition progression but SHALL NOT erase pre-existing Scars or Curses.
 

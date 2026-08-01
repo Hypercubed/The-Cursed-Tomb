@@ -58,6 +58,7 @@ export function DrawZone({
             </svg>
           </div>
           <span className="font-bold text-[0.55rem] sm:text-[0.6rem] tracking-wider uppercase mb-1">{drawButtonLabel}</span>
+          <span className="text-[0.5rem] text-game-muted/70 font-mono bg-amber-900/20 px-1.5 py-0.5 rounded border border-amber-900/30">[Space]</span>
         </button>
         <div className="text-xs text-game-muted mt-2">
           Cycles: {redrawsRemaining === null ? '∞' : redrawsRemaining}

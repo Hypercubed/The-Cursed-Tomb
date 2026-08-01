@@ -442,6 +442,13 @@ export function selectCard(state: GameState, cardId: string): GameState {
   };
 }
 
+export function deselectCard(state: GameState): GameState {
+  return {
+    ...state,
+    selectedCardId: null,
+  };
+}
+
 function removeCard(state: GameState, cardId: string): GameState {
   return {
     ...state,
@@ -709,7 +716,7 @@ export function applyEndOfWeekLifecycle(campaign: CampaignState): CampaignState 
 
       const aIdx = masterDeck.findIndex((c) => c.id === anchorCard.id);
       if (aIdx !== -1) {
-        if (masterDeck[aIdx].attritionStage === 0) {
+        if (masterDeck[aIdx].attritionStage < 3) {
           masterDeck[aIdx].rewardStage = Math.min(2, masterDeck[aIdx].rewardStage + 1) as RewardStage;
         }
       }
@@ -717,7 +724,7 @@ export function applyEndOfWeekLifecycle(campaign: CampaignState): CampaignState 
       const kCard = lastPair[0];
       const kIdx = masterDeck.findIndex((c) => c.id === kCard.id);
       if (kIdx !== -1) {
-        if (masterDeck[kIdx].attritionStage === 0) {
+        if (masterDeck[kIdx].attritionStage < 3) {
           masterDeck[kIdx].rewardStage = Math.min(2, masterDeck[kIdx].rewardStage + 1) as RewardStage;
         }
       }
@@ -858,7 +865,7 @@ export function computeRoundLifecycleEffects(
         heroCard,
         heroAlreadyBlessed: Boolean(beforeHero?.blessed),
         anchorCard,
-        anchorBlockedByScar: (beforeAnchor?.attritionStage ?? 0) > 0,
+        anchorBlockedByScar: (beforeAnchor?.attritionStage ?? 0) >= 3,
         anchorAlreadyMaxed: (beforeAnchor?.rewardStage ?? 0) >= 2,
         isSoloKing: false,
       };
@@ -869,7 +876,7 @@ export function computeRoundLifecycleEffects(
       clearDetails = {
         lastClearedPair: lastPair,
         anchorCard: kCard,
-        anchorBlockedByScar: (beforeKing?.attritionStage ?? 0) > 0,
+        anchorBlockedByScar: (beforeKing?.attritionStage ?? 0) >= 3,
         anchorAlreadyMaxed: (beforeKing?.rewardStage ?? 0) >= 2,
         isSoloKing: true,
       };

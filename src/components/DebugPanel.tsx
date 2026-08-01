@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { GameState } from '../game';
 import { evaluateWinnability, SolverStrategy, WinnabilityStatus } from '../solver';
-
+const DEBUG_PANEL_STORAGE_KEY = 'debugPanelSettings';
 interface DebugPanelProps {
   game: GameState;
   isPlaying: boolean;
@@ -73,8 +73,27 @@ export function DebugPanel({
     };
   }, [game]);
 
+  // Initialize selections from localStorage on first render
+  useEffect(() => {
+    const stored = localStorage.getItem(DEBUG_PANEL_STORAGE_KEY);
+    if (stored) {
+      try {
+        const { strategy: storedStrategy, speedMs: storedSpeed } = JSON.parse(stored);
+        if (storedStrategy) onStrategyChange(storedStrategy as SolverStrategy);
+        if (typeof storedSpeed === 'number') onSpeedChange(storedSpeed);
+      } catch {}
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const isBusy = isThinking || isEvaluating;
   const isActionsDisabled = !isGameRunning || isBusy;
+
+  // Persist strategy and speed changes to localStorage
+  useEffect(() => {
+    const data = { strategy, speedMs };
+    localStorage.setItem(DEBUG_PANEL_STORAGE_KEY, JSON.stringify(data));
+  }, [strategy, speedMs]);
 
   const winnabilityBadge = useMemo(() => {
     if (isBusy && isGameRunning) {

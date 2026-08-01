@@ -25,7 +25,7 @@ export const DIFFICULTY_OPTIONS: DifficultyOption[] = [
     icon: '📜',
     winRate: '25.2%',
     standardWinRate: '25.2%',
-    campaignWinRate: '6.4%',
+    campaignWinRate: '2.9%',
   },
   {
     id: 'explorer',
@@ -37,7 +37,7 @@ export const DIFFICULTY_OPTIONS: DifficultyOption[] = [
     icon: '🧭',
     winRate: '21.2%',
     standardWinRate: '21.2%',
-    campaignWinRate: '3.9%',
+    campaignWinRate: '2.4%',
   },
   {
     id: 'archaeologist',
@@ -49,7 +49,7 @@ export const DIFFICULTY_OPTIONS: DifficultyOption[] = [
     icon: '🔍',
     winRate: '6.4%',
     standardWinRate: '6.4%',
-    campaignWinRate: '0.7%',
+    campaignWinRate: '0.9%',
   },
   {
     id: 'survivalist',
@@ -75,6 +75,7 @@ interface CampaignSetupModalProps {
   volatileCollapse?: boolean;
   onToggleVolatileCollapse?: (enabled: boolean) => void;
   onStartCampaign: (difficulty: number | null, mode?: GameMode, volatileCollapse?: boolean) => void;
+  onOpenFullRules?: () => void;
 }
 
 export function CampaignSetupModal({
@@ -87,6 +88,7 @@ export function CampaignSetupModal({
   volatileCollapse: propVolatile,
   onToggleVolatileCollapse,
   onStartCampaign,
+  onOpenFullRules,
 }: CampaignSetupModalProps) {
   const [internalMode, setInternalMode] = useState<GameMode>('cursed-tomb');
   const [internalVolatile, setInternalVolatile] = useState<boolean>(false);
@@ -203,9 +205,20 @@ export function CampaignSetupModal({
 
           {/* Rules Overview Section */}
           <section className="bg-[#120e0a] border border-[#2d2319] rounded-lg p-4 flex flex-col gap-3">
-            <h3 className="text-sm font-semibold text-game-accent font-display tracking-wider uppercase m-0 flex items-center gap-2 border-b border-[#251e16] pb-2">
-              <span>📜</span> Expedition Rules Overview ({mode === 'cursed-tomb' ? 'Cursed Tomb' : 'Standard'})
-            </h3>
+            <div className="flex items-center justify-between border-b border-[#251e16] pb-2">
+              <h3 className="text-sm font-semibold text-game-accent font-display tracking-wider uppercase m-0 flex items-center gap-2">
+                <span>📜</span> Expedition Rules Overview ({mode === 'cursed-tomb' ? 'Cursed Tomb' : 'Standard'})
+              </h3>
+              {onOpenFullRules && (
+                <button
+                  type="button"
+                  onClick={onOpenFullRules}
+                  className="text-xs text-amber-400 hover:text-amber-200 hover:underline bg-transparent border-none cursor-pointer font-medium flex items-center gap-1 transition-colors"
+                >
+                  <span>📖</span> Read Full Rules
+                </button>
+              )}
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
               <div className="bg-[#18130e] p-3 rounded border border-[#251e16] flex flex-col gap-1">

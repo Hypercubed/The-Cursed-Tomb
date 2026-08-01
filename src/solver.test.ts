@@ -5,6 +5,7 @@ import {
   findNextSmartMove,
   findNextPerfectMove,
   findNextMove,
+  getLegalNextStates,
   evaluateWinnability,
   solveBoard,
   forceWin,
@@ -268,6 +269,101 @@ describe('solver', () => {
       expect(nextState!.vaultCard).toBeDefined();
       expect(nextState!.vaultCard?.suit).toBe('♦');
       expect(nextState!.pyramid[6][0].removed).toBe(true);
+    });
+  });
+
+  describe('hero power targeting mode resolution', () => {
+    it('greedy solver auto-resolves targeting-spades without resigning', () => {
+      const game = startGame(1, 'cursed-tomb');
+      // Inject a face-down card in the pyramid and set targeting-spades mode
+      const customPyramid = game.pyramid.map((row, rIdx) =>
+        row.map((card, cIdx) =>
+          rIdx === 5 && cIdx === 0 ? { ...card, faceDown: true } : card
+        )
+      );
+      const state: GameState = {
+        ...game,
+        pyramid: customPyramid,
+        interactionMode: 'targeting-spades',
+        pendingHeroCardId: '♠A',
+      };
+
+      const nextState = findNextGreedyMove(state);
+      expect(nextState).not.toBeNull();
+      expect(nextState!.status).not.toBe('pyramid-collapse');
+      expect(nextState!.interactionMode).toBe('normal');
+    });
+
+    it('smart solver auto-resolves targeting-spades without resigning', () => {
+      const game = startGame(1, 'cursed-tomb');
+      const customPyramid = game.pyramid.map((row, rIdx) =>
+        row.map((card, cIdx) =>
+          rIdx === 5 && cIdx === 0 ? { ...card, faceDown: true } : card
+        )
+      );
+      const state: GameState = {
+        ...game,
+        pyramid: customPyramid,
+        interactionMode: 'targeting-spades',
+        pendingHeroCardId: '♠A',
+      };
+
+      const nextState = findNextSmartMove(state);
+      expect(nextState).not.toBeNull();
+      expect(nextState!.status).not.toBe('pyramid-collapse');
+      expect(nextState!.interactionMode).toBe('normal');
+    });
+
+    it('perfect solver auto-resolves targeting-spades without resigning', () => {
+      const game = startGame(1, 'cursed-tomb');
+      const customPyramid = game.pyramid.map((row, rIdx) =>
+        row.map((card, cIdx) =>
+          rIdx === 5 && cIdx === 0 ? { ...card, faceDown: true } : card
+        )
+      );
+      const state: GameState = {
+        ...game,
+        pyramid: customPyramid,
+        interactionMode: 'targeting-spades',
+        pendingHeroCardId: '♠A',
+      };
+
+      const nextState = findNextPerfectMove(state);
+      expect(nextState).not.toBeNull();
+      expect(nextState!.status).not.toBe('pyramid-collapse');
+      expect(nextState!.interactionMode).toBe('normal');
+    });
+
+    it('greedy solver auto-resolves targeting-hearts by granting temp immunity', () => {
+      const game = startGame(1, 'cursed-tomb');
+      const state: GameState = {
+        ...game,
+        interactionMode: 'targeting-hearts',
+        pendingHeroCardId: '♥A',
+      };
+
+      const nextState = findNextGreedyMove(state);
+      expect(nextState).not.toBeNull();
+      expect(nextState!.status).not.toBe('pyramid-collapse');
+      expect(nextState!.interactionMode).toBe('normal');
+    });
+
+    it('getLegalNextStates returns only the targeting resolution when mode is active', () => {
+      const game = startGame(1, 'cursed-tomb');
+      const customPyramid = game.pyramid.map((row, rIdx) =>
+        row.map((card, cIdx) =>
+          rIdx === 5 && cIdx === 0 ? { ...card, faceDown: true } : card
+        )
+      );
+      const state: GameState = {
+        ...game,
+        pyramid: customPyramid,
+        interactionMode: 'targeting-spades',
+        pendingHeroCardId: '♠A',
+      };
+      const nexts = getLegalNextStates(state);
+      expect(nexts.length).toBe(1);
+      expect(nexts[0].interactionMode).toBe('normal');
     });
   });
 });

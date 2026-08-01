@@ -1,4 +1,4 @@
-# The Cursed Tomb (Official Ruleset)
+# The Cursed Tomb (Official Ruleset v0.0.9)
 
 A persistent, mutating tactical card game played with a standard 52-card deck and a permanent fine-tip marker. 
 
@@ -24,6 +24,7 @@ The campaign ends in instant defeat if the tomb collapses. The tomb collapses th
 *   **The Stock:** The face-down draw pile.
 *   **The Waste:** The face-up pile where cards flipped from the Stock land.
 *   **The Foundation:** The separate, face-up destination pile where successfully paired and cleared cards are placed. **Cards in the Foundation are completely inert trophies;** they cannot be targeted, moved, or interacted with by any special rules or blessings for the remainder of the game.
+*   **The Vault (Diamond Blessing):** A separate holding area beside the table, distinct from the Foundation. When a ♦ Diamond card with the Fallen Hero blessing (circled suit symbol) is exposed on the Waste pile or the Pyramid layout, it may be **instantly and freely** placed face-up into the Vault without spending an action. A Pyramid Diamond placed in the Vault unblocks the cards beneath it as if it were cleared. The Vaulted card survives all subsequent Waste pile Redeals for the duration of the game and may be paired normally from the Vault at any future point.
 *   **The Graveyard Box:** A separate physical container used to hold dead cards. Cards in the Graveyard Box are permanently removed from the deck pool for the remainder of the campaign.
 
 ---
@@ -61,9 +62,9 @@ When a game freezes and no legal moves remain, you lose the round. Identify all 
 
 *   **Stage 1 `[ |7 ]` (Vulnerable):** 1st Stroke. Single vertical line drawn to the left of the rank number. No mechanical effect.
 *   **Stage 2 `[ |7| ]` (Doubtful):** 2nd Stroke. Single vertical line drawn to the right of the rank number, framing the number (`|N|`). No mechanical effect.
-*   **Stage 3: The Scar `[ |N| ]` (e.g. `|7\| 8`):** 3rd Stroke. Backslash `\` drawn from top-left to bottom-right across the rank number, forming the letter `N` with the two vertical walls. Write the card's new **Functional Value** directly to the right (+1 for Red, -1 for Black).
-*   **Stage 4: The Curse `[ |X| ]` (e.g. `|7X| 8`):** 4th Stroke. Forward slash `/` drawn from bottom-left to top-right across the rank number, completing an `X` framed by walls (`|X|`). Enforces the structural rules defined in Section 4 with the modified functional value written to the right.
-*   **Stage 5: Entombed:** The card is removed from the active deck pool and placed into the Graveyard Box. *(Note: Its Stage 4 Curse mark `[ |X| ]` remains on the card. If later returned to the active deck pool via a ♥ Hearts Resurrection blessing, it returns as a Stage 4 Cursed card, preserving all previous failure ink marks and functional value shifts).*
+*   **Stage 3: The Scar `[ |7̸| 8 ]` (The Shift):** 3rd Stroke. Backslash `\` drawn directly across the rank number from top-left to bottom-right (overlapping the rank digit). Write the card's new **Functional Value** directly to the right (+1 for Red, -1 for Black).
+*   **Stage 4: The Curse `[ |7X| 8 ]` (The Trap/Weight):** 4th Stroke. Forward slash `/` drawn directly across the rank number from bottom-left to top-right (crossing the backslash to form an `X` overlapping the rank digit). Enforces the structural rules defined in Section 4 with the modified functional value written to the right.
+*   **Stage 5: Entombed:** The card is removed from the active deck pool and placed into the Graveyard Box. *(Note: Its Stage 4 Curse mark remains on the card. If later returned to the active deck pool via a ♥ Hearts Resurrection blessing, it returns as a Stage 4 Cursed card, preserving all previous failure ink marks and functional value shifts).*
 
 *Immunity Exception:* If a card possesses a completed **Anchor `[ + ]`** in its upper-right corner, ignore this penalty phase entirely.
 

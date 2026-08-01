@@ -3,9 +3,7 @@
 ## Purpose
 
 Modal UI and flow for viewing game rules, selecting campaign difficulty, and initiating a campaign session.
-
 ## Requirements
-
 ### Requirement: Campaign setup modal presentation on initial load and reset
 The application SHALL display a Campaign Setup Modal when initialized without an active campaign state, and when a player confirms starting a new campaign via the reset confirmation dialog.
 
@@ -29,8 +27,13 @@ The Campaign Setup Modal SHALL allow the user to select one of four global campa
 - **THEN** the modal SHALL close AND a new game SHALL be started with the selected difficulty's redeal limit (Novice: unlimited, Explorer: 2, Archaeologist: 1, Survivalist: 0)
 
 ### Requirement: Rules overview displayed in setup modal
-The Campaign Setup Modal SHALL present a clear overview of the core game rules, objectives, and pairing mechanics.
+The Campaign Setup Modal SHALL present a clear overview of the core game rules, objectives, and pairing mechanics, and provide a direct trigger to open the full Expedition Rules & Compendium modal.
 
 #### Scenario: Rules text is visible in setup modal
 - **WHEN** the Campaign Setup Modal is open
 - **THEN** it SHALL display the rules overview including target sum (13), card rank values, and redeal explanations
+
+#### Scenario: Triggering full rules modal from setup modal
+- **WHEN** the player clicks the "Read Full Expedition Rules" link in the setup modal rules overview
+- **THEN** the Expedition Rules Compendium Modal SHALL open overlaying or replacing the setup modal
+

@@ -15,6 +15,14 @@ interface PyramidBoardProps {
   onMovePyramidToVault?: (cardId: string) => void;
 }
 
+const getCardTiltStyle = (row: number, col: number): React.CSSProperties => {
+  const index = (row * (row + 1)) / 2 + col;
+  const tiltDeg = ((((index * 7 + row * 3 + col * 13) % 9) - 4) * 0.35).toFixed(2);
+  return {
+    '--card-deal-tilt': `${tiltDeg}deg`,
+  } as React.CSSProperties;
+};
+
 const getCollapseStyle = (row: number, col: number): React.CSSProperties => {
   const index = (row * (row + 1)) / 2 + col;
   const delayMs = index * 45;
@@ -43,7 +51,7 @@ export function PyramidBoard({
     <div className={`flex flex-col items-center py-2 sm:py-4 relative ${status === 'pyramid-collapse' ? 'overflow-hidden' : 'overflow-x-auto'}`}>
       {interactionMode === 'targeting-hearts' && (
         <div className="mb-2 px-3 py-1 bg-red-950/90 border border-red-700 text-red-200 text-xs font-semibold rounded-full animate-bounce">
-          ♥ Hearts Martyr: Click one exposed pyramid card to grant temporary Anchor immunity!
+          ♥ Hearts Resurrection: Activate to draw 1 random card from the Graveyard Box back into play!
         </div>
       )}
 
@@ -55,7 +63,7 @@ export function PyramidBoard({
 
       {pyramid.map((row, rowIndex) => (
         <div
-          className={`flex gap-1 sm:gap-2 justify-center ${
+          className={`flex gap-1 sm:gap-2 justify-center pointer-events-none ${
             rowIndex > 0 ? '-mt-8 sm:-mt-12 lg:-mt-14 xl:-mt-16 2xl:-mt-[72px]' : ''
           }`}
           key={rowIndex}
@@ -74,10 +82,15 @@ export function PyramidBoard({
             const isAnimatingMatch = animatingMatchIds.includes(card.id);
             const isAnimatingError = animatingErrorIds.includes(card.id);
             const isCollapsing = status === 'pyramid-collapse' && !card.removed;
+            const cardStyle: React.CSSProperties = {
+              ...getCardTiltStyle(rowIndex, colIndex),
+              ...(isCollapsing ? getCollapseStyle(rowIndex, colIndex) : {}),
+            };
+
             return (
               <div
                 key={card.id}
-                className={`relative ${isTargetable ? 'ring-2 ring-amber-400 rounded-lg sm:rounded-xl shadow-[0_0_12px_rgba(251,191,36,0.8)]' : ''}`}
+                className={`relative pointer-events-none ${isTargetable ? 'ring-2 ring-amber-400 rounded-lg sm:rounded-xl shadow-[0_0_12px_rgba(251,191,36,0.8)]' : ''}`}
               >
                 <PlayingCard
                   rank={card.rank}
@@ -93,7 +106,7 @@ export function PyramidBoard({
                   animatingMatch={isAnimatingMatch}
                   animatingError={isAnimatingError}
                   animatingCollapse={isCollapsing}
-                  style={isCollapsing ? getCollapseStyle(rowIndex, colIndex) : undefined}
+                  style={cardStyle}
                   onClick={() => onCardClick(card.id)}
                 />
               </div>

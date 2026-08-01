@@ -36,7 +36,7 @@ export function RoundSummaryModal({
   const getSuitBlessingDescription = (suit: string) => {
     switch (suit) {
       case '♥':
-        return '♥ Martyr: Grant temporary Anchor immunity to 1 exposed pyramid card';
+        return '♥ Resurrection: Draw 1 random card from the Graveyard Box back into active deck as Stage 4';
       case '♦':
         return '♦ Vault: Free move to Vault slot when top card of Waste pile';
       case '♠':
@@ -62,9 +62,8 @@ export function RoundSummaryModal({
       >
         {/* Modal Header */}
         <div
-          className={`flex items-center justify-between px-6 py-4 border-b border-[#2d2319] ${
-            isVictory ? 'bg-gradient-to-r from-amber-950/80 to-[#120e0a]' : 'bg-gradient-to-r from-red-950/80 to-[#120e0a]'
-          }`}
+          className={`flex items-center justify-between px-6 py-4 border-b border-[#2d2319] ${isVictory ? 'bg-gradient-to-r from-amber-950/80 to-[#120e0a]' : 'bg-gradient-to-r from-red-950/80 to-[#120e0a]'
+            }`}
         >
           <div className="flex items-center gap-3">
             <span className="text-3xl">{isVictory ? '🌟' : '🏺'}</span>
@@ -105,8 +104,8 @@ export function RoundSummaryModal({
                     {effects.clearDetails.anchorBlockedByScar
                       ? 'Rule of Ink Overlap: Card already features upper-right scar marks, so defensive Anchor stroke could not be applied.'
                       : effects.clearDetails.anchorAlreadyMaxed
-                      ? 'Card is already fully Anchored [+].'
-                      : 'Defensive Anchor stroke added! (No Fallen Hero blessing is awarded for Solo King clears).'}
+                        ? 'Card is already fully Anchored [+].'
+                        : 'Defensive Anchor stroke added! (No Fallen Hero blessing is awarded for Solo King clears).'}
                   </p>
                 </div>
               ) : (
@@ -140,8 +139,8 @@ export function RoundSummaryModal({
                         {effects.clearDetails.anchorBlockedByScar
                           ? 'Rule of Ink Overlap: Card features upper-right scar marks, so defensive Anchor stroke [—] cannot be applied.'
                           : effects.clearDetails.anchorAlreadyMaxed
-                          ? 'Already fully Anchored [+].'
-                          : 'Defensive Anchor stroke applied!'}
+                            ? 'Already fully Anchored [+].'
+                            : 'Defensive Anchor stroke applied!'}
                       </span>
                     </div>
                   </div>
@@ -254,7 +253,7 @@ export function RoundSummaryModal({
               {effects.scarred.length > 0 && (
                 <div className="bg-amber-950/30 border border-amber-800/60 rounded-lg p-4 flex flex-col gap-3">
                   <h3 className="text-xs font-semibold text-amber-300 font-display uppercase tracking-wider m-0 flex items-center gap-2">
-                    <span>🩸</span> New Attrition Marks (|# / |#| / |#\|)
+                    <span>🩸</span> New Attrition Marks
                   </h3>
                   <div className="flex flex-col gap-2">
                     {effects.scarred.map((card) => {

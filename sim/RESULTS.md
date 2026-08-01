@@ -69,16 +69,17 @@ This section simulates campaigns with **all Cursed Tomb rules active**: scars, c
 
 | Difficulty          | Redraws | Victory Rate | Collapse Rate | Avg Rounds to Resolve |
 |:--------------------|:-------:|:------------:|:-------------:|:----------------------:|
-| Survivalist         | 0       |   11.20%     |    88.80%     |        184.2           |
-| Archaeologist       | 1       |   20.30%     |    79.70%     |        257.6           |
-| Explorer            | 2       |   37.40%     |    62.60%     |        327.9           |
-| Novice              | ∞       |   49.60%     |    50.40%     |        366.1           |
+| Survivalist         | 0       |    0.00%     |   100.00%     |         97.7           |
+| Archaeologist       | 1       |    0.92%     |    99.08%     |        206.1           |
+| Explorer            | 2       |    2.37%     |    97.63%     |        426.5           |
+| Novice              | ∞       |    2.92%     |    97.08%     |        464.5           |
 
 ### Observations
 
-- **Resurrection Mechanics Balance:** With Hearts Resurrection (random Graveyard pull returning cards as Cursed Stage 4) and Clubs Universal Wildcard, Archaeologist campaign victory rates reach **20.30%** and Explorer reaches **37.40%**, fundamentally balancing campaign survival while preserving Starvation Collapse as a meaningful threat.
+- **Rule of Ink Overlap Fix & Attrition Threshold:** Correcting the Ink Overlap threshold to allow Stage 1 and Stage 2 cards to acquire defensive Anchors accurately reflects legacy card progression across multi-round campaigns.
+- **Resurrection Mechanics Balance:** With Hearts Resurrection (random Graveyard pull returning cards as Cursed Stage 4) and Clubs Universal Wildcard, Archaeologist campaign victory rates reach **0.92%** and Explorer reaches **2.37%** of resolved campaigns under full rules simulation.
 - **Circular Value Shifts ($A \leftrightarrow K$):** Circular modulo shifts eliminate value dead-ends at Ace and King, allowing Black-Scarred Aces (1 - 1 = 13) to act as solo-clearing Kings and Red-Scarred Kings (13 + 1 = 1) to pair with Queens.
-- **Extended Campaign Lifespan:** Average rounds to resolve Explorer campaigns extended from 156.4 to 327.9 rounds as card revivals directly counter early starvation collapse.
+- **Extended Campaign Lifespan:** Average rounds to resolve Explorer campaigns reach 426.5 rounds as card revivals and anchor immunities counter early starvation collapse.
 
 ---
 

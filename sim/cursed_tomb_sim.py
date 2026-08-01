@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-The Cursed Tomb (v1.8) -- Campaign Simulator
+The Cursed Tomb (v0.0.9) -- Campaign Simulator
 =============================================================
 
 Simulates full CAMPAIGNS (not single rounds) of the Cursed Tomb ruleset:
@@ -334,12 +334,12 @@ def _apply_survival_reward(last_clear_type, last_clear_cards, flags):
         higher, lower = (a, b) if va > vb else (b, a)
         if flags.blessings and not higher.blessed:
             higher.blessed = True
-        if lower.attrition_stage == 0:
+        if lower.attrition_stage < 3:
             lower.reward_stage = min(2, lower.reward_stage + 1)
         # else: Ink Overlap -- reward lost
     elif last_clear_type == 'solo':
         card, = last_clear_cards
-        if card.attrition_stage == 0:
+        if card.attrition_stage < 3:
             card.reward_stage = min(2, card.reward_stage + 1)
 
 

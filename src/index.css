@@ -25,6 +25,39 @@ body {
   background-size: 120px 120px, 120px 120px, auto;
 }
 
+/* Tactile Cardstock Paper Texture Overlay */
+.card-paper-texture {
+  background-color: #f5f0e6;
+  background-image:
+    radial-gradient(circle at 50% 40%, rgba(255, 255, 255, 0.45) 0%, transparent 85%),
+    repeating-linear-gradient(
+      45deg,
+      rgba(180, 150, 110, 0.025),
+      rgba(180, 150, 110, 0.025) 2px,
+      transparent 2px,
+      transparent 5px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      rgba(140, 110, 70, 0.02),
+      rgba(140, 110, 70, 0.02) 1px,
+      transparent 1px,
+      transparent 4px
+    );
+}
+
+/* Card Deal Tabletop Rotation & Leveling Transition */
+.card-tabletop-tilt {
+  transform: rotate(var(--card-deal-tilt, 0deg));
+  transition: transform 150ms ease-in-out, border-color 120ms ease-in-out, box-shadow 120ms ease-in-out;
+}
+
+.card-tabletop-tilt:hover,
+.card-tabletop-tilt:focus-visible,
+.card-tabletop-tilt[aria-pressed="true"] {
+  transform: rotate(0deg) scale(1.03) !important;
+}
+
 /* Ambient Flickering Torchlight Vignette Overlay */
 .torch-overlay {
   pointer-events: none;

@@ -6,6 +6,7 @@ import {
   canRemoveSingle,
   checkForWin,
   createCampaign,
+  computeRoundLifecycleEffects,
   createDeck,
   cyclePile,
   dealPyramid,
@@ -401,6 +402,41 @@ describe('Cursed Tomb campaign mechanics', () => {
 
     expect(updatedHigh?.blessed).toBe(true);
     expect(updatedLow?.rewardStage).toBe(1);
+  });
+
+  it('allows Stage 1 and Stage 2 cards to receive Anchor rewards, while blocking Stage 3+ cards via Rule of Ink Overlap', () => {
+    const campaign = createCampaign('cursed-tomb', 1, false);
+    const cardHigh = campaign.masterDeck.find((c) => c.rank === 10)!; // 10
+    const cardLowStage1 = campaign.masterDeck.find((c) => c.rank === 2 && c.suit === '♥')!; // 2 of Hearts
+    cardLowStage1.attritionStage = 1;
+
+    const beforeDeck1 = campaign.masterDeck.map((c) => ({ ...c }));
+    campaign.currentRound.status = 'partial-victory';
+    campaign.currentRound.lastClearedPair = [cardHigh, cardLowStage1];
+
+    const updatedStage1 = applyEndOfWeekLifecycle(campaign);
+    const updatedLow1 = updatedStage1.masterDeck.find((c: CursedCard) => c.id === cardLowStage1.id);
+    expect(updatedLow1?.rewardStage).toBe(1);
+
+    const effects1 = computeRoundLifecycleEffects(beforeDeck1, updatedStage1.masterDeck, campaign.currentRound);
+    expect(effects1.clearDetails?.anchorBlockedByScar).toBe(false);
+
+    // Now test Stage 3 card (Scarred)
+    const campaignStage3 = createCampaign('cursed-tomb', 1, false);
+    const cardHigh3 = campaignStage3.masterDeck.find((c) => c.rank === 10)!;
+    const cardLowStage3 = campaignStage3.masterDeck.find((c) => c.rank === 2 && c.suit === '♥')!;
+    cardLowStage3.attritionStage = 3;
+
+    const beforeDeck3 = campaignStage3.masterDeck.map((c) => ({ ...c }));
+    campaignStage3.currentRound.status = 'partial-victory';
+    campaignStage3.currentRound.lastClearedPair = [cardHigh3, cardLowStage3];
+
+    const updatedStage3 = applyEndOfWeekLifecycle(campaignStage3);
+    const updatedLow3 = updatedStage3.masterDeck.find((c: CursedCard) => c.id === cardLowStage3.id);
+    expect(updatedLow3?.rewardStage).toBe(0); // Blocked
+
+    const effects3 = computeRoundLifecycleEffects(beforeDeck3, updatedStage3.masterDeck, campaignStage3.currentRound);
+    expect(effects3.clearDetails?.anchorBlockedByScar).toBe(true);
   });
 
   it('applies Hero Blessing and Anchor Reward when forceWin is called in campaign mode', () => {

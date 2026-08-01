@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { GameState, startGame } from '../game';
+import { GameState, startGame, initializeGame, createDeck } from '../game';
 import { findNextMove } from '../solver';
 
 describe('useAutoplay', () => {
@@ -106,6 +106,65 @@ describe('useAutoplay', () => {
     thinkingState = false;
     expect(thinkingState).toBe(false);
     expect(state).not.toEqual(game);
+  });
+
+  describe('campaign-aware autoplay resets', () => {
+    it('campaign-aware handleStart uses masterDeck markings instead of fresh deck', () => {
+      // Simulate a campaign masterDeck with scarred cards (attritionStage > 0)
+      const masterDeck = createDeck().map((card, idx) =>
+        idx < 5 ? { ...card, attritionStage: 2 as const } : card
+      );
+      const graveyard: typeof masterDeck = [];
+
+      // Campaign-aware initialization: pass masterDeck + graveyard
+      const newRound = {
+        ...initializeGame(1, 'cursed-tomb', masterDeck, graveyard),
+        status: 'in-progress' as const,
+      };
+
+      // The new round's deck should include scarred cards from the master deck
+      const allCards = [
+        ...newRound.pyramid.flat(),
+        ...newRound.drawPile,
+        ...newRound.discardPile,
+      ];
+      const scarredCards = allCards.filter((c) => c.attritionStage > 0);
+      // At least some of the 5 scarred cards should have been dealt
+      expect(scarredCards.length).toBeGreaterThan(0);
+    });
+
+    it('non-campaign handleStart uses clean default deck', () => {
+      // Standard startGame produces a deck with all attritionStage === 0
+      const newRound = startGame(1, 'standard');
+      const allCards = [
+        ...newRound.pyramid.flat(),
+        ...newRound.drawPile,
+        ...newRound.discardPile,
+      ];
+      const scarredCards = allCards.filter((c) => c.attritionStage > 0);
+      expect(scarredCards.length).toBe(0);
+    });
+
+    it('campaign-aware round preserves blessed card status', () => {
+      const masterDeck = createDeck().map((card, idx) =>
+        idx === 0 ? { ...card, blessed: true } : card
+      );
+      const graveyard: typeof masterDeck = [];
+
+      const newRound = {
+        ...initializeGame(1, 'cursed-tomb', masterDeck, graveyard),
+        status: 'in-progress' as const,
+      };
+
+      const allCards = [
+        ...newRound.pyramid.flat(),
+        ...newRound.drawPile,
+        ...newRound.discardPile,
+      ];
+      const blessedCards = allCards.filter((c) => c.blessed);
+      // The blessed card from the masterDeck should appear in the new round
+      expect(blessedCards.length).toBeGreaterThan(0);
+    });
   });
 });
 

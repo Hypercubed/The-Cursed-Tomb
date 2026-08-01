@@ -14,18 +14,21 @@ import {
   playCard,
   resignGame,
   startGame,
+  initializeGame,
   createCampaign,
   advanceCampaignRound,
   applyEndOfWeekLifecycle,
   computeRoundLifecycleEffects,
   moveWasteToVault,
   movePyramidToVault,
+  deselectCard,
   GameState,
   GameMode,
   CampaignState,
   RoundLifecycleEffects,
 } from './game';
 import { useAutoplay } from './hooks/useAutoplay';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { forceWin, forceLoss } from './solver';
 import { GameShell } from './components/GameShell';
 import { GameSidebar } from './components/GameSidebar';
@@ -35,6 +38,8 @@ import { DrawZone } from './components/DrawZone';
 import { MatchedCardsModal } from './components/MatchedCardsModal';
 import { ResetConfirmationModal } from './components/ResetConfirmationModal';
 import { CampaignSetupModal } from './components/CampaignSetupModal';
+import { RulesModal, RulesTab } from './components/RulesModal';
+import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal';
 import { defaultPersistenceManager, StoredStats, StoredCampaignStats } from './storage/persistence';
 
 const initialState: GameState = {
@@ -85,6 +90,9 @@ function App() {
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const [isCampaignSetupModalOpen, setIsCampaignSetupModalOpen] = useState(() => game.status === 'ready');
   const [isRoundSummaryModalOpen, setIsRoundSummaryModalOpen] = useState(false);
+  const [isRulesModalOpen, setIsRulesModalOpen] = useState(false);
+  const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState(false);
+  const [rulesTab, setRulesTab] = useState<RulesTab>('core-rules');
   const [roundEffects, setRoundEffects] = useState<RoundLifecycleEffects | null>(null);
 
   const handleStart = useCallback(() => {
@@ -94,12 +102,25 @@ function App() {
         setStats(updated);
         setCampaignStats(updatedCampaign);
       }
+      // When a campaign is active, preserve card markings by initializing from the
+      // campaign's master deck and graveyard rather than a fresh default deck.
+      if (campaign && campaign.status === 'active') {
+        return {
+          ...initializeGame(
+            selectedRedraw,
+            selectedMode,
+            campaign.masterDeck,
+            campaign.graveyard
+          ),
+          status: 'in-progress' as const,
+        };
+      }
       return startGame(selectedRedraw, selectedMode);
     });
     setHasRecordedOutcome(false);
     setRoundEffects(null);
     setIsRoundSummaryModalOpen(false);
-  }, [hasRecordedOutcome, selectedRedraw, selectedMode]);
+  }, [campaign, hasRecordedOutcome, selectedRedraw, selectedMode]);
 
   const handleStartCampaign = useCallback(
     (difficulty: number | null, mode: GameMode = 'cursed-tomb', volatile: boolean = false) => {
@@ -327,6 +348,14 @@ function App() {
     setGame((state) => resignGame(state));
   };
 
+  useKeyboardShortcuts({
+    onDrawOrCycle: handleDraw,
+    onDeselect: () => setGame((state) => deselectCard(state)),
+    onNewGame: handleRestart,
+    onToggleHelp: () => setIsShortcutsModalOpen((prev) => !prev),
+    isModalOpen: isResetModalOpen || isCampaignSetupModalOpen || isRoundSummaryModalOpen || isRulesModalOpen || isShortcutsModalOpen,
+  });
+
   const canDraw = game.drawPile.length > 0;
   const canCycle =
     game.drawPile.length === 0 &&
@@ -349,11 +378,15 @@ function App() {
       onStart={handleStart}
       onOpenSetupModal={() => setIsCampaignSetupModalOpen(true)}
       onRestart={handleRestart}
-      onResign={handleResign}
       removedCardsCount={removedCardsCount}
       stats={stats}
       campaignStats={campaignStats}
       onOpenMatchedCardsModal={() => setIsMatchedCardsModalOpen(true)}
+      onOpenRulesModal={(tab?: RulesTab) => {
+        const validTab: RulesTab = typeof tab === 'string' && ['core-rules', 'web-guide', 'card-anatomy'].includes(tab) ? tab : 'core-rules';
+        setRulesTab(validTab);
+        setIsRulesModalOpen(true);
+      }}
     />
   );
 
@@ -371,6 +404,23 @@ function App() {
         </div>
       </div>
       <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => setIsShortcutsModalOpen(true)}
+          className="px-3 py-1.5 bg-[#18130e] border border-amber-900/60 hover:border-amber-600 text-amber-300 rounded-lg text-xs font-semibold hover:bg-[#251d14] transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
+        >
+          <span>⌨️</span> Shortcuts
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setRulesTab('core-rules');
+            setIsRulesModalOpen(true);
+          }}
+          className="px-3 py-1.5 bg-[#18130e] border border-amber-900/60 hover:border-amber-600 text-amber-300 rounded-lg text-xs font-semibold hover:bg-[#251d14] transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
+        >
+          <span>📖</span> Rules & Guide
+        </button>
         {roundEffects && game.status !== 'in-progress' && (
           <button
             type="button"
@@ -419,7 +469,16 @@ function App() {
       <GameShell header={header} sidebar={sidebar} gameStatus={game.status}>
         {/* Board: only shown when game is active */}
         {game.status !== 'ready' && (
-          <div className="bg-game-panel border border-game-border rounded-2xl p-3 sm:p-5 lg:p-6 overflow-hidden">
+          <div className="relative bg-game-panel border border-game-border rounded-2xl p-3 sm:p-5 lg:p-6 overflow-hidden">
+            {game.status === 'in-progress' && (
+              <button
+                type="button"
+                className="absolute top-3 right-3 z-10 appearance-none bg-transparent border border-red-900/50 hover:border-game-red hover:text-game-red text-red-400 rounded-lg text-xs cursor-pointer font-[inherit] px-3 py-1.5 transition-[border-color,color] duration-[120ms]"
+                onClick={handleResign}
+              >
+                Resign
+              </button>
+            )}
             {/* Pyramid — the hero */}
             <PyramidBoard
               pyramid={game.pyramid}
@@ -511,6 +570,21 @@ function App() {
         volatileCollapse={volatileCollapse}
         onToggleVolatileCollapse={setVolatileCollapse}
         onStartCampaign={handleStartCampaign}
+        onOpenFullRules={() => {
+          setRulesTab('core-rules');
+          setIsRulesModalOpen(true);
+        }}
+      />
+
+      <RulesModal
+        isOpen={isRulesModalOpen}
+        onClose={() => setIsRulesModalOpen(false)}
+        initialTab={rulesTab}
+      />
+
+      <KeyboardShortcutsModal
+        isOpen={isShortcutsModalOpen}
+        onClose={() => setIsShortcutsModalOpen(false)}
       />
     </>
   );

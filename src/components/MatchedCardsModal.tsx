@@ -73,10 +73,12 @@ export function MatchedCardsModal({
             <span className="text-2xl text-game-accent">📜</span>
             <div>
               <h2 id="modal-title" className="text-lg font-semibold text-game-text font-display tracking-wider uppercase m-0">
-                Matched Cards Tomb Vault
+                Deck Codex
               </h2>
               <p className="text-xs text-game-muted m-0 mt-0.5">
-                Overview of cleared cards and remaining strategic pair odds
+                {mode === 'cursed-tomb'
+                  ? 'Master campaign deck state, active mutations & remaining pair odds'
+                  : 'Deck matrix overview & remaining strategic pair odds'}
               </p>
             </div>
           </div>
@@ -164,7 +166,7 @@ export function MatchedCardsModal({
 
                       const statusParts: string[] = [];
                       if (isBlessed) {
-                        if (suit === '♥') statusParts.push('Blessed Hero (◯) (Hearts Martyr: Temp Anchor Immunity)');
+                        if (suit === '♥') statusParts.push('Blessed Hero (◯) (Hearts Resurrection: Revive from Graveyard)');
                         else if (suit === '♦') statusParts.push('Blessed Hero (◯) (Diamonds Vault: Store 1 Waste Card)');
                         else if (suit === '♠') statusParts.push('Blessed Hero (◯) (Spades Tunnel: Flip Face-Down Card)');
                         else if (suit === '♣') statusParts.push('Blessed Hero (◯) (Clubs Rally: Redraw Stock)');
@@ -339,7 +341,7 @@ export function MatchedCardsModal({
             onClick={onClose}
             className="appearance-none bg-transparent border border-game-border rounded-lg text-game-text text-sm cursor-pointer font-[inherit] px-5 py-1.5 hover:border-game-accent transition-colors"
           >
-            Close Vault
+            Close Deck Codex
           </button>
         </div>
       </div>

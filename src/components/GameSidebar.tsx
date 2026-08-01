@@ -14,7 +14,6 @@ interface GameSidebarProps {
   onStart: () => void;
   onOpenSetupModal?: () => void;
   onRestart: () => void;
-  onResign: () => void;
   // Progress & Stats panel
   removedCardsCount?: { count: number; total: number; percentage: number };
   stats?: {
@@ -31,6 +30,7 @@ interface GameSidebarProps {
     totalAttempts: number;
   };
   onOpenMatchedCardsModal?: () => void;
+  onOpenRulesModal?: (tab?: 'core-rules' | 'web-guide' | 'card-anatomy') => void;
 }
 
 const buttonClass =
@@ -50,11 +50,11 @@ export function GameSidebar({
   onStart,
   onOpenSetupModal,
   onRestart,
-  onResign,
   removedCardsCount,
   stats,
   campaignStats,
   onOpenMatchedCardsModal,
+  onOpenRulesModal,
 }: GameSidebarProps) {
   const complete = stats?.completeVictories ?? 0;
   const partial = stats?.partialVictories ?? 0;
@@ -69,8 +69,19 @@ export function GameSidebar({
 
       {/* Setup section */}
       <div className="bg-[#18130e] border border-[#2d2319] rounded-lg p-5 shadow-[inset_0_0_8px_rgba(0,0,0,0.5)] z-10">
-        <h2 className="text-base font-semibold text-game-text font-display mt-0 mb-4 tracking-wider uppercase border-b border-[#3d3124] pb-2 flex items-center gap-2">
-          <span className="text-game-accent text-lg">📜</span> Setup
+        <h2 className="text-base font-semibold text-game-text font-display mt-0 mb-4 tracking-wider uppercase border-b border-[#3d3124] pb-2 flex items-center justify-between">
+          <span className="flex items-center gap-2">
+            <span className="text-game-accent text-lg">📜</span> Setup
+          </span>
+          {onOpenRulesModal && (
+            <button
+              type="button"
+              onClick={() => onOpenRulesModal('core-rules')}
+              className="text-xs text-amber-400 hover:text-amber-200 bg-transparent border-none cursor-pointer font-sans normal-case tracking-normal hover:underline flex items-center gap-1 transition-colors"
+            >
+              <span>📖</span> Rules
+            </button>
+          )}
         </h2>
         
         <div className="flex flex-col gap-1.5 text-sm mb-4">
@@ -103,25 +114,22 @@ export function GameSidebar({
             </button>
           )}
 
-          {gameStatus === 'in-progress' && (
-            <button
-              type="button"
-              className="appearance-none bg-transparent border border-red-900/50 hover:border-game-red hover:text-game-red text-red-400 rounded-lg text-sm cursor-pointer font-[inherit] px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed transition-[border-color,color] duration-[120ms]"
-              onClick={onResign}
-            >
-              Resign
-            </button>
-          )}
+
           <button type="button" className={buttonClass} onClick={onRestart}>
-            New Campaign
+            <span className="flex items-center justify-between gap-2">
+              <span>New Campaign</span>
+              <span className="text-[0.65rem] text-game-muted/70 font-mono bg-amber-900/20 px-1.5 py-0.5 rounded border border-amber-900/30 whitespace-nowrap">[N]</span>
+            </span>
           </button>
         </div>
       </div>
 
       {/* Progress & Stats section */}
       <div className="bg-[#18130e] border border-[#2d2319] rounded-lg p-5 shadow-[inset_0_0_8px_rgba(0,0,0,0.5)] z-10">
-        <h2 className="text-base font-semibold text-game-text font-display mt-0 mb-4 tracking-wider uppercase border-b border-[#3d3124] pb-2 flex items-center gap-2">
-          <span className="text-game-accent text-lg">📊</span> Progress & Stats
+        <h2 className="text-base font-semibold text-game-text font-display mt-0 mb-4 tracking-wider uppercase border-b border-[#3d3124] pb-2 flex items-center justify-between">
+          <span className="flex items-center gap-2">
+            <span className="text-game-accent text-lg">📊</span> Progress & Stats
+          </span>
         </h2>
         <dl className="flex flex-col gap-2 text-sm">
           <div>
@@ -155,15 +163,26 @@ export function GameSidebar({
             </dd>
           </div>
         </dl>
-        {onOpenMatchedCardsModal && (
-          <button
-            type="button"
-            className="mt-4 w-full appearance-none bg-[#231b13] border border-[#3d3124] hover:border-game-accent text-game-accent rounded-lg text-sm font-semibold font-display tracking-wide py-2 px-3 cursor-pointer flex items-center justify-center gap-2 transition-colors shadow-sm"
-            onClick={onOpenMatchedCardsModal}
-          >
-            <span>📜</span> View Matched Vault
-          </button>
-        )}
+        <div className="mt-4 flex flex-col gap-2">
+          {onOpenMatchedCardsModal && (
+            <button
+              type="button"
+              className="w-full appearance-none bg-[#231b13] border border-[#3d3124] hover:border-game-accent text-game-accent rounded-lg text-sm font-semibold font-display tracking-wide py-2 px-3 cursor-pointer flex items-center justify-center gap-2 transition-colors shadow-sm"
+              onClick={onOpenMatchedCardsModal}
+            >
+              <span>📜</span> View Deck Codex
+            </button>
+          )}
+          {onOpenRulesModal && (
+            <button
+              type="button"
+              className="w-full appearance-none bg-[#1a140e] border border-[#2d2319] hover:border-amber-700 text-amber-300 rounded-lg text-xs font-medium py-1.5 px-3 cursor-pointer flex items-center justify-center gap-2 transition-colors shadow-sm"
+              onClick={() => onOpenRulesModal()}
+            >
+              <span>📖</span> Expedition Rules & Guide
+            </button>
+          )}
+        </div>
       </div>
     </aside>
   );

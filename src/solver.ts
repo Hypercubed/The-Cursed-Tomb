@@ -9,6 +9,7 @@ import {
   cyclePile,
   moveWasteToVault,
   movePyramidToVault,
+  applyTargetingAction,
   checkForWin,
   resignGame,
   getRemainingPyramidCards,
@@ -19,6 +20,38 @@ import {
 
 export type SolverStrategy = 'greedy' | 'smart' | 'perfect';
 export type WinnabilityStatus = 'complete-victory' | 'partial-victory' | 'unwinnable' | 'deadlocked';
+
+/**
+ * If the game is waiting on a hero-power targeting action (Spades Tunnel or Hearts Resurrection),
+ * automatically selects a valid target card and resolves the interaction mode.
+ * Returns null if no valid target exists (should not happen in a well-formed game state).
+ */
+function resolveTargetingMode(state: GameState): GameState | null {
+  if (state.interactionMode === 'targeting-spades') {
+    // Pick the first blocked face-down card in the pyramid to reveal
+    for (const row of state.pyramid) {
+      for (const card of row) {
+        if (!card.removed && card.faceDown) {
+          return applyTargetingAction(state, card.id);
+        }
+      }
+    }
+    // No face-down card found — just reset the interaction mode to unblock the solver
+    return { ...state, interactionMode: 'normal', pendingHeroCardId: null };
+  }
+
+  if (state.interactionMode === 'targeting-hearts') {
+    // Pick the first exposed (unblocked, face-up) pyramid card to grant temporary immunity
+    const exposed = visibleCards(state.pyramid);
+    if (exposed.length > 0) {
+      return applyTargetingAction(state, exposed[0].id);
+    }
+    // No exposed card — just reset the interaction mode
+    return { ...state, interactionMode: 'normal', pendingHeroCardId: null };
+  }
+
+  return null;
+}
 
 /**
  * Evaluates whether any playable card removal (King, pyramid pair, or pyramid/discard pair)
@@ -90,6 +123,11 @@ export function isGamePlayable(state: GameState): boolean {
 export function findNextGreedyMove(state: GameState): GameState | null {
   if (state.status !== 'in-progress') {
     return null;
+  }
+
+  // Resolve any pending hero power targeting before continuing normal move selection
+  if (state.interactionMode && state.interactionMode !== 'normal') {
+    return resolveTargetingMode(state);
   }
 
   const visiblePyramid = visibleCards(state.pyramid);
@@ -173,6 +211,12 @@ export function findNextGreedyMove(state: GameState): GameState | null {
  */
 export function getLegalNextStates(state: GameState): GameState[] {
   if (state.status !== 'in-progress') return [];
+
+  // When a hero targeting action is pending, only the resolved targeting state is a legal next state
+  if (state.interactionMode && state.interactionMode !== 'normal') {
+    const resolved = resolveTargetingMode(state);
+    return resolved ? [resolved] : [];
+  }
 
   const cleanState = state.selectedCardId ? { ...state, selectedCardId: null } : state;
   const visiblePyramid = visibleCards(cleanState.pyramid);
@@ -284,6 +328,11 @@ function scoreCandidateState(prevState: GameState, candidateState: GameState): n
 export function findNextSmartMove(state: GameState): GameState | null {
   if (state.status !== 'in-progress') return null;
 
+  // Resolve any pending hero power targeting before continuing normal move selection
+  if (state.interactionMode && state.interactionMode !== 'normal') {
+    return resolveTargetingMode(state);
+  }
+
   if (!isGamePlayable(state)) {
     return resignGame(state);
   }
@@ -390,6 +439,11 @@ export function solveBoard(
  */
 export function findNextPerfectMove(state: GameState): GameState | null {
   if (state.status !== 'in-progress') return null;
+
+  // Resolve any pending hero power targeting before running the graph search
+  if (state.interactionMode && state.interactionMode !== 'normal') {
+    return resolveTargetingMode(state);
+  }
 
   if (!isGamePlayable(state)) {
     return resignGame(state);
