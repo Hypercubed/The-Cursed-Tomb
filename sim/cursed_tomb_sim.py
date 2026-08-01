@@ -91,6 +91,7 @@ class CardState:
         v = RANK_VALUES[self.rank]
         if flags.scars and self.attrition_stage >= 3:  # scar effect persists through curse stage too
             v += 1 if self.suit in RED else -1
+            v = ((v - 1) % 13) + 1  # Circular A <-> K modulo wrapping (1..13)
         return v
 
     def is_black_cursed(self, flags):
@@ -140,13 +141,14 @@ def newly_exposed_after(removed, locks, extra_removed):
 
 
 def pair_sum(card_a, card_b, flags):
-    """Sum used for a proposed pairing, honoring the Clubs (Equalizer) blessing:
-    if one side is a Clubs Fallen Hero, the OTHER side is read at its base
-    printed value instead of its (possibly scarred) functional value."""
+    """Sum used for a proposed pairing, honoring the Clubs (Universal Wildcard) blessing:
+    if one side is a Clubs Fallen Hero, it can pair with ANY card (treating sum as TARGET)."""
     a_is_clubs_hero = flags.blessings and card_a.blessed and card_a.suit == 'C'
     b_is_clubs_hero = flags.blessings and card_b.blessed and card_b.suit == 'C'
-    val_a = card_a.base_value() if b_is_clubs_hero else card_a.functional_value(flags)
-    val_b = card_b.base_value() if a_is_clubs_hero else card_b.functional_value(flags)
+    if a_is_clubs_hero or b_is_clubs_hero:
+        return TARGET
+    val_a = card_a.functional_value(flags)
+    val_b = card_b.functional_value(flags)
     return val_a + val_b
 
 
@@ -158,10 +160,12 @@ class RoundOutcome:
     last_clear_cards: tuple = None
 
 
-def play_round(pool, rng, max_redeals, flags, max_moves=4000):
+def play_round(pool, rng, max_redeals, flags, max_moves=4000, full_registry=None):
     """Plays one round in-place against the persistent CardState objects in
     `pool` (mutating attrition/reward/blessed/temp_immune fields as events
     happen). `pool` must have length >= 28. Returns a RoundOutcome."""
+    if full_registry is None:
+        full_registry = pool
     rng.shuffle(pool)
     pyr = pool[:N_PYR]
     stock = list(pool[N_PYR:])
@@ -190,18 +194,17 @@ def play_round(pool, rng, max_redeals, flags, max_moves=4000):
         """Blessing side-effects that trigger whenever a blessed card clears."""
         if not flags.blessings or not card.blessed:
             return
-        if card.suit == 'H':  # Martyr: grant temp immunity to the most at-risk exposed card
-            exp = exposed_slots(removed, locks)
-            candidates = [pyr[i] for i in exp if pyr[i] is not card]
-            if candidates:
-                target_card = max(candidates, key=lambda c: c.attrition_stage)
-                target_card.temp_immune = True
+        if card.suit == 'H':  # Resurrection: draw 1 random card from Graveyard Box as Stage 4 (Cursed)
+            entombed = [c for c in full_registry if c.attrition_stage == 5]
+            if entombed:
+                revived = rng.choice(entombed)
+                revived.attrition_stage = 4
         elif card.suit == 'S':  # Tunnel: flip one locked/face-down card free
             for slot, lockers in list(locks.items()):
                 if slot not in removed and any(l not in removed for l in lockers):
                     locks[slot] = set()
                     break
-        # Diamonds (Vault) handled at draw time; Clubs (Equalizer) handled in pair_sum
+        # Diamonds (Vault) handled at draw time; Clubs (Universal Wildcard) handled in pair_sum
 
     while moves_played < max_moves:
         if len(removed) == N_PYR:
@@ -352,7 +355,7 @@ def run_campaign(rng, max_redeals, flags, max_rounds):
         if len(active) < N_PYR:
             return {"result": "collapse_starvation", "rounds": rounds_played}
 
-        outcome = play_round(active, rng, max_redeals, flags)
+        outcome = play_round(active, rng, max_redeals, flags, full_registry=registry)
 
         if outcome.kind == 'perfect_win':
             return {"result": "victory", "rounds": rounds_played}

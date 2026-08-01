@@ -69,16 +69,16 @@ This section simulates campaigns with **all Cursed Tomb rules active**: scars, c
 
 | Difficulty          | Redraws | Victory Rate | Collapse Rate | Avg Rounds to Resolve |
 |:--------------------|:-------:|:------------:|:-------------:|:----------------------:|
-| Survivalist         | 0       |    0.00%     |    100.00%    |         94.1           |
-| Archaeologist       | 1       |    1.30%     |     98.70%    |        127.8           |
-| Explorer            | 2       |    6.90%     |     93.10%    |        156.4           |
-| Novice              | ∞       |   10.90%     |     89.10%    |        160.8           |
+| Survivalist         | 0       |   11.20%     |    88.80%     |        184.2           |
+| Archaeologist       | 1       |   20.30%     |    79.70%     |        257.6           |
+| Explorer            | 2       |   37.40%     |    62.60%     |        327.9           |
+| Novice              | ∞       |   49.60%     |    50.40%     |        366.1           |
 
 ### Observations
 
-- **Collapse remains the primary failure mode.** Even with Pyramid Diamond Self-Vaulting, ~93% of Explorer campaigns collapse due to card attrition, maintaining the game's core survival challenge.
-- **Pyramid Self-Vaulting improves win rates meaningfully.** Enabling exposed Diamond Heroes (`♦ [O]`) to move directly from the Pyramid into the Vault increases Explorer victory rates from 3.90% to 6.90% (+77% relative boost) and Novice mode victory rates from 6.40% to 10.90%.
-- **Faster campaign resolutions.** Average rounds to resolve Explorer victory/collapse decreased from 164.1 to 156.4 rounds as players gain tactical unblocking opportunities.
+- **Resurrection Mechanics Balance:** With Hearts Resurrection (random Graveyard pull returning cards as Cursed Stage 4) and Clubs Universal Wildcard, Archaeologist campaign victory rates reach **20.30%** and Explorer reaches **37.40%**, fundamentally balancing campaign survival while preserving Starvation Collapse as a meaningful threat.
+- **Circular Value Shifts ($A \leftrightarrow K$):** Circular modulo shifts eliminate value dead-ends at Ace and King, allowing Black-Scarred Aces (1 - 1 = 13) to act as solo-clearing Kings and Red-Scarred Kings (13 + 1 = 1) to pair with Queens.
+- **Extended Campaign Lifespan:** Average rounds to resolve Explorer campaigns extended from 156.4 to 327.9 rounds as card revivals directly counter early starvation collapse.
 
 ---
 

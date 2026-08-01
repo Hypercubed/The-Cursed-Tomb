@@ -1,4 +1,4 @@
-# The Cursed Tomb (Official Ruleset v1.8)
+# The Cursed Tomb (Official Ruleset)
 
 A persistent, mutating tactical card game played with a standard 52-card deck and a permanent fine-tip marker. 
 
@@ -37,9 +37,9 @@ Before beginning the campaign, select your global difficulty setting. This dicta
 *   **Survivalist (Hard):** 0 Redeals allowed (1 single pass through the Stock deck).
 
 ### Spatial Layout & Ink Zones
-Ink modifications must be strictly confined to two separate visual zones:
-*   **Upper-Right Corner (The Downward Path):** Reserved exclusively for failure track lines, Scars, and Curses (`|`, `||`, `N`, `|X|`).
-*   **Upper-Left Corner (The Upward Path):** Reserved exclusively for success upgrades, including Anchor lines (`—`, `+`) and circled Suit Blessings (`[ O ]` drawn directly around the left printed suit pip).
+Ink modifications must be strictly confined to distinct visual zones:
+*   **Upper-Left Corner Index:** Reserved exclusively for Rank modification marks, Scars, and Curses (`|`, `||`, `N`, `|X|`) drawn over the rank number pip, and Fallen Hero Suit Blessings (`[ (♦) ]`) drawn as a circle directly enclosing the printed suit pip.
+*   **Upper-Right Corner Margin (and Bottom-Left in 180° rotation):** Reserved exclusively for defensive Immunity Anchor marks (`—` for Fortifying, `+` for Anchored).
 
 ---
 
@@ -47,49 +47,50 @@ Ink modifications must be strictly confined to two separate visual zones:
 Deal 28 cards face-up into a standard pyramid layout consisting of 7 rows. The remaining cards form the face-down **Stock Pile**. Cards are cleared by pairing exposed cards that add up to a Functional Value of exactly **13** (e.g., A + Q, 6 + 7). Standard Kings have a value of 13 and clear themselves singly into the Foundation.
 
 ### The Traps & Modifications Modifiers
-1.  **Value Shifts:** If a card has an upper-right **Scar `[ N ]`**, its functional value is modified for the duration of the game (+1 for Red, -1 for Black).
-2.  **Red Curses `[ |X| ]` (The Trap):** When dealing the pyramid, once a Red Curse card is placed into a row, the overlapping cards placed into the next lower row must be dealt face-down. Face-down cards are revealed (flipped face-up) as soon as they become exposed and playable (or when targeted by a ♠ Spades Hero blessing). *(Note: This means Red Curses have no mechanical face-down effect when dealt in the last or second-to-last row, since there are either no rows beneath them or the cards in the bottom row are exposed immediately at the start of play.)*
+1.  **Value Shifts:** If a card has a **Scar** marked across its rank number pip (`|7̸| 8`), its functional value is modified for the duration of the game (+1 for Red, -1 for Black), with the effective modified value written directly to the right of the slashed base rank. *Functional values wrap circularly between 1 (Ace) and 13 (King); a -1 shift on a Black Ace wraps to value 13 (allowing it to clear solo as a King), and a +1 shift on a Red King wraps to value 1 (allowing it to pair with a Queen).*
+2.  **Red Curses `[ |X| ]` (The Trap):** When dealing the pyramid, once a Red Curse card (`|X|`) is placed into a row, the overlapping cards placed into the next lower row must be dealt face-down. Face-down cards are revealed (flipped face-up) as soon as they become exposed and playable (or when targeted by a ♠ Spades Hero blessing). *(Note: This means Red Curses have no mechanical face-down effect when dealt in the last or second-to-last row, since there are either no rows beneath them or the cards in the bottom row are exposed immediately at the start of play.)*
 3.  **Black Curses `[ |X| ]` (The Weight):** This card cannot be paired with cards drawn from the Stock or Waste pile. It can *only* be paired with another exposed card located inside the pyramid structure. Its matching partner can be any exposed card in the layout—regardless of that partner's own blessing, scar, or curse status—so long as their combined functional values total exactly 13.
-4.  **The Scarred Hero Interaction:** A single card can be both Blessed (Upper-Left) and Cursed (Upper-Right). It enforces its math shift and layout trap while in the pyramid, but successfully clearing it still unleashes its Suit Blessing.
-5.  **Retrospective Anchor Rules:** An Anchor `[ + ]` stops *future* degradation. If a card already has a Scar or Curse, those ink marks remain active; the Anchor simply blocks the card from progressing to Stage 5 (Entombed).
+4.  **The Scarred Hero Interaction:** A single card can be both Blessed (encircling the suit pip `(♦)`) and Cursed (crossing the rank pip `|X|`). It enforces its math shift and layout trap while in the pyramid, but successfully clearing it still unleashes its Suit Blessing.
+5.  **Retrospective Anchor Rules:** An Anchor `[ + ]` drawn in the card's upper-right corner stops *future* degradation. If a card already has a Scar or Curse, those ink marks remain active; the Anchor simply blocks the card from progressing to Stage 5 (Entombed).
+6.  **180° Symmetry:** For physical deck play, all pen strokes are marked symmetrically (scars, curses, and blessings in top-left/bottom-right corners; anchors in top-right/bottom-left corners) so cards remain readable when rotated.
 
 ---
 
-## ── 5. THE ATTRITION TRACK (UPPER-RIGHT) ──
-When a game freezes and no legal moves remain, you lose the round. Identify all **Bottlenecks**—every card left completely exposed at the lowest remaining base tiers of the frozen pyramid. Add exactly one straight pen stroke to the Upper-Right corner of each bottleneck card to progress it down the failure track:
+## ── 5. THE ATTRITION TRACK (RANK PIP MARKS) ──
+When a game freezes and no legal moves remain, you lose the round. Identify all **Bottlenecks**—every card left completely exposed at the lowest remaining base tiers of the frozen pyramid. Add pen strokes directly to the **Rank Number Pip** in both corner indices (top-left and bottom-right) to progress each bottleneck card down the failure track:
 
-*   **Stage 1 `[ | ]` (Vulnerable):** 1st Line. Single vertical line. No mechanical effect.
-*   **Stage 2 `[ || ]` (Doubtful):** 2nd Line. Parallel vertical line. No mechanical effect.
-*   **Stage 3: The Scar `[ N ]`:** 3rd Line. Connect with a diagonal line. The card's **Functional Value** permanently shifts (+1 for Red, -1 for Black).
-*   **Stage 4: The Curse `[ |X| ]`:** 4th Line. Draw the opposing diagonal line to close the box. Enforces the structural rules defined in Section 4.
-*   **Stage 5: Entombed `[ X ]`:** Deface Face. Draw a massive cross through the center face. The card is dead. Move it permanently into the Graveyard Box.
+*   **Stage 1 `[ |7 ]` (Vulnerable):** 1st Stroke. Single vertical line drawn to the left of the rank number. No mechanical effect.
+*   **Stage 2 `[ |7| ]` (Doubtful):** 2nd Stroke. Single vertical line drawn to the right of the rank number, framing the number (`|N|`). No mechanical effect.
+*   **Stage 3: The Scar `[ |N| ]` (e.g. `|7\| 8`):** 3rd Stroke. Backslash `\` drawn from top-left to bottom-right across the rank number, forming the letter `N` with the two vertical walls. Write the card's new **Functional Value** directly to the right (+1 for Red, -1 for Black).
+*   **Stage 4: The Curse `[ |X| ]` (e.g. `|7X| 8`):** 4th Stroke. Forward slash `/` drawn from bottom-left to top-right across the rank number, completing an `X` framed by walls (`|X|`). Enforces the structural rules defined in Section 4 with the modified functional value written to the right.
+*   **Stage 5: Entombed:** The card is removed from the active deck pool and placed into the Graveyard Box. *(Note: Its Stage 4 Curse mark `[ |X| ]` remains on the card. If later returned to the active deck pool via a ♥ Hearts Resurrection blessing, it returns as a Stage 4 Cursed card, preserving all previous failure ink marks and functional value shifts).*
 
-*Immunity Exception:* If a card possesses a completed **Anchor `[ + ]`** in its upper-left corner, ignore this penalty phase entirely.
+*Immunity Exception:* If a card possesses a completed **Anchor `[ + ]`** in its upper-right corner, ignore this penalty phase entirely.
 
 ---
 
-## ── 6. THE SURVIVAL REWARDS (UPPER-LEFT) ──
+## ── 6. THE SURVIVAL REWARDS (SUIT PIP MARKS) ──
 If you completely clear all 28 cards from the pyramid layout but have leftover cards remaining in the Stock or Waste piles, you achieve a **Pyramid Clear**. Unlocked suit blessings carry over permanently and trigger across all subsequent rounds of the campaign.
 
-**Card-Specific Legacy Unlocks:** A suit blessing `[ O ]` applies strictly to the individual physical card it is drawn upon. While multiple separate cards in your deck can acquire the same suit blessing over the course of the campaign (creating multiple distinct Hero cards), each instance triggers independently when that specific card is cleared.
+**Card-Specific Legacy Unlocks:** A suit blessing `[ (♦) ]` applies strictly to the individual physical card it is drawn upon. While multiple separate cards in your deck can acquire the same suit blessing over the course of the campaign (creating multiple distinct Hero cards), each instance triggers independently when that specific card is cleared.
 
 Isolate the **final visual transaction** used to remove the last card(s) from the board:
 
 ### A. The Final Pair Clear
 Compare the final two cards' active Functional Values:
-*   **The Higher-Value Card becomes the Fallen Hero:** Circle its left printed suit icon `[ O ]` to permanently unlock its blessing for all future games. *(If already circled, skip this effect).*
-    *   ♥ **Hearts (The Martyr):** When cleared, temporarily treat one other pyramid card as a fully immune Anchor `[ + ]` for the remainder of this single game.
+*   **The Higher-Value Card becomes the Fallen Hero:** Draw a circle completely enclosing its printed suit symbol `[ (♦) ]` in both corner indices to permanently unlock its blessing for all future games. *(If already circled, skip this effect).*
+    *   ♥ **Hearts (Resurrection):** When cleared, draw 1 **random card** blindly from the physical Graveyard Box container and shuffle it back into your active deck pool as Stage 4 (Cursed), preserving all ink marks. *(If the Graveyard Box is empty, no action is taken).*
     *   ♦ **Diamonds (The Vault):** When exposed on the Waste pile OR on the Pyramid layout, you may instantly place this card face-up into a separate area on the side of the table (the Diamond Vault slot). **This action is completely free and does not interrupt your turn.** Placing a Pyramid Diamond card into the Vault unblocks cards beneath it. You may immediately proceed to draw a new stock card, interact with the layout, or choose to pair the newly vaulted Diamond right away. It survives all subsequent Waste pile Redeals for the duration of this game.
     *   ♠ **Spades (The Tunnel):** When cleared, immediately flip one face-down card in the pyramid layout face-up.
-    *   ♣ **Clubs (The Equalizer):** When pairing, this card forces its partner to completely ignore all active `[ N ]` value shifts, treating it strictly by its original Printed Rank.
-*   **The Lower-Value Card builds the Anchor:** Progress its defensive upper-left track by one stroke:
-    *   *First Stroke `[ — ]` (Fortifying):* Draw a single horizontal line. No mechanical effect yet.
-    *   *Second Stroke `[ + ]` (Anchored):* Cross it vertically. The card is now permanently immune to upper-right loss marks.
+    *   ♣ **Clubs (Universal Wildcard):** When pairing, this card can legally pair with **ANY exposed card** regardless of that partner card's functional value (treating the combined sum as 13).
+*   **The Lower-Value Card builds the Anchor:** Progress its defensive immunity track by one stroke in the upper-right corner margin (and bottom-left corner rotated 180°):
+    *   *First Stroke `[ — ]` (Fortifying):* Draw a single bold dark horizontal line in the upper-right corner margin. No mechanical effect yet.
+    *   *Second Stroke `[ + ]` (Anchored):* Cross it vertically with a bold dark stroke (`+`) in the upper-right corner margin. The card is now permanently immune to rank loss marks.
 
 ### B. The Sibling Clear (Solo King Clear)
-If the final card clearing the board is a standalone King, it acts as both structural points. Progress its upper-left Anchor track by one stroke (`[ — ]` or `[ + ]`). No Fallen Hero blessing is awarded.
+If the final card clearing the board is a standalone King, it acts as both structural points. Progress its upper-right Anchor track by one stroke (`[ — ]` or `[ + ]`). No Fallen Hero blessing is awarded.
 
-*Rule of Ink Overlap:* If a selected card already features ink lines in its upper-right corner from the failure track, it cannot become an Anchor; the horizontal stroke `[ — ]` cannot be applied and the defensive reward is lost. Ink never moves backward.
+*Rule of Ink Overlap:* If a selected card already features Stage 3 or 4 Attrition marks (`|N|`, `|X|`) from the failure track, it cannot become an Anchor; the horizontal stroke `[ — ]` cannot be applied and the defensive reward is lost. Ink never moves backward.
 
 ---
 

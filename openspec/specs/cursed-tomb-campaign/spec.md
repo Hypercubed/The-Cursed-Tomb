@@ -3,9 +3,7 @@
 ## Purpose
 
 Defines rules and mechanics for multi-round Cursed Tomb campaigns, including deck persistence, card mutations (attrition/scars/curses/blessings/anchors), lifecycle phases, trap mechanics, and campaign end conditions.
-
 ## Requirements
-
 ### Requirement: Persistent 52-card deck with mutation tracking
 The campaign SHALL maintain a persistent master deck of 52 cards across multiple rounds, tracking their Attrition Stage (0-5: None, Vulnerable, Doubtful, Scar, Curse, Entombed), Reward Stage (0-2: None, Fortifying `[—]`, Anchored `[+]`), Blessed status (`[O]`), and Graveyard status.
 
@@ -14,7 +12,7 @@ The campaign SHALL maintain a persistent master deck of 52 cards across multiple
 - **THEN** cards dealt into the new pyramid SHALL retain all ink marks (Scars, Curses, Blessings, Anchors) earned in previous rounds
 
 ### Requirement: Functional Value scaling and Retrospective Anchors
-The game SHALL calculate card pairing values dynamically, applying a +1 value shift for Red Scars (stage 3+ Hearts/Diamonds) and a -1 value shift for Black Scars (stage 3+ Spades/Clubs). An Anchor (`[+]`) SHALL prevent future attrition progression but SHALL NOT erase pre-existing Scars or Curses.
+The game SHALL calculate card pairing values dynamically, applying a +1 value shift for Red Scars (stage 3+ Hearts/Diamonds) and a -1 value shift for Black Scars (stage 3+ Spades/Clubs). Functional values SHALL wrap circularly between 1 (Ace) and 13 (King). An Anchor (`[+]`) SHALL prevent future attrition progression but SHALL NOT erase pre-existing Scars or Curses.
 
 #### Scenario: Scarred Red card acts as higher value
 - **WHEN** a Red card (e.g., ♥ Queen, printed rank 12) has Attrition Stage 3 or 4
@@ -24,12 +22,21 @@ The game SHALL calculate card pairing values dynamically, applying a +1 value sh
 - **WHEN** a Black card (e.g., ♠ 10, printed rank 10) has Attrition Stage 3 or 4
 - **THEN** its Functional Value SHALL be evaluated as 9
 
+#### Scenario: Scarred Black Ace wraps circularly to 13
+- **WHEN** a Black Ace (e.g., ♠ Ace, printed rank 1) has Attrition Stage 3 or 4
+- **THEN** its Functional Value SHALL wrap to 13 AND it SHALL be clearable solo as a King
+
+#### Scenario: Scarred Red King wraps circularly to 1
+- **WHEN** a Red King (e.g., ♥ King, printed rank 13) has Attrition Stage 3 or 4
+- **THEN** its Functional Value SHALL wrap to 1 AND it SHALL be pairable with a Queen (functional value 12)
+
 ### Requirement: Attrition Phase on game freeze
-When a round freezes (pyramid collapse), the campaign SHALL identify Bottlenecks (exposed cards at lowest remaining base tiers of the frozen pyramid) and increment their Attrition Stage by one stroke unless they possess a completed Anchor (`[+]`) or active temporary immunity.
+When a round freezes (pyramid collapse), the campaign SHALL identify Bottlenecks (exposed cards at lowest remaining base tiers of the frozen pyramid) and increment their Attrition Stage by exactly one stroke unless they possess a completed Anchor (`[+]`) or active temporary immunity. End-of-round attrition SHALL be applied strictly once per failed round.
 
 #### Scenario: Bottleneck card gains an attrition mark
 - **WHEN** a round freezes AND an exposed pyramid card is not Anchored
-- **THEN** its Attrition Stage SHALL increase by 1
+- **THEN** its Attrition Stage SHALL increase by exactly 1 upon round completion
+- **AND** advancing to the subsequent round SHALL NOT re-apply attrition for the already processed round
 
 #### Scenario: Entombed card moves to Graveyard
 - **WHEN** an attrition mark increases a card's Attrition Stage to 5
@@ -64,21 +71,22 @@ The game SHALL enforce structural traps for Stage 4 Cursed cards.
 ### Requirement: Suit Blessing powers
 The game SHALL enforce the persistent powers of Hero Cards when cleared or exposed.
 
-#### Scenario: Hearts Martyr blessing
+#### Scenario: Hearts Resurrection blessing
 - **WHEN** a Blessed Hearts card is cleared
-- **THEN** the player SHALL be prompted to select one exposed pyramid card to treat as a fully immune Anchor (`[+]`) for the remainder of the current round
+- **THEN** the game SHALL draw 1 random card from the Graveyard Box (if non-empty) AND return it to the active campaign pool as Attrition Stage 4 (Cursed)
+- **AND** IF the Graveyard Box is empty, no action SHALL be taken
 
 #### Scenario: Diamonds Vault blessing
 - **WHEN** a Blessed Diamonds card is exposed on top of the Waste pile OR is exposed in the Pyramid layout
-- **THEN** the player MAY move it for free into the Diamond Vault slot adjacent to the Waste pile provided the Diamond Vault slot is empty
+- **THEN** the player MAY move it for free into the Diamond Vault slot adjacent to the Waste pile by selecting the card and clicking the empty Diamond Vault slot provided the Diamond Vault slot is empty
 
 #### Scenario: Spades Tunnel blessing
 - **WHEN** a Blessed Spades card is cleared
 - **THEN** the player SHALL be prompted to select one face-down card to flip face-up
 
-#### Scenario: Clubs Equalizer blessing
-- **WHEN** a Blessed Clubs card is paired with another card
-- **THEN** its partner card SHALL ignore any active Scar value shift and be evaluated strictly by its original Printed Rank
+#### Scenario: Clubs Universal Wildcard blessing
+- **WHEN** a Blessed Clubs card is paired with another exposed card
+- **THEN** it SHALL legally pair with ANY exposed card regardless of the partner card's functional value
 
 ### Requirement: Campaign End & Audit Conditions (Starvation and Volatile Collapse)
 The campaign engine SHALL audit active deck pool size and Graveyard counts between rounds.
@@ -90,3 +98,4 @@ The campaign engine SHALL audit active deck pool size and Graveyard counts betwe
 #### Scenario: Volatile Collapse variant condition
 - **WHEN** the Volatile Collapse rule is enabled AND all 4 cards of any printed rank reside in the Graveyard Box
 - **THEN** the campaign SHALL end in instant defeat (Tomb Collapse)
+

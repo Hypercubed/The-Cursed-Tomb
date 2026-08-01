@@ -250,16 +250,35 @@ export function RoundSummaryModal({
                 </div>
               )}
 
-              {/* Scarred Cards */}
+              {/* Scarred / Attrition Cards */}
               {effects.scarred.length > 0 && (
                 <div className="bg-amber-950/30 border border-amber-800/60 rounded-lg p-4 flex flex-col gap-3">
                   <h3 className="text-xs font-semibold text-amber-300 font-display uppercase tracking-wider m-0 flex items-center gap-2">
-                    <span>🩸</span> New Scarred Cards (|| / |||)
+                    <span>🩸</span> New Attrition Marks (|# / |#| / |#\|)
                   </h3>
                   <div className="flex flex-col gap-2">
                     {effects.scarred.map((card) => {
                       const fVal = getFunctionalValue(card, mode);
                       const isRed = card.suit === '♥' || card.suit === '♦';
+                      const stage = card.attritionStage;
+                      const rLabel = card.rank === 1 ? 'A' : card.rank === 11 ? 'J' : card.rank === 12 ? 'Q' : card.rank === 13 ? 'K' : String(card.rank);
+                      const fValStr = fVal === 1 ? 'A' : fVal === 11 ? 'J' : fVal === 12 ? 'Q' : fVal === 13 ? 'K' : String(fVal);
+
+                      let stageTitle = isRed ? `Red Scar (|${rLabel}\\|)` : `Black Scar (|${rLabel}\\|)`;
+                      let description = isRed
+                        ? `Functional Value shifted +1 (now acts as rank ${fValStr})`
+                        : `Functional Value shifted -1 (now acts as rank ${fValStr})`;
+
+                      if (stage === 1) {
+                        stageTitle = `Vulnerable (|${rLabel})`;
+                        description = '1st attrition line to the left of rank (No functional value shift yet)';
+                      } else if (stage === 2) {
+                        stageTitle = `Doubtful (|${rLabel}|)`;
+                        description = '2nd attrition line framing rank (No functional value shift yet)';
+                      } else if (stage === 3) {
+                        stageTitle = isRed ? `Red Scar (|${rLabel}\\|)` : `Black Scar (|${rLabel}\\|)`;
+                      }
+
                       return (
                         <div key={card.id} className="flex items-center gap-3 bg-[#120e0a]/80 p-2 rounded border border-amber-900/40">
                           <PlayingCard
@@ -270,12 +289,10 @@ export function RoundSummaryModal({
                           />
                           <div className="flex flex-col gap-0.5 text-xs">
                             <span className="font-bold text-amber-200">
-                              {card.suit}{card.rank} — {isRed ? 'Red Scar' : 'Black Scar'} (FV: {fVal})
+                              {card.suit}{card.rank} — {stageTitle} {stage >= 3 ? `(FV: ${fValStr})` : ''}
                             </span>
                             <span className="text-[11px] text-amber-300/80 leading-tight">
-                              {isRed
-                                ? `Functional Value shifted +1 (now acts as rank ${fVal})`
-                                : `Functional Value shifted -1 (now acts as rank ${fVal})`}
+                              {description}
                             </span>
                           </div>
                         </div>

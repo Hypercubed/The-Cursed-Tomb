@@ -74,34 +74,11 @@ export function PyramidBoard({
             const isAnimatingMatch = animatingMatchIds.includes(card.id);
             const isAnimatingError = animatingErrorIds.includes(card.id);
             const isCollapsing = status === 'pyramid-collapse' && !card.removed;
-            const canVaultPyramidCard =
-              !card.removed &&
-              !blocked &&
-              !card.faceDown &&
-              card.blessed &&
-              card.suit === '♦' &&
-              !vaultCard &&
-              status === 'in-progress' &&
-              interactionMode === 'normal';
-
             return (
               <div
                 key={card.id}
                 className={`relative ${isTargetable ? 'ring-2 ring-amber-400 rounded-lg sm:rounded-xl shadow-[0_0_12px_rgba(251,191,36,0.8)]' : ''}`}
               >
-                {canVaultPyramidCard && onMovePyramidToVault && (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onMovePyramidToVault(card.id);
-                    }}
-                    className="absolute -top-3 -right-2 z-30 text-[10px] bg-amber-950 border border-amber-600 text-amber-300 rounded px-1.5 py-0.5 hover:bg-amber-900 cursor-pointer font-mono shadow-md animate-pulse"
-                    title="Move ♦ Hero card to Diamond Vault"
-                  >
-                    Vault ♦
-                  </button>
-                )}
                 <PlayingCard
                   rank={card.rank}
                   suit={card.suit}

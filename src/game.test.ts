@@ -16,6 +16,7 @@ import {
   getRemovedCardIds,
   getRemovedCardsCount,
   applyEndOfWeekLifecycle,
+  advanceCampaignRound,
   initializeGame,
   isBlocked,
   movePyramidToVault,
@@ -25,6 +26,7 @@ import {
   updateRedCurseFaceDownState,
   visibleCards,
 } from './game';
+import { forceWin } from './solver';
 
 function createDeterministicGameState(redraws: number | null): GameState {
   const deck = createDeck();
@@ -317,11 +319,30 @@ describe('Cursed Tomb campaign mechanics', () => {
     expect(getFunctionalValue(redQueen, 'cursed-tomb')).toBe(13); // +1 Red Scar
     expect(getFunctionalValue(blackTen, 'cursed-tomb')).toBe(9);  // -1 Black Scar
     expect(getFunctionalValue(normalFive, 'cursed-tomb')).toBe(5);
+
+    // Circular modulo wrapping between 1 and 13
+    const blackAceScarred = { id: '♠1', suit: '♠' as const, rank: 1 as const, removed: false, selected: false, attritionStage: 3 as const, rewardStage: 0 as const, blessed: false };
+    const redKingScarred = { id: '♥13', suit: '♥' as const, rank: 13 as const, removed: false, selected: false, attritionStage: 3 as const, rewardStage: 0 as const, blessed: false };
+    const normalQueen = { id: '♦12', suit: '♦' as const, rank: 12 as const, removed: false, selected: false, attritionStage: 0 as const, rewardStage: 0 as const, blessed: false };
+
+    expect(getFunctionalValue(blackAceScarred, 'cursed-tomb')).toBe(13); // 1 - 1 wraps to 13
+    expect(getFunctionalValue(redKingScarred, 'cursed-tomb')).toBe(1);   // 13 + 1 wraps to 1
+
+    // Black Ace -1 wraps to 13 (clears solo as a King)
+    expect(canRemoveSingle(blackAceScarred, 'cursed-tomb')).toBe(true);
+    // Red King +1 wraps to 1 (pairs with Queen 12)
+    expect(canRemovePair(redKingScarred, normalQueen, 'cursed-tomb')).toBe(true);
   });
 
   it('allows solo King removal for Red Scarred Queen (Functional Value 13)', () => {
     const redQueen = { id: '♥12', suit: '♥' as const, rank: 12 as const, removed: false, selected: false, attritionStage: 4 as const, rewardStage: 0 as const, blessed: false };
     expect(canRemoveSingle(redQueen, 'cursed-tomb')).toBe(true);
+  });
+
+  it('treats Clubs Hero cards as Universal Wildcards matching any exposed card', () => {
+    const clubsHero = { id: '♣5', suit: '♣' as const, rank: 5 as const, removed: false, selected: false, attritionStage: 0 as const, rewardStage: 0 as const, blessed: true };
+    const randomCard = { id: '♦4', suit: '♦' as const, rank: 4 as const, removed: false, selected: false, attritionStage: 0 as const, rewardStage: 0 as const, blessed: false };
+    expect(canRemovePair(clubsHero, randomCard, 'cursed-tomb')).toBe(true);
   });
 
   it('restricts Black Cursed cards from pairing with Stock or Waste', () => {
@@ -347,6 +368,25 @@ describe('Cursed Tomb campaign mechanics', () => {
     expect(updatedCard?.attritionStage).toBe(1);
   });
 
+  it('ensures applyEndOfWeekLifecycle and advanceCampaignRound apply attrition exactly once per failed round', () => {
+    const campaign = createCampaign('cursed-tomb', 1, false);
+    campaign.currentRound.status = 'pyramid-collapse';
+
+    const exposedCards = visibleCards(campaign.currentRound.pyramid);
+    const targetCardId = exposedCards[0].id;
+
+    // 1st call: when game ends, UI updates campaign state
+    const processedCampaign = applyEndOfWeekLifecycle(campaign);
+    const cardAfterFirst = processedCampaign.masterDeck.find((c: CursedCard) => c.id === targetCardId);
+    expect(cardAfterFirst?.attritionStage).toBe(1);
+
+    // 2nd call: when user advances to next round
+    const nextRoundCampaign = advanceCampaignRound(processedCampaign);
+    const cardAfterAdvance = nextRoundCampaign.masterDeck.find((c: CursedCard) => c.id === targetCardId);
+    expect(cardAfterAdvance?.attritionStage).toBe(1);
+    expect(nextRoundCampaign.roundNumber).toBe(2);
+  });
+
   it('applies Reward Phase to cleared final pair', () => {
     const campaign = createCampaign('cursed-tomb', 1, false);
     const cardHigh = { id: '♥8', suit: '♥' as const, rank: 8 as const, removed: true, selected: false, attritionStage: 0 as const, rewardStage: 0 as const, blessed: false };
@@ -361,6 +401,17 @@ describe('Cursed Tomb campaign mechanics', () => {
 
     expect(updatedHigh?.blessed).toBe(true);
     expect(updatedLow?.rewardStage).toBe(1);
+  });
+
+  it('applies Hero Blessing and Anchor Reward when forceWin is called in campaign mode', () => {
+    const campaign = createCampaign('cursed-tomb', 1, false);
+    campaign.currentRound = forceWin(campaign.currentRound);
+
+    const updated = applyEndOfWeekLifecycle(campaign);
+    const blessedCard = updated.masterDeck.find((c: CursedCard) => c.blessed);
+    expect(blessedCard).toBeDefined();
+    const rewardedCard = updated.masterDeck.find((c: CursedCard) => c.rewardStage > 0);
+    expect(rewardedCard).toBeDefined();
   });
 
   it('triggers Starvation defeat when fewer than 28 active cards remain', () => {

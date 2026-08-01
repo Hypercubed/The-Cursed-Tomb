@@ -1,26 +1,25 @@
 ## Why
 
-During Pyramid Solitaire gameplay, misclicks or tactical mistakes can lead to instant game-over or suboptimal states with no way to recover. Adding an Undo and Move History feature provides a forgiving, tactical experience where players can revert recent actions (card pairings, draws, pile recycles) without starting over, while ensuring move history is cleanly tracked and persisted.
+During Pyramid Solitaire development and testing, stepping back and forward through moves is essential for evaluating game mechanics, solver paths, and edge cases. Scoping Undo and Redo functionality to the Debug Panel provides developer time-travel debugging without changing the main player-facing interface or balance.
 
 ## What Changes
 
-- Add a move history stack (`history: GameState[]`) to track reversible actions in the active game.
-- Expose an `undo(state)` reducer function in `game.ts` that reverts the game to its previous state.
-- Add an **Undo button** to the UI (in the Game Shell / Sidebar controls) enabled only when an undoable move exists.
-- Add **Keyboard Shortcut** support (`Ctrl+Z` / `U`) to trigger Undo.
-- Update game persistence to store and restore move history alongside active game state.
-- Reset move history when starting a new game or resetting.
+- Add move history tracking (`history: GameState[]`) and redo tracking (`future: GameState[]`) to `GameState`.
+- Expose pure `undo(state)` and `redo(state)` reducer functions in `src/game.ts`.
+- Add **Undo** and **Redo** action buttons to `DebugPanel.tsx` in a dedicated Debug Time-Travel section.
+- Clear `history` and `future` when starting a new game or when making a new move (clearing the redo stack on new branch).
+- Update persistence layer if needed to handle `history` / `future` properties smoothly.
 
 ## Capabilities
 
 ### New Capabilities
-- `undo-move-history`: Reversible move history and Undo action support for Pyramid Solitaire, including UI buttons and keyboard shortcuts.
+- `undo-move-history`: Reversible move history and time-travel controls (Undo and Redo) scoped to the Debug Panel.
 
 ### Modified Capabilities
-- `pyramid-solitaire-game`: State updates will record previous state snapshots to support reverting moves and updating win/loss statuses dynamically.
+- `pyramid-solitaire-game`: Game state actions push snapshots to `history` and reset `future` to support debug step-back and step-forward.
 
 ## Impact
 
-- **Core Game Engine (`src/game.ts`)**: Addition of history tracking in `GameState` and `undo(state)` export.
-- **UI Components (`src/components/GameSidebar.tsx` / `GameShell.tsx` / `App.tsx`)**: Undo button rendering and keyboard event listener (`Ctrl+Z` / `U`).
-- **Persistence (`src/storage/persistence.ts`)**: Serializing and deserializing history snapshots safely.
+- **Core Game Engine (`src/game.ts`)**: Addition of `history` and `future` snapshot stacks in `GameState`, plus `undo(state)` and `redo(state)` reducer exports.
+- **Debug UI (`src/components/DebugPanel.tsx`)**: Render Undo and Redo debug action buttons with disabled states based on history/future availability.
+- **App Integration (`src/App.tsx`)**: Wire Undo and Redo callbacks into `DebugPanel`.

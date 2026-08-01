@@ -93,6 +93,9 @@ describe('solver', () => {
     expect(wonState.status).toBe('partial-victory');
     const remainingCards = wonState.pyramid.flat().filter((card) => !card.removed);
     expect(remainingCards.length).toBe(0);
+    expect(wonState.lastClearedPair).toBeDefined();
+    expect(wonState.lastClearedPair!.length).toBeGreaterThanOrEqual(1);
+    expect(wonState.lastClearedPair!.length).toBeLessThanOrEqual(2);
   });
 
   it('forceWin clears pyramid and deck setting status to complete-victory when complete option is true', () => {

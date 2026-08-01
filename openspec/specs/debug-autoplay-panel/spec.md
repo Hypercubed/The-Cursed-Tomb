@@ -85,7 +85,7 @@ The system SHALL display a dedicated Debug & Autoplay panel within the game side
 
 #### Scenario: Force instant win
 - **WHEN** user clicks the "Force Win" debug button
-- **THEN** the remaining pyramid cards are cleared, status changes to won, and win state persistence triggers
+- **THEN** the system identifies remaining pyramid cards, records a synthetic last cleared pair (preferring valid 13-pairs or highest-value cards) on the game state, clears remaining pyramid cards, changes status to won, and triggers win state and campaign lifecycle persistence
 
 #### Scenario: Force instant loss
 - **WHEN** user clicks the "Force Loss" debug button

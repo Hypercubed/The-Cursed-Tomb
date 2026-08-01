@@ -1,35 +1,37 @@
 ## Context
 
-The Pyramid Solitaire game engine operates on pure functional state transformations (`playCard`, `drawCard`, `cyclePile`). Currently, state modifications overwrite the active state without preserving previous snapshots, giving players no way to undo accidental or tactical mistakes.
+The Pyramid Solitaire game engine uses pure functional state transitions (`playCard`, `drawCard`, `cyclePile`). To support developer testing and solver verification, we are introducing state history snapshots and Undo/Redo capabilities scoped exclusively to the `DebugPanel`.
 
 ## Goals / Non-Goals
 
 **Goals:**
-- Add an `undo(state)` reducer function to revert to the previous board snapshot.
-- Store a snapshot stack (`history`) inside `GameState` without recursive snapshot overhead.
-- Render an Undo button in the game sidebar/controls toolbar and bind `Ctrl+Z` / `U` keyboard shortcuts.
-- Persist `history` in `LocalStorage` alongside active game state.
+- Implement pure `undo(state)` and `redo(state)` reducer functions in `src/game.ts`.
+- Store `history: GameState[]` and `future: GameState[]` arrays inside `GameState`.
+- Render Undo and Redo trigger buttons in `DebugPanel.tsx`.
+- Automatically prune nested history/future arrays from saved snapshots to keep memory usage minimal.
+- Clear `future` stack whenever a new player action is taken.
 
 **Non-Goals:**
-- Redo capability (forward step history).
-- Infinite undo limit constraints (we preserve full history for the active round).
+- Exposing Undo/Redo in the main player interface (e.g. `GameSidebar.tsx` or `GameShell.tsx`).
+- Listening to global keyboard shortcuts (`Ctrl+Z` / `Cmd+Z` / `U`).
+- Custom move diffing/replaying engine (full state snapshots are fast and deterministic).
 
 ## Decisions
 
-### 1. Snapshot Stack (`history: GameState[]`) vs Action Replay
-- **Decision**: Store snapshots of prior `GameState` objects in an array.
-- **Rationale**: Since `GameState` is small and lightweight, snapshot-based undo is immediate ($O(1)$ stack pop), 100% deterministic, and eliminates complex action replaying logic across seed/randomness boundaries.
-- **Implementation Detail**: Snapshots pushed into `history` will have their own `history` property pruned to empty `[]` to prevent memory multiplication.
+### 1. Snapshot Stacks (`history` & `future`)
+- **Decision**: Save complete `GameState` snapshots into `history` on state-modifying actions. Save undone states into `future` when `undo` is called.
+- **Rationale**: Direct snapshot assignment gives instant $O(1)$ state restoration, guarantees exact state reconstruction across random seed or solver evaluation, and requires zero complex diffing logic.
+- **Implementation Detail**: Before pushing a state to `history` or `future`, strip its `history` and `future` fields (`...snapshot, history: [], future: []`) to avoid exponential memory growth.
 
-### 2. UI & Keyboard Bindings
-- **Decision**: Provide both a visual Undo button in `GameSidebar` and global keyboard listeners (`Ctrl+Z`, `Cmd+Z`, and `u` / `U`).
-- **Rationale**: Meets expectations for both desktop power users and touch/mouse players.
+### 2. Debug Panel UI Integration
+- **Decision**: Place Undo (`↩ Undo`) and Redo (`↪ Redo`) buttons inside `DebugPanel.tsx` in a dedicated "Time Travel / History" section.
+- **Rationale**: Keeps player-facing HUD clean while empowering developers and QA to step backward and forward through game moves during testing.
+
+### 3. Redo Stack Clearing on New Move
+- **Decision**: Taking any new state-modifying action (`playCard`, `drawCard`, `cyclePile`) resets `future` to `[]`.
+- **Rationale**: Standard time-travel mechanics invalidate alternative future timelines once a new move is made.
 
 ## Risks / Trade-offs
 
-- **[Risk]**: `LocalStorage` payload size growing large with long move histories.
-- **Mitigation**: A full game history contains at most ~40 moves, which serializes to < 50KB JSON—well within `LocalStorage`'s 5MB quota.
-
-## Open Questions
-
-None. The pure function reducer architecture makes implementation straightforward.
+- **[Risk]**: Object allocation during long game sessions.
+- **Mitigation**: History size is bounded by round move counts (~40 moves max). Pruning `history`/`future` on snapshots keeps total memory overhead under 100KB per session.

@@ -41,6 +41,7 @@ export interface GameState {
   interactionMode?: 'normal' | 'targeting-spades' | 'targeting-hearts';
   pendingHeroCardId?: string | null;
   lastClearedPair?: Card[];
+  lifecycleProcessed?: boolean;
 }
 
 export interface CampaignState {
@@ -61,15 +62,13 @@ const ranks: Rank[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
 export function getFunctionalValue(card: Card, mode: GameMode = 'standard'): number {
   if (mode !== 'cursed-tomb') return card.rank;
   if (card.attritionStage < 3) return card.rank;
-  if (card.suit === '♥' || card.suit === '♦') {
-    return card.rank + 1;
-  }
-  return card.rank - 1;
+  const shift = card.suit === '♥' || card.suit === '♦' ? 1 : -1;
+  return ((card.rank + shift - 1 + 13) % 13) + 1;
 }
 
 export function getEffectiveValueForPair(card: Card, partner: Card, mode: GameMode = 'standard'): number {
-  if (mode === 'cursed-tomb' && partner.blessed && partner.suit === '♣') {
-    return card.rank;
+  if (mode === 'cursed-tomb' && ((card.blessed && card.suit === '♣') || (partner.blessed && partner.suit === '♣'))) {
+    return 13;
   }
   return getFunctionalValue(card, mode);
 }
@@ -195,6 +194,10 @@ export function canRemovePair(
     if (second.attritionStage === 4 && (second.suit === '♠' || second.suit === '♣')) {
       if (firstLoc && firstLoc !== 'pyramid') return false;
       if (secondLoc && secondLoc !== 'pyramid') return false;
+    }
+
+    if ((first.blessed && first.suit === '♣') || (second.blessed && second.suit === '♣')) {
+      return true;
     }
   }
 
@@ -458,13 +461,7 @@ function handleHeroBlessings(state: GameState, clearedCards: Card[]): GameState 
 
   for (const card of clearedCards) {
     if (card.blessed) {
-      if (card.suit === '♥') {
-        const visiblePyramid = visibleCards(state.pyramid);
-        if (visiblePyramid.length > 0) {
-          interactionMode = 'targeting-hearts';
-          pendingHeroCardId = card.id;
-        }
-      } else if (card.suit === '♠') {
+      if (card.suit === '♠') {
         const hasFaceDown = state.pyramid.flat().some((c) => !c.removed && c.faceDown);
         if (hasFaceDown) {
           interactionMode = 'targeting-spades';
@@ -674,6 +671,7 @@ export function applyEndOfWeekLifecycle(campaign: CampaignState): CampaignState 
   const round = campaign.currentRound;
   const mode = campaign.mode;
   if (mode !== 'cursed-tomb') return campaign;
+  if (round.lifecycleProcessed) return campaign;
 
   let masterDeck = campaign.masterDeck.map((c) => ({ ...c }));
   let graveyard = campaign.graveyard.map((c) => ({ ...c }));
@@ -732,6 +730,21 @@ export function applyEndOfWeekLifecycle(campaign: CampaignState): CampaignState 
     }
   }
 
+  // Hearts Resurrection: for each cleared Hearts Hero in the round, pull 1 random card from Graveyard Box as Stage 4
+  const clearedCards = round.deck.filter((c) => {
+    const inPyr = round.pyramid.flat().find((p) => p.id === c.id);
+    return inPyr ? inPyr.removed : c.removed;
+  });
+  const clearedHeartsHeroes = clearedCards.filter((c) => c.blessed && c.suit === '♥');
+  for (const _ of clearedHeartsHeroes) {
+    const entombed = masterDeck.filter((c) => c.attritionStage === 5);
+    if (entombed.length > 0) {
+      const revived = entombed[Math.floor(Math.random() * entombed.length)];
+      revived.attritionStage = 4;
+      graveyard = graveyard.filter((g) => g.id !== revived.id);
+    }
+  }
+
   const activeDeck = masterDeck.filter((c) => c.attritionStage < 5);
   let status: 'active' | 'defeat' = campaign.status;
   let defeatReason = campaign.defeatReason;
@@ -758,6 +771,10 @@ export function applyEndOfWeekLifecycle(campaign: CampaignState): CampaignState 
     graveyard,
     status,
     defeatReason,
+    currentRound: {
+      ...round,
+      lifecycleProcessed: true,
+    },
   };
 }
 

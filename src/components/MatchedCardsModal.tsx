@@ -108,14 +108,20 @@ export function MatchedCardsModal({
                 <span className="flex items-center gap-1">
                   <span className="inline-block w-2.5 h-2.5 rounded-sm bg-[#18130e] border border-[#251e16]"></span> Active
                 </span>
-                <span className="flex items-center gap-1 text-emerald-400 font-medium">
-                  <span className="font-mono font-bold">[O]</span> Blessed Hero
+                <span className="flex items-center gap-1 text-blue-400 font-medium">
+                  <span className="font-mono font-bold">(◯)</span> Blessed Hero
                 </span>
-                <span className="flex items-center gap-1 text-purple-400 font-medium">
-                  <span>⚡</span> Cursed
+                <span className="flex items-center gap-1 text-blue-400 font-medium">
+                  <span className="font-mono font-bold">—</span> Fortifying
                 </span>
-                <span className="flex items-center gap-1 text-amber-400 font-medium">
-                  <span>|||</span> Scarred
+                <span className="flex items-center gap-1 text-blue-400 font-medium">
+                  <span className="font-mono font-bold">+</span> Anchored
+                </span>
+                <span className="flex items-center gap-1 text-blue-400 font-medium">
+                  <span className="font-mono font-bold">|X|</span> Cursed
+                </span>
+                <span className="flex items-center gap-1 text-blue-400 font-medium">
+                  <span className="font-mono font-bold">|#\|</span> Scarred
                 </span>
                 <span className="flex items-center gap-1 text-red-400 font-medium">
                   <span>💀</span> Entombed
@@ -143,59 +149,51 @@ export function MatchedCardsModal({
                     {ranks.map((rank) => {
                       const cardId = `${suit}${rank}`;
                       const isRemoved = removedCardIds.has(cardId);
+                      const rLabel = rankLabel(rank);
 
                       const cursedCard = masterDeck?.find((c) => c.id === cardId);
                       const fVal = cursedCard ? getFunctionalValue(cursedCard, mode) : rank;
-
-                      let leftInk: string | null = null;
-                      if (cursedCard?.blessed) leftInk = '[O]';
-                      else if (cursedCard?.rewardStage === 1) leftInk = '[—]';
-                      else if (cursedCard?.rewardStage === 2) leftInk = '[+]';
-
-                      let rightInk: string | null = null;
-                      if (cursedCard?.attritionStage === 1) rightInk = '|';
-                      else if (cursedCard?.attritionStage === 2) rightInk = '||';
-                      else if (cursedCard?.attritionStage === 3) rightInk = '|||';
-                      else if (cursedCard?.attritionStage === 4) rightInk = '⚡';
-                      else if (cursedCard?.attritionStage === 5) rightInk = '💀';
+                      const fValLabel = rankLabel(fVal as Rank);
 
                       const isBlessed = Boolean(cursedCard?.blessed);
-                      const isCursed = cursedCard?.attritionStage === 4;
-                      const isScarred = (cursedCard?.attritionStage ?? 0) > 0 && (cursedCard?.attritionStage ?? 0) < 4;
-                      const isEntombed = cursedCard?.attritionStage === 5;
+                      const rewardStage = cursedCard?.rewardStage ?? 0;
+                      const attritionStage = cursedCard?.attritionStage ?? 0;
+                      const isCursed = attritionStage === 4;
+                      const isScarred = attritionStage > 0 && attritionStage < 4;
+                      const isEntombed = attritionStage === 5;
 
                       const statusParts: string[] = [];
                       if (isBlessed) {
-                        if (suit === '♥') statusParts.push('Blessed Hero [O] (Hearts Martyr: Temp Anchor Immunity)');
-                        else if (suit === '♦') statusParts.push('Blessed Hero [O] (Diamonds Vault: Store 1 Waste Card)');
-                        else if (suit === '♠') statusParts.push('Blessed Hero [O] (Spades Tunnel: Flip Face-Down Card)');
-                        else if (suit === '♣') statusParts.push('Blessed Hero [O] (Clubs Rally: Redraw Stock)');
-                        else statusParts.push('Blessed Hero [O]');
+                        if (suit === '♥') statusParts.push('Blessed Hero (◯) (Hearts Martyr: Temp Anchor Immunity)');
+                        else if (suit === '♦') statusParts.push('Blessed Hero (◯) (Diamonds Vault: Store 1 Waste Card)');
+                        else if (suit === '♠') statusParts.push('Blessed Hero (◯) (Spades Tunnel: Flip Face-Down Card)');
+                        else if (suit === '♣') statusParts.push('Blessed Hero (◯) (Clubs Rally: Redraw Stock)');
+                        else statusParts.push('Blessed Hero (◯)');
                       }
-                      if (cursedCard?.rewardStage === 1) statusParts.push('Fortifying Anchor [—]');
-                      if (cursedCard?.rewardStage === 2) statusParts.push('Anchored [+]');
-                      if (cursedCard?.attritionStage === 1) statusParts.push('Scar 1 (|)');
-                      if (cursedCard?.attritionStage === 2) statusParts.push('Scar 2 (||)');
-                      if (cursedCard?.attritionStage === 3) statusParts.push('Scar 3 (|||)');
+                      if (rewardStage === 1) statusParts.push('Fortifying Anchor (─)');
+                      if (rewardStage === 2) statusParts.push('Anchored (✢)');
+                      if (attritionStage === 1) statusParts.push(`Scar 1 (|${rLabel})`);
+                      if (attritionStage === 2) statusParts.push(`Scar 2 (|${rLabel}|)`);
+                      if (attritionStage === 3) statusParts.push(`Scar 3 (|${rLabel}\\|)`);
                       if (isCursed) {
-                        if (suit === '♥' || suit === '♦') statusParts.push('Red Curse ⚡ (+1 Shift, Locks Cards Face-Down)');
-                        else statusParts.push('Black Curse ⚡ (-1 Shift, Pyramid Pairing Only)');
+                        if (suit === '♥' || suit === '♦') statusParts.push('Red Curse |X| (+1 Shift, Locks Cards Face-Down)');
+                        else statusParts.push('Black Curse |X| (-1 Shift, Pyramid Pairing Only)');
                       }
                       if (isEntombed) statusParts.push('Entombed 💀');
-                      if (fVal !== rank) statusParts.push(`Functional Value: ${fVal}`);
+                      if (fVal !== rank) statusParts.push(`Functional Value: ${fValLabel}`);
                       statusParts.push(isRemoved ? 'Removed' : 'Active');
 
-                      const tooltipText = `${suit}${rankLabel(rank)} (${statusParts.join(', ')})`;
+                      const tooltipText = `${suit}${rLabel} (${statusParts.join(', ')})`;
 
                       let cardStyleClasses = 'bg-[#18130e] border-[#251e16] text-game-muted/60';
                       if (isEntombed) {
                         cardStyleClasses = 'bg-stone-950 border-red-950 text-red-700/60 opacity-60';
                       } else if (isBlessed) {
-                        cardStyleClasses = 'bg-emerald-950/40 border-emerald-500/80 text-emerald-200 ring-1 ring-emerald-400/60 shadow-[0_0_8px_rgba(16,185,129,0.25)]';
+                        cardStyleClasses = 'bg-blue-950/40 border-blue-500/80 text-blue-200 ring-1 ring-blue-400/60 shadow-[0_0_8px_rgba(37,99,235,0.25)]';
                       } else if (isCursed) {
-                        cardStyleClasses = 'bg-purple-950/40 border-purple-600/80 text-purple-200 ring-1 ring-purple-500/60 shadow-[0_0_8px_rgba(168,85,247,0.25)]';
+                        cardStyleClasses = 'bg-blue-950/40 border-blue-600/80 text-blue-200 ring-1 ring-blue-500/60 shadow-[0_0_8px_rgba(37,99,235,0.25)]';
                       } else if (isScarred) {
-                        cardStyleClasses = 'bg-amber-950/30 border-amber-600/70 text-amber-200';
+                        cardStyleClasses = 'bg-blue-950/30 border-blue-600/70 text-blue-200';
                       } else if (isRemoved) {
                         cardStyleClasses = 'bg-[#2a2016] border-game-accent text-game-accent shadow-[0_0_6px_rgba(212,175,55,0.2)]';
                       }
@@ -204,25 +202,77 @@ export function MatchedCardsModal({
                         <div
                           key={cardId}
                           title={tooltipText}
-                          className={`h-11 rounded-md border flex flex-col items-center justify-between p-1 text-[10px] font-bold transition-all relative ${cardStyleClasses}`}
+                          className={`h-12 rounded-md border flex flex-col items-center justify-between p-1 text-[10px] font-bold transition-all relative ${cardStyleClasses}`}
                         >
-                          <div className="flex items-center justify-between w-full text-[8px] leading-none">
-                            <span className={`font-mono ${isBlessed ? 'text-emerald-300 font-bold' : 'text-emerald-400/90'}`}>
-                              {leftInk}
-                            </span>
-                            <span className={`font-mono ${isCursed ? 'text-purple-300 font-bold' : isScarred ? 'text-amber-400' : 'text-red-400'}`}>
-                              {rightInk}
-                            </span>
+                          {/* Top-Right Anchor Badge */}
+                          {rewardStage > 0 && (
+                            <div className="absolute top-0.5 right-0.5 pointer-events-none z-30">
+                              {rewardStage === 1 && (
+                                <svg className="w-2.5 h-2.5" viewBox="0 0 100 100">
+                                  <line x1="10" y1="50" x2="90" y2="50" stroke="#3b82f6" strokeWidth="24" strokeLinecap="round" />
+                                </svg>
+                              )}
+                              {rewardStage >= 2 && (
+                                <svg className="w-2.5 h-2.5" viewBox="0 0 100 100">
+                                  <line x1="10" y1="50" x2="90" y2="50" stroke="#3b82f6" strokeWidth="24" strokeLinecap="round" />
+                                  <line x1="50" y1="10" x2="50" y2="90" stroke="#3b82f6" strokeWidth="24" strokeLinecap="round" />
+                                </svg>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Rank Row with Blue Slashed Scar Overlay */}
+                          <div className="flex items-center justify-center w-full leading-none relative">
+                            {isEntombed ? (
+                              <span className="text-xs">💀</span>
+                            ) : (
+                              <span className="relative inline-block leading-none">
+                                <span>{rLabel}</span>
+                                {attritionStage >= 1 && (
+                                  <svg
+                                    aria-hidden="true"
+                                    className="absolute -inset-x-0.5 -inset-y-0.5 w-[calc(100%+4px)] h-[calc(100%+4px)] pointer-events-none overflow-visible z-20"
+                                    viewBox="0 0 100 100"
+                                    preserveAspectRatio="none"
+                                  >
+                                    <line x1="8" y1="5" x2="8" y2="95" stroke="#2563eb" strokeWidth="20" strokeLinecap="round" />
+                                    {attritionStage >= 2 && (
+                                      <line x1="92" y1="5" x2="92" y2="95" stroke="#2563eb" strokeWidth="20" strokeLinecap="round" />
+                                    )}
+                                    {attritionStage >= 3 && (
+                                      <line x1="8" y1="5" x2="92" y2="95" stroke="#2563eb" strokeWidth="20" strokeLinecap="round" />
+                                    )}
+                                    {attritionStage >= 4 && (
+                                      <line x1="8" y1="95" x2="92" y2="5" stroke="#2563eb" strokeWidth="20" strokeLinecap="round" />
+                                    )}
+                                  </svg>
+                                )}
+                                {attritionStage >= 3 && (
+                                  <span
+                                    className="absolute left-full ml-1 top-[-2px] text-[9px] text-blue-400 font-black font-mono leading-none whitespace-nowrap"
+                                    style={{ fontFamily: '"Caveat", "Architects Daughter", "Comic Sans MS", cursive, sans-serif' }}
+                                  >
+                                    {fValLabel}
+                                  </span>
+                                )}
+                              </span>
+                            )}
                           </div>
 
-                          <span className={isRemoved ? (isRedSuit(suit) ? 'text-game-red' : 'text-game-accent') : ''}>
-                            {rankLabel(rank)}
-                          </span>
-
-                          <div className="text-[8px] leading-none">
-                            {fVal !== rank && (
-                              <span className="text-amber-400 font-mono">FV:{rankLabel(fVal as Rank)}</span>
-                            )}
+                          {/* Suit Row with Blessing ring */}
+                          <div className="relative inline-flex items-center justify-center text-[9px] leading-none">
+                            <span className={`relative flex items-center justify-center ${isRedSuit(suit) ? 'text-game-red' : 'text-game-text'}`}>
+                              <span>{symbol}</span>
+                              {isBlessed && (
+                                <svg
+                                  aria-hidden="true"
+                                  className="absolute -inset-[40%] w-[180%] h-[180%] pointer-events-none overflow-visible z-10"
+                                  viewBox="0 0 100 100"
+                                >
+                                  <circle cx="50" cy="50" r="46" stroke="#2563eb" strokeWidth="18" fill="none" />
+                                </svg>
+                              )}
+                            </span>
                           </div>
                         </div>
                       );

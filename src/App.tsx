@@ -2,9 +2,12 @@ import { useMemo, useState, useEffect, useCallback } from 'react';
 import { RoundSummaryModal } from './components/RoundSummaryModal';
 import {
   canRemovePair,
+  canRemoveSingle,
   cyclePile,
   drawCard,
   getCardById,
+  getCardLocation,
+  isBlocked,
   getRemainingPairStats,
   getRemovedCardIds,
   getRemovedCardsCount,
@@ -221,7 +224,7 @@ function App() {
     if (!targetCard) return;
 
     // Single King match / Functional Value 13
-    if (targetCard.rank === 13) {
+    if (canRemoveSingle(targetCard, game.mode)) {
       setAnimatingMatchIds([cardId]);
       setTimeout(() => {
         setGame((state) => playCard(state, cardId));
@@ -262,12 +265,39 @@ function App() {
     });
   };
 
-  const handleMoveToVault = () => {
-    setGame((state) => moveWasteToVault(state));
-  };
+  const selectedCardForVault = useMemo(() => {
+    if (!game.selectedCardId || game.vaultCard) return null;
+    const card = getCardById(game.selectedCardId, game);
+    if (!card || !card.blessed || card.suit !== '♦') return null;
+    const location = getCardLocation(card.id, game);
+    const isUnblockedPyramid = location.zone === 'pyramid' && !isBlocked(card.id, game.pyramid);
+    const isTopDiscard = location.zone === 'discard' && topDiscard?.id === card.id;
+    return (isUnblockedPyramid || isTopDiscard) ? card : null;
+  }, [game, topDiscard]);
 
-  const handleMovePyramidToVault = (cardId: string) => {
-    setGame((state) => movePyramidToVault(state, cardId));
+  const isVaultTargetActive = Boolean(selectedCardForVault);
+
+  const handleVaultSlotClick = () => {
+    if (game.status !== 'in-progress') return;
+    if (game.vaultCard) return;
+    if (!game.selectedCardId) return;
+
+    if (selectedCardForVault) {
+      const location = getCardLocation(selectedCardForVault.id, game);
+      setGame((state) => {
+        const nextState = location.zone === 'discard'
+          ? moveWasteToVault(state)
+          : movePyramidToVault(state, selectedCardForVault.id);
+        return { ...nextState, selectedCardId: null };
+      });
+    } else {
+      const currentSelectedId = game.selectedCardId;
+      setAnimatingErrorIds([currentSelectedId]);
+      setTimeout(() => {
+        setGame((state) => ({ ...state, selectedCardId: null }));
+        setAnimatingErrorIds([]);
+      }, 300);
+    }
   };
 
   const handleRestart = () => {
@@ -401,7 +431,6 @@ function App() {
               animatingMatchIds={animatingMatchIds}
               animatingErrorIds={animatingErrorIds}
               onCardClick={handleCardClick}
-              onMovePyramidToVault={handleMovePyramidToVault}
             />
 
             {/* Draw zone — separate container below the pyramid */}
@@ -415,11 +444,12 @@ function App() {
                 canDraw={canDraw}
                 canCycle={canCycle}
                 gameActive={game.status === 'in-progress'}
+                isVaultTargetActive={isVaultTargetActive}
                 animatingMatchIds={animatingMatchIds}
                 animatingErrorIds={animatingErrorIds}
                 onDraw={handleDraw}
                 onCardClick={handleCardClick}
-                onMoveToVault={handleMoveToVault}
+                onVaultSlotClick={handleVaultSlotClick}
               />
             </div>
           </div>

@@ -11,11 +11,12 @@ interface DrawZoneProps {
   canDraw: boolean;
   canCycle: boolean;
   gameActive: boolean;
+  isVaultTargetActive?: boolean;
   animatingMatchIds?: string[];
   animatingErrorIds?: string[];
   onDraw: () => void;
   onCardClick: (cardId: string) => void;
-  onMoveToVault?: () => void;
+  onVaultSlotClick?: () => void;
 }
 
 export function DrawZone({
@@ -27,19 +28,18 @@ export function DrawZone({
   canDraw,
   canCycle,
   gameActive,
+  isVaultTargetActive = false,
   animatingMatchIds = [],
   animatingErrorIds = [],
   onDraw,
   onCardClick,
-  onMoveToVault,
+  onVaultSlotClick,
 }: DrawZoneProps): React.ReactElement {
   const drawButtonLabel = canDraw
     ? `Draw (${drawPileCount})`
     : canCycle
       ? 'Cycle deck'
       : 'Empty';
-
-  const canVaultTopDiscard = topDiscard && topDiscard.blessed && topDiscard.suit === '♦' && !vaultCard;
 
   return (
     <div className="flex flex-row gap-6 sm:gap-8 items-start pt-4">
@@ -68,16 +68,6 @@ export function DrawZone({
       <div>
         <div className="flex items-center justify-between mb-2 h-6">
           <span className="text-xs text-game-muted uppercase tracking-wide font-display">Discard top</span>
-          {canVaultTopDiscard && (
-            <button
-              type="button"
-              onClick={onMoveToVault}
-              className="text-[10px] bg-amber-950 border border-amber-700 text-amber-300 rounded px-1.5 py-0.5 hover:bg-amber-900 cursor-pointer font-mono"
-              title="Move ♦ Hero card to Diamond Vault"
-            >
-              Vault ♦
-            </button>
-          )}
         </div>
         {topDiscard !== null ? (
           <div>
@@ -123,10 +113,20 @@ export function DrawZone({
             />
           </div>
         ) : (
-          <div className="w-12 h-[64px] sm:w-[72px] sm:h-[96px] lg:w-[88px] lg:h-[116px] xl:w-[96px] xl:h-[128px] 2xl:w-[108px] 2xl:h-[144px] rounded-lg sm:rounded-xl border border-dashed border-amber-900/40 flex flex-col items-center justify-center text-amber-700/60 text-[0.6rem] sm:text-xs bg-[#120d09] shadow-[inset_0_0_8px_rgba(0,0,0,0.8)] relative">
+          <button
+            type="button"
+            onClick={onVaultSlotClick}
+            disabled={!gameActive}
+            className={`w-12 h-[64px] sm:w-[72px] sm:h-[96px] lg:w-[88px] lg:h-[116px] xl:w-[96px] xl:h-[128px] 2xl:w-[108px] 2xl:h-[144px] rounded-lg sm:rounded-xl border border-dashed text-[0.6rem] sm:text-xs bg-[#120d09] shadow-[inset_0_0_8px_rgba(0,0,0,0.8)] relative flex flex-col items-center justify-center transition-all duration-200 cursor-pointer disabled:cursor-not-allowed ${
+              isVaultTargetActive
+                ? 'border-amber-400 ring-2 ring-amber-400/80 animate-pulse text-amber-300 shadow-[0_0_12px_rgba(251,191,36,0.6)]'
+                : 'border-amber-900/40 text-amber-700/60 hover:border-amber-700/60'
+            }`}
+            title={isVaultTargetActive ? 'Click to Vault selected Blessed Diamond card' : 'Select a Blessed Diamond card, then click here to Vault'}
+          >
             <div className="absolute inset-1 border border-dashed border-amber-900/20 rounded-lg pointer-events-none" />
             <span>♦ Vault</span>
-          </div>
+          </button>
         )}
       </div>
     </div>

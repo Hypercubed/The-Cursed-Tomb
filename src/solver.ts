@@ -14,6 +14,7 @@ import {
   getRemainingPyramidCards,
   getActiveRankCounts,
   Rank,
+  getFunctionalValue,
 } from './game';
 
 export type SolverStrategy = 'greedy' | 'smart' | 'perfect';
@@ -444,8 +445,50 @@ export function findNextMove(state: GameState, strategy: SolverStrategy = 'greed
 /**
  * Instantly transitions the game to a victory state by removing all pyramid cards
  * (and clearing draw/discard piles if complete victory is requested).
+ * Synthetically sets lastClearedPair so end-of-round lifecycle blessings/rewards apply.
  */
 export function forceWin(state: GameState, complete: boolean = false): GameState {
+  const unremovedPyramidCards = state.pyramid.flat().filter((card) => !card.removed);
+
+  let lastClearedPair = state.lastClearedPair;
+
+  if (unremovedPyramidCards.length === 1) {
+    lastClearedPair = [unremovedPyramidCards[0]];
+  } else if (unremovedPyramidCards.length >= 2) {
+    const blessedCard = unremovedPyramidCards.find((c) => c.blessed);
+    const lowRankCard = unremovedPyramidCards.find((c) => c.rank <= 6 && c.id !== blessedCard?.id);
+    if (blessedCard && lowRankCard) {
+      lastClearedPair = [blessedCard, lowRankCard];
+    } else {
+      let foundPair: Card[] | null = null;
+
+      for (let i = 0; i < unremovedPyramidCards.length; i += 1) {
+        const c1 = unremovedPyramidCards[i];
+        if (canRemoveSingle(c1, state.mode)) {
+          foundPair = [c1];
+          break;
+        }
+        for (let j = i + 1; j < unremovedPyramidCards.length; j += 1) {
+          const c2 = unremovedPyramidCards[j];
+          if (canRemovePair(c1, c2, state.mode)) {
+            foundPair = [c1, c2];
+            break;
+          }
+        }
+        if (foundPair) break;
+      }
+
+      if (foundPair) {
+        lastClearedPair = foundPair;
+      } else {
+        const sorted = [...unremovedPyramidCards].sort(
+          (a, b) => getFunctionalValue(b, state.mode) - getFunctionalValue(a, state.mode)
+        );
+        lastClearedPair = [sorted[0], sorted[1]];
+      }
+    }
+  }
+
   const clearedPyramid = state.pyramid.map((row) =>
     row.map((card) => ({ ...card, removed: true, selected: false }))
   );
@@ -456,6 +499,7 @@ export function forceWin(state: GameState, complete: boolean = false): GameState
     drawPile: complete ? [] : state.drawPile,
     discardPile: complete ? [] : state.discardPile,
     selectedCardId: null,
+    lastClearedPair,
     status: 'in-progress',
   };
 
