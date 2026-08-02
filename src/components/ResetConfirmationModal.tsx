@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 interface ResetConfirmationModalProps {
   isOpen: boolean;
@@ -11,8 +11,14 @@ export function ResetConfirmationModal({
   onConfirm,
   onCancel,
 }: ResetConfirmationModalProps) {
+  const confirmBtnRef = useRef<HTMLButtonElement>(null);
+
   useEffect(() => {
     if (!isOpen) return;
+
+    const timer = setTimeout(() => {
+      confirmBtnRef.current?.focus();
+    }, 0);
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -21,7 +27,10 @@ export function ResetConfirmationModal({
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, [isOpen, onCancel]);
 
   if (!isOpen) return null;
@@ -49,7 +58,7 @@ export function ResetConfirmationModal({
           <button
             type="button"
             onClick={onCancel}
-            className="text-game-muted hover:text-game-text bg-transparent border-none text-xl font-bold cursor-pointer p-1 transition-colors"
+            className="text-game-muted hover:text-game-text bg-transparent border-none text-xl font-bold cursor-pointer p-1 transition-colors focus:ring-2 focus:ring-amber-500 focus:outline-none rounded"
             aria-label="Close modal"
           >
             ✕
@@ -71,14 +80,15 @@ export function ResetConfirmationModal({
           <button
             type="button"
             onClick={onCancel}
-            className="appearance-none bg-transparent border border-game-border rounded-lg text-game-text text-sm cursor-pointer font-[inherit] px-4 py-2 hover:border-game-accent transition-colors"
+            className="appearance-none bg-transparent border border-game-border rounded-lg text-game-text text-sm cursor-pointer font-[inherit] px-4 py-2 hover:border-game-accent focus:ring-2 focus:ring-amber-500 focus:outline-none transition-colors"
           >
             Cancel
           </button>
           <button
+            ref={confirmBtnRef}
             type="button"
             onClick={onConfirm}
-            className="appearance-none bg-amber-950/80 border border-amber-800 text-amber-300 rounded-lg text-sm cursor-pointer font-[inherit] px-4 py-2 hover:bg-amber-900 hover:text-amber-100 transition-colors font-medium"
+            className="appearance-none bg-amber-950/80 border border-amber-800 text-amber-300 rounded-lg text-sm cursor-pointer font-[inherit] px-4 py-2 hover:bg-amber-900 hover:text-amber-100 focus:ring-2 focus:ring-amber-500 focus:outline-none transition-colors font-medium"
           >
             Start New Campaign
           </button>

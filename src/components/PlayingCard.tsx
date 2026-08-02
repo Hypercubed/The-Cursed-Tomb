@@ -389,7 +389,7 @@ export function PlayingCard({
     'grid grid-rows-[auto_1fr_auto] overflow-hidden',
     faceDown ? 'bg-[#1a1510] border-[#3a2d1d]' : 'card-paper-texture disabled:bg-game-card-bg',
     'before:absolute before:inset-[2px] sm:before:inset-[3px] before:border before:border-amber-900/20 before:rounded-[6px] sm:before:rounded-[8px] before:pointer-events-none',
-    'card-tabletop-tilt',
+    animatingCollapse ? '' : 'card-tabletop-tilt',
     'transition-[border-color,box-shadow,transform] duration-[120ms] ease-in-out',
     'appearance-none font-[inherit] cursor-pointer select-none',
     'disabled:opacity-100 disabled:cursor-not-allowed',
@@ -405,7 +405,7 @@ export function PlayingCard({
     'relative',
     selected || animatingMatch || animatingError ? 'z-20' : 'z-0',
     blocked && !removed ? 'cursor-not-allowed' : '',
-    removed && !animatingMatch ? 'invisible pointer-events-none' : 'pointer-events-auto',
+    removed && !animatingMatch ? 'invisible pointer-events-none' : animatingCollapse ? '' : 'pointer-events-auto',
   ]
     .filter(Boolean)
     .join(' ');

@@ -36,6 +36,7 @@ import { DebugPanel } from './components/DebugPanel';
 import { PyramidBoard } from './components/PyramidBoard';
 import { DrawZone } from './components/DrawZone';
 import { MatchedCardsModal } from './components/MatchedCardsModal';
+import { CampaignEndModal } from './components/CampaignEndModal';
 import { ResetConfirmationModal } from './components/ResetConfirmationModal';
 import { CampaignSetupModal } from './components/CampaignSetupModal';
 import { RulesModal, RulesTab } from './components/RulesModal';
@@ -90,6 +91,8 @@ function App() {
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const [isCampaignSetupModalOpen, setIsCampaignSetupModalOpen] = useState(() => game.status === 'ready');
   const [isRoundSummaryModalOpen, setIsRoundSummaryModalOpen] = useState(false);
+  const [isCampaignEndModalOpen, setIsCampaignEndModalOpen] = useState(false);
+  const [campaignEndMode, setCampaignEndMode] = useState<'defeat' | 'victory'>('defeat');
   const [isRulesModalOpen, setIsRulesModalOpen] = useState(false);
   const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState(false);
   const [rulesTab, setRulesTab] = useState<RulesTab>('core-rules');
@@ -120,6 +123,7 @@ function App() {
     setHasRecordedOutcome(false);
     setRoundEffects(null);
     setIsRoundSummaryModalOpen(false);
+    setIsCampaignEndModalOpen(false);
   }, [campaign, hasRecordedOutcome, selectedRedraw, selectedMode]);
 
   const handleStartCampaign = useCallback(
@@ -143,6 +147,7 @@ function App() {
       setHasRecordedOutcome(false);
       setRoundEffects(null);
       setIsRoundSummaryModalOpen(false);
+      setIsCampaignEndModalOpen(false);
       setIsCampaignSetupModalOpen(false);
     },
     []
@@ -168,6 +173,7 @@ function App() {
     togglePlay,
     stepOne,
     stepToConclusion,
+    stop: stopAutoplay,
     resetCount,
     setSpeedMs,
     setStrategy,
@@ -212,10 +218,21 @@ function App() {
         const effects = computeRoundLifecycleEffects(campaign.masterDeck, nextCampaignState.masterDeck, game, game.mode);
         setCampaign(nextCampaignState);
         setRoundEffects(effects);
-        setIsRoundSummaryModalOpen(true);
+
+        if (nextCampaignState.status === 'defeat') {
+          stopAutoplay();
+          setCampaignEndMode('defeat');
+          setIsCampaignEndModalOpen(true);
+        } else if (game.status === 'complete-victory') {
+          stopAutoplay();
+          setCampaignEndMode('victory');
+          setIsCampaignEndModalOpen(true);
+        } else {
+          setIsRoundSummaryModalOpen(true);
+        }
       }
     }
-  }, [game.status, hasRecordedOutcome, campaign, game]);
+  }, [game.status, hasRecordedOutcome, campaign, game, stopAutoplay]);
 
   const topDiscard = game.discardPile[0] ?? null;
 
@@ -556,6 +573,22 @@ function App() {
         onNextRound={campaign && campaign.status === 'active' ? handleNextCampaignRound : undefined}
         onOpenVault={() => {
           setIsRoundSummaryModalOpen(false);
+          setIsMatchedCardsModalOpen(true);
+        }}
+      />
+
+      <CampaignEndModal
+        isOpen={isCampaignEndModalOpen}
+        mode={campaignEndMode}
+        defeatReason={campaign?.defeatReason}
+        campaign={campaign}
+        campaignStats={campaignStats}
+        roundNumber={campaign?.roundNumber ?? 1}
+        effects={roundEffects}
+        onStartNewCampaign={() => {
+          setIsCampaignSetupModalOpen(true);
+        }}
+        onOpenVault={() => {
           setIsMatchedCardsModalOpen(true);
         }}
       />

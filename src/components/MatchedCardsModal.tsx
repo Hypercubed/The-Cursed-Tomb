@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { PairStat, Suit, Rank, CursedCard, GameMode, getFunctionalValue } from '../game';
 
 interface MatchedCardsModalProps {
@@ -37,8 +37,14 @@ export function MatchedCardsModal({
   masterDeck,
   mode = 'standard',
 }: MatchedCardsModalProps) {
+  const closeBtnRef = useRef<HTMLButtonElement>(null);
+
   useEffect(() => {
     if (!isOpen) return;
+
+    const timer = setTimeout(() => {
+      closeBtnRef.current?.focus();
+    }, 0);
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -47,17 +53,22 @@ export function MatchedCardsModal({
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
   const totalRemoved = removedCardIds.size;
   const percentage = Math.round((totalRemoved / 52) * 100);
+  const entombedCount = masterDeck ? masterDeck.filter((c) => c.attritionStage === 5).length : 0;
+  const remainingCount = Math.max(0, 52 - totalRemoved);
 
   return (
     <div
-      className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 bg-black/80 z-[60] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -84,8 +95,16 @@ export function MatchedCardsModal({
           </div>
           <div className="flex items-center gap-4">
             <span className="px-3 py-1 bg-[#251c14] border border-game-border rounded-full text-xs text-game-accent font-mono font-medium">
+              {remainingCount} Remaining
+            </span>
+            <span className="px-3 py-1 bg-[#251c14] border border-game-border rounded-full text-xs text-game-accent font-mono font-medium">
               {totalRemoved} / 52 Removed ({percentage}%)
             </span>
+            {mode === 'cursed-tomb' && (
+              <span className="px-3 py-1 bg-[#251c14] border border-game-border rounded-full text-xs text-game-accent font-mono font-medium">
+                {entombedCount} Entombed 💀
+              </span>
+            )}
             <button
               type="button"
               onClick={onClose}
@@ -337,9 +356,10 @@ export function MatchedCardsModal({
         {/* Modal Footer */}
         <div className="px-6 py-3 border-t border-[#2d2319] bg-[#120e0a] flex justify-end">
           <button
+            ref={closeBtnRef}
             type="button"
             onClick={onClose}
-            className="appearance-none bg-transparent border border-game-border rounded-lg text-game-text text-sm cursor-pointer font-[inherit] px-5 py-1.5 hover:border-game-accent transition-colors"
+            className="appearance-none bg-transparent border border-game-border rounded-lg text-game-text text-sm cursor-pointer font-[inherit] px-5 py-1.5 hover:border-game-accent focus:ring-2 focus:ring-amber-500 focus:outline-none transition-colors"
           >
             Close Deck Codex
           </button>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { PlayingCard, InkBleedFilterDef } from './PlayingCard';
 
 export type RulesTab = 'core-rules' | 'web-guide' | 'card-anatomy';
@@ -112,6 +112,7 @@ function sanitizeTab(tab?: unknown): RulesTab {
 
 export function RulesModal({ isOpen, onClose, initialTab = 'core-rules' }: RulesModalProps) {
   const [activeTab, setActiveTab] = useState<RulesTab>(() => sanitizeTab(initialTab));
+  const closeBtnRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     setActiveTab(sanitizeTab(initialTab));
@@ -120,6 +121,10 @@ export function RulesModal({ isOpen, onClose, initialTab = 'core-rules' }: Rules
   useEffect(() => {
     if (!isOpen) return;
 
+    const timer = setTimeout(() => {
+      closeBtnRef.current?.focus();
+    }, 0);
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         onClose();
@@ -127,7 +132,10 @@ export function RulesModal({ isOpen, onClose, initialTab = 'core-rules' }: Rules
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
@@ -525,9 +533,10 @@ export function RulesModal({ isOpen, onClose, initialTab = 'core-rules' }: Rules
         {/* Modal Footer */}
         <div className="px-5 py-3 border-t border-[#2d2319] bg-[#120e0a] flex justify-end shrink-0">
           <button
+            ref={closeBtnRef}
             type="button"
             onClick={onClose}
-            className="appearance-none bg-amber-950/80 border border-amber-800 text-amber-300 rounded-lg text-xs sm:text-sm cursor-pointer font-[inherit] px-5 py-2 hover:bg-amber-900 hover:text-amber-100 transition-colors font-medium flex items-center gap-1.5"
+            className="appearance-none bg-amber-950/80 border border-amber-800 text-amber-300 rounded-lg text-xs sm:text-sm cursor-pointer font-[inherit] px-5 py-2 hover:bg-amber-900 hover:text-amber-100 focus:ring-2 focus:ring-amber-500 focus:outline-none transition-colors font-medium flex items-center gap-1.5"
           >
             <span>📜</span> Close Compendium
           </button>

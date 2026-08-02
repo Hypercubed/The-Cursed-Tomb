@@ -23,6 +23,33 @@ export function RoundSummaryModal({
   onNextRound,
   onOpenVault,
 }: RoundSummaryModalProps): React.ReactElement | null {
+  const primaryBtnRef = React.useRef<HTMLButtonElement>(null);
+  const closeBtnRef = React.useRef<HTMLButtonElement>(null);
+
+  React.useEffect(() => {
+    if (isOpen) {
+      const timer = setTimeout(() => {
+        if (onNextRound && primaryBtnRef.current) {
+          primaryBtnRef.current.focus();
+        } else if (closeBtnRef.current) {
+          closeBtnRef.current.focus();
+        }
+      }, 0);
+
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          onClose();
+        }
+      };
+
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        clearTimeout(timer);
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [isOpen, onNextRound, onClose]);
+
   if (!isOpen || !effects) return null;
 
   const isVictory = status === 'complete-victory' || status === 'partial-victory';
@@ -348,17 +375,19 @@ export function RoundSummaryModal({
           <div className="flex items-center gap-3 ml-auto">
             {onNextRound && (
               <button
+                ref={primaryBtnRef}
                 type="button"
                 onClick={onNextRound}
-                className="appearance-none bg-amber-950/90 border border-amber-700 text-amber-200 rounded-lg text-xs cursor-pointer font-[inherit] px-4 py-2 hover:bg-amber-900 transition-colors font-semibold flex items-center gap-1.5"
+                className="appearance-none bg-amber-950/90 border border-amber-700 text-amber-200 rounded-lg text-xs cursor-pointer font-[inherit] px-4 py-2 hover:bg-amber-900 focus:ring-2 focus:ring-amber-500 focus:outline-none transition-colors font-semibold flex items-center gap-1.5"
               >
                 <span>📜</span> Next Round
               </button>
             )}
             <button
+              ref={closeBtnRef}
               type="button"
               onClick={onClose}
-              className="appearance-none bg-transparent border border-game-border rounded-lg text-game-text text-xs cursor-pointer font-[inherit] px-4 py-2 hover:border-game-accent transition-colors"
+              className="appearance-none bg-transparent border border-game-border rounded-lg text-game-text text-xs cursor-pointer font-[inherit] px-4 py-2 hover:border-game-accent focus:ring-2 focus:ring-amber-500 focus:outline-none transition-colors"
             >
               Close
             </button>

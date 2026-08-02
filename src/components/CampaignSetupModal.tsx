@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { GameMode } from '../game';
 
 export interface DifficultyOption {
@@ -106,8 +106,14 @@ export function CampaignSetupModal({
     onToggleVolatileCollapse?.(val);
   };
 
+  const startCampaignBtnRef = useRef<HTMLButtonElement>(null);
+
   useEffect(() => {
     if (!isOpen) return;
+
+    const timer = setTimeout(() => {
+      startCampaignBtnRef.current?.focus();
+    }, 0);
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -116,7 +122,10 @@ export function CampaignSetupModal({
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
@@ -362,14 +371,15 @@ export function CampaignSetupModal({
           <button
             type="button"
             onClick={onClose}
-            className="appearance-none bg-transparent border border-game-border rounded-lg text-game-text text-sm cursor-pointer font-[inherit] px-4 py-2 hover:border-game-accent transition-colors"
+            className="appearance-none bg-transparent border border-game-border rounded-lg text-game-text text-sm cursor-pointer font-[inherit] px-4 py-2 hover:border-game-accent focus:ring-2 focus:ring-amber-500 focus:outline-none transition-colors"
           >
             Cancel
           </button>
           <button
+            ref={startCampaignBtnRef}
             type="button"
             onClick={() => onStartCampaign(selectedDifficulty, mode, volatile)}
-            className="appearance-none bg-amber-950/80 border border-amber-800 text-amber-300 rounded-lg text-sm cursor-pointer font-[inherit] px-6 py-2.5 hover:bg-amber-900 hover:text-amber-100 transition-colors font-semibold tracking-wide flex items-center gap-2 shadow-md"
+            className="appearance-none bg-amber-950/80 border border-amber-800 text-amber-300 rounded-lg text-sm cursor-pointer font-[inherit] px-6 py-2.5 hover:bg-amber-900 hover:text-amber-100 focus:ring-2 focus:ring-amber-500 focus:outline-none transition-colors font-semibold tracking-wide flex items-center gap-2 shadow-md"
           >
             <span>𓋹</span> Start Campaign
           </button>

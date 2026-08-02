@@ -1,9 +1,33 @@
+import { useEffect, useRef } from 'react';
+
 interface KeyboardShortcutsModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
 export function KeyboardShortcutsModal({ isOpen, onClose }: KeyboardShortcutsModalProps) {
+  const closeBtnRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const timer = setTimeout(() => {
+      closeBtnRef.current?.focus();
+    }, 0);
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   return (
@@ -16,9 +40,10 @@ export function KeyboardShortcutsModal({ isOpen, onClose }: KeyboardShortcutsMod
         onClick={(e) => e.stopPropagation()}
       >
         <button
+          ref={closeBtnRef}
           type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 text-game-muted hover:text-game-text bg-transparent border-none cursor-pointer text-xl leading-none"
+          className="absolute top-4 right-4 text-game-muted hover:text-game-text bg-transparent border-none cursor-pointer text-xl leading-none focus:ring-2 focus:ring-amber-500 focus:outline-none rounded"
           aria-label="Close"
         >
           ×
