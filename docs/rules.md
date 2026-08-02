@@ -1,4 +1,4 @@
-# The Cursed Tomb (Official Ruleset v0.0.9)
+# The Cursed Tomb (Official Ruleset v0.0.10)
 
 A persistent, mutating tactical card game played with a standard 52-card deck and a permanent fine-tip marker. 
 

@@ -68,7 +68,11 @@ class RuleFlags:
     curses: bool = True             # stage-4 red trap / black pairing restriction
     blessings: bool = True          # Fallen Hero unlocks + all 4 suit blessing effects
     attrition: bool = True          # failure track progresses at all on freeze
-    volatile_collapse: bool = False # optional "all 4 of a rank entombed" instant collapse
+    volatile_collapse: bool = True  # optional "all 4 of a rank entombed" instant collapse
+    max_attrition_stage: int = 5    # stage at which a card is considered entombed (default 5)
+    anchor_absorption: bool = False # Anchored cards absorb 4 marks before anchor exhausts (disabled)
+    anchor_max_absorption: int = 4  # Number of absorbed marks on + before exhaustion (default 4)
+    sealed_tomb_victory: bool = False# Sealed Tomb Win: < 28 living (un-anchored) cards remain (disabled)
 
 
 @dataclass
@@ -80,6 +84,7 @@ class CardState:
     reward_stage: int = 0      # 0 none,1 fortifying,2 anchored (immune forever)
     blessed: bool = False      # Fallen Hero blessing unlocked (uses own suit for effect)
     temp_immune: bool = False  # this-round-only immunity granted by a Hearts blessing
+    anchor_absorption: int = 0 # 0..4 marks absorbed by current Anchor
 
     def __repr__(self):
         return f"{self.rank}{self.suit}"
@@ -95,10 +100,10 @@ class CardState:
         return v
 
     def is_black_cursed(self, flags):
-        return flags.curses and self.attrition_stage == 4 and self.suit in BLACK
+        return flags.curses and self.attrition_stage >= 4 and self.suit in BLACK
 
     def is_red_cursed(self, flags):
-        return flags.curses and self.attrition_stage == 4 and self.suit in RED
+        return flags.curses and self.attrition_stage >= 4 and self.suit in RED
 
     def is_anchored(self):
         return self.reward_stage >= 2
@@ -160,7 +165,7 @@ class RoundOutcome:
     last_clear_cards: tuple = None
 
 
-def play_round(pool, rng, max_redeals, flags, max_moves=4000, full_registry=None):
+def play_round(pool, rng, max_redeals, flags, max_moves=300, full_registry=None):
     """Plays one round in-place against the persistent CardState objects in
     `pool` (mutating attrition/reward/blessed/temp_immune fields as events
     happen). `pool` must have length >= 28. Returns a RoundOutcome."""
@@ -199,10 +204,11 @@ def play_round(pool, rng, max_redeals, flags, max_moves=4000, full_registry=None
                 stock.extend(waste)
                 waste.clear()
                 rng.shuffle(stock)
-        elif card.suit == 'S':  # Tunnel: move highest-leverage exposed pyramid card to Waste
+        elif card.suit == 'S':  # Tunnel: move exposed pyramid card to Waste
             exp = exposed_slots(removed, locks)
             if exp:
-                best_slot = max(exp, key=lambda s: newly_exposed_after(removed, locks, (s,)))
+                # Select exposed slot that unlocks the most cards below
+                best_slot = max(exp, key=lambda s: len(COVERS[s]) if s < len(COVERS) else 0)
                 removed.add(best_slot)
                 waste.append(pyr[best_slot])
         # Diamonds (Vault) handled at draw time; Clubs (Universal Wildcard) handled in pair_sum
@@ -325,8 +331,7 @@ def play_round(pool, rng, max_redeals, flags, max_moves=4000, full_registry=None
 
         # stock just ran out for this pass.
         # allow redeal if redeals_left > 0 AND (progress was made OR this is the first pass of the round).
-        # this allows 1 extra pass to pair newly exposed waste/pyramid cards without looping infinitely.
-        if redeals_left > 0 and waste and (clears_this_pass > 0 or redeals_left == max_redeals):
+        if redeals_left > 0 and waste and clears_this_pass > 0:
             stock = waste
             waste = []
             redeals_left -= 1
@@ -341,9 +346,18 @@ def play_round(pool, rng, max_redeals, flags, max_moves=4000, full_registry=None
         exp = exposed_slots(removed, locks)
         for i in exp:
             card = pyr[i]
-            if card.is_anchored() or card.temp_immune:
+            if card.temp_immune:
                 continue
-            if card.attrition_stage < 5:
+            if flags.anchor_absorption and card.reward_stage >= 2:
+                if card.anchor_absorption < flags.anchor_max_absorption:
+                    card.anchor_absorption += 1
+                    if card.anchor_absorption >= flags.anchor_max_absorption:
+                        card.reward_stage = 0
+                        card.attrition_stage = 0
+                    continue
+            if card.is_anchored():
+                continue
+            if card.attrition_stage < flags.max_attrition_stage:
                 card.attrition_stage += 1
 
     # Reward pass, only meaningful if the pyramid actually got cleared this
@@ -360,25 +374,44 @@ def _apply_survival_reward(last_clear_type, last_clear_cards, flags):
         if flags.blessings and not higher.blessed:
             higher.blessed = True
         if lower.attrition_stage < 3:
+            prev_stage = lower.reward_stage
             lower.reward_stage = min(2, lower.reward_stage + 1)
+            if lower.reward_stage == 2 and prev_stage < 2:
+                lower.anchor_absorption = 0
         # else: Ink Overlap -- reward lost
     elif last_clear_type == 'solo':
         card, = last_clear_cards
         if card.attrition_stage < 3:
+            prev_stage = card.reward_stage
             card.reward_stage = min(2, card.reward_stage + 1)
+            if card.reward_stage == 2 and prev_stage < 2:
+                card.anchor_absorption = 0
 
 
-def run_campaign(rng, max_redeals, flags, max_rounds):
+def run_campaign(rng, max_redeals, flags, max_rounds, deadlock_limit=None):
     # `registry` holds all 52 physical cards for the entire campaign,
     # including entombed ones (needed for the volatile-collapse rank check).
     registry = [CardState(r, s) for s in SUITS for r in RANKS]
     rounds_played = 0
 
+    consecutive_stalls = 0
     for round_num in range(1, max_rounds + 1):
         rounds_played = round_num
-        active = [c for c in registry if c.attrition_stage < 5]
+        active = [c for c in registry if c.attrition_stage < flags.max_attrition_stage]
         if len(active) < N_PYR:
             return {"result": "collapse_starvation", "rounds": rounds_played}
+
+        if flags.sealed_tomb_victory:
+            living = [c for c in active if not c.is_anchored()]
+            if len(living) < N_PYR:
+                return {"result": "victory_sealed", "rounds": rounds_played}
+
+        # Check if ALL remaining active cards in the campaign are immune/anchored
+        if all(c.is_anchored() for c in active):
+            return {"result": "all_immune_stall", "rounds": rounds_played}
+
+        # Take snapshot of deck state before round
+        state_before = [(c.attrition_stage, c.reward_stage, c.blessed, c.anchor_absorption) for c in registry]
 
         outcome = play_round(active, rng, max_redeals, flags, full_registry=registry)
 
@@ -391,11 +424,26 @@ def run_campaign(rng, max_redeals, flags, max_rounds):
         if outcome.kind == 'freeze' and flags.volatile_collapse:
             by_rank = {}
             for c in registry:
-                if c.attrition_stage == 5:
+                if c.attrition_stage >= flags.max_attrition_stage:
                     by_rank.setdefault(c.rank, 0)
                     by_rank[c.rank] += 1
             if any(count >= 4 for count in by_rank.values()):
                 return {"result": "collapse_volatile", "rounds": rounds_played}
+
+        # Check if any physical card state changed during this round
+        state_after = [(c.attrition_stage, c.reward_stage, c.blessed, c.anchor_absorption) for c in registry]
+        if state_before == state_after:
+            consecutive_stalls += 1
+            if deadlock_limit is None:
+                deadlock_threshold = max(1, int(max_rounds * 0.10))
+            elif isinstance(deadlock_limit, float) and deadlock_limit < 1.0:
+                deadlock_threshold = max(1, int(max_rounds * deadlock_limit))
+            else:
+                deadlock_threshold = int(deadlock_limit)
+            if consecutive_stalls >= deadlock_threshold:
+                return {"result": "stall_deadlock", "rounds": rounds_played}
+        else:
+            consecutive_stalls = 0
 
     return {"result": "timeout", "rounds": rounds_played}
 
@@ -415,6 +463,7 @@ def run_many_campaigns(difficulty, campaigns, seed, flags, max_rounds, verbose=F
     victories = 0
     collapses = 0
     timeouts = 0
+    stall_deadlocks = 0
     victory_rounds = []
     collapse_rounds = []
     rounds_to_resolution = []  # victories + collapses only (excludes timeouts)
@@ -427,6 +476,8 @@ def run_many_campaigns(difficulty, campaigns, seed, flags, max_rounds, verbose=F
             rounds_to_resolution.append(result["rounds"])
         elif result["result"] == "timeout":
             timeouts += 1
+        elif result["result"] == "stall_deadlock":
+            stall_deadlocks += 1
         else:
             collapses += 1
             collapse_rounds.append(result["rounds"])
@@ -445,14 +496,17 @@ def run_many_campaigns(difficulty, campaigns, seed, flags, max_rounds, verbose=F
     print(f"campaigns run:       {campaigns}")
     print(f"victories:           {victories}")
     print(f"collapses:           {collapses}")
+    if stall_deadlocks:
+        print(f"stall (deadlock):    {stall_deadlocks}  (all-immune or no-progress deadlock)")
     if timeouts:
-        print(f"timeouts (uncapped): {timeouts}  (increase --max-rounds to resolve these)")
+        print(f"timeouts (round cap):{timeouts}  (increase --max-rounds to resolve these)")
     resolved = victories + collapses
     if resolved:
         print(f"victory rate:        {victories / resolved:.2%} (of resolved campaigns)")
         print(f"collapse rate:       {collapses / resolved:.2%} (of resolved campaigns)")
     print(f"victory rate (all):  {victories / campaigns:.2%}")
     print(f"collapse rate (all): {collapses / campaigns:.2%}")
+    print(f"timeout rate (all):  {timeouts / campaigns:.2%}")
     if victory_rounds:
         v_mean = statistics.mean(victory_rounds)
         v_std = statistics.stdev(victory_rounds) if len(victory_rounds) > 1 else 0.0
@@ -484,7 +538,7 @@ def parse_args():
     p.add_argument("--no-attrition", action="store_true",
                    help="disable the whole failure ink track (cards never scar/curse/entomb; "
                         "campaigns then can only end via victory or timeout)")
-    p.add_argument("--max-rounds", type=int, default=1000,
+    p.add_argument("--max-rounds", type=int, default=500,
                    help="safety cap on rounds per campaign before declaring a timeout")
     p.add_argument("--verbose", action="store_true", help="print per-campaign results")
     return p.parse_args()

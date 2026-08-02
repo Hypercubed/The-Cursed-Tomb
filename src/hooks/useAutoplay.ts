@@ -2,14 +2,30 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { GameState } from '../game';
 import { findNextMove, SolverStrategy } from '../solver';
 
+const DEBUG_PANEL_STORAGE_KEY = 'debugPanelSettings';
+
+function loadDebugPanelSettings(): { strategy: SolverStrategy; speedMs: number } {
+  try {
+    const stored = localStorage.getItem(DEBUG_PANEL_STORAGE_KEY);
+    if (stored) {
+      const { strategy, speedMs } = JSON.parse(stored);
+      return {
+        strategy: (strategy as SolverStrategy) ?? 'greedy',
+        speedMs: typeof speedMs === 'number' ? speedMs : 200,
+      };
+    }
+  } catch {}
+  return { strategy: 'greedy', speedMs: 200 };
+}
+
 export function useAutoplay(
   game: GameState,
   setGame: React.Dispatch<React.SetStateAction<GameState>>,
   onStartNewGame: () => void
 ) {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [strategy, setStrategy] = useState<SolverStrategy>('greedy');
-  const [speedMs, setSpeedMs] = useState(200);
+  const [strategy, setStrategy] = useState<SolverStrategy>(() => loadDebugPanelSettings().strategy);
+  const [speedMs, setSpeedMs] = useState<number>(() => loadDebugPanelSettings().speedMs);
   const [moveCount, setMoveCount] = useState(0);
   const [isThinking, setIsThinking] = useState(false);
 
