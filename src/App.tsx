@@ -7,6 +7,7 @@ import {
   drawCard,
   getCardById,
   getCardLocation,
+  getFunctionalValue,
   isBlocked,
   getRemainingPairStats,
   getRemovedCardIds,
@@ -249,8 +250,22 @@ function App() {
   };
 
   const handleCardClick = (cardId: string) => {
-    if (game.status !== 'in-progress') return;
-    if (animatingMatchIds.length > 0) return;
+    console.log('[TOMB DEBUG] handleCardClick triggered for:', cardId, {
+      status: game.status,
+      selectedCardId: game.selectedCardId,
+      interactionMode: game.interactionMode,
+      animatingMatchIds,
+      animatingErrorIds,
+    });
+
+    if (game.status !== 'in-progress') {
+      console.log('[TOMB DEBUG] handleCardClick ignored: game status is not in-progress:', game.status);
+      return;
+    }
+    if (animatingMatchIds.length > 0) {
+      console.log('[TOMB DEBUG] handleCardClick ignored: match animation in progress:', animatingMatchIds);
+      return;
+    }
 
     // Handle Spades/Hearts targeting actions
     if (game.interactionMode && game.interactionMode !== 'normal') {
@@ -274,7 +289,9 @@ function App() {
     // If another card is currently selected
     if (game.selectedCardId && game.selectedCardId !== cardId) {
       const selectedCard = getCardById(game.selectedCardId, game);
-      if (selectedCard && canRemovePair(targetCard, selectedCard, game.mode)) {
+      const canPair = selectedCard ? canRemovePair(targetCard, selectedCard, game.mode) : false;
+
+      if (selectedCard && canPair) {
         const matchIds = [selectedCard.id, targetCard.id];
         setAnimatingMatchIds(matchIds);
         setTimeout(() => {

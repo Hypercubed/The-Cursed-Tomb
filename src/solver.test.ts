@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { startGame, GameState } from './game';
+import { startGame, playCard, Card, GameState } from './game';
 import {
   findNextGreedyMove,
   findNextSmartMove,
@@ -334,18 +334,26 @@ describe('solver', () => {
       expect(nextState!.interactionMode).toBe('normal');
     });
 
-    it('greedy solver auto-resolves targeting-hearts by granting temp immunity', () => {
-      const game = startGame(1, 'cursed-tomb');
-      const state: GameState = {
-        ...game,
-        interactionMode: 'targeting-hearts',
-        pendingHeroCardId: '♥A',
-      };
+    it('executes Hearts Stock Reshuffle when clearing a Blessed Hearts Hero', () => {
+      let game = startGame(1, 'cursed-tomb');
+      const heartsHero = { id: '♥8', suit: '♥' as const, rank: 8 as const, removed: false, selected: false, attritionStage: 0 as const, rewardStage: 0 as const, blessed: true };
+      const partnerFive = { id: '♣5', suit: '♣' as const, rank: 5 as const, removed: false, selected: false, attritionStage: 0 as const, rewardStage: 0 as const, blessed: false };
+      const extraWaste = { id: '♠3', suit: '♠' as const, rank: 3 as const, removed: false, selected: false, attritionStage: 0 as const, rewardStage: 0 as const, blessed: false };
 
-      const nextState = findNextGreedyMove(state);
-      expect(nextState).not.toBeNull();
-      expect(nextState!.status).not.toBe('pyramid-collapse');
-      expect(nextState!.interactionMode).toBe('normal');
+      const existingId = game.pyramid[6][0].id;
+      game.pyramid[6][0] = { ...heartsHero, id: existingId };
+      const partnerId = game.pyramid[6][1].id;
+      game.pyramid[6][1] = { ...partnerFive, id: partnerId };
+      game.drawPile = game.drawPile.filter((c) => c.id !== '♠3');
+      game.discardPile = [{ ...extraWaste }];
+
+      game = playCard(game, partnerId);
+      expect(game.selectedCardId).toBe(partnerId);
+
+      const nextState = playCard(game, existingId);
+      // Extra waste card (♠3) should now be in drawPile, and discardPile empty
+      expect(nextState.discardPile.length).toBe(0);
+      expect(nextState.drawPile.some((c: Card) => c.id === '♠3')).toBe(true);
     });
 
     it('getLegalNextStates returns only the targeting resolution when mode is active', () => {

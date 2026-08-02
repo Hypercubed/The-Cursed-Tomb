@@ -49,15 +49,9 @@ export function PyramidBoard({
 }: PyramidBoardProps): React.ReactElement {
   return (
     <div className={`flex flex-col items-center py-2 sm:py-4 relative ${status === 'pyramid-collapse' ? 'overflow-hidden' : 'overflow-x-auto'}`}>
-      {interactionMode === 'targeting-hearts' && (
-        <div className="mb-2 px-3 py-1 bg-red-950/90 border border-red-700 text-red-200 text-xs font-semibold rounded-full animate-bounce">
-          ♥ Hearts Resurrection: Activate to draw 1 random card from the Graveyard Box back into play!
-        </div>
-      )}
-
       {interactionMode === 'targeting-spades' && (
         <div className="mb-2 px-3 py-1 bg-blue-950/90 border border-blue-700 text-blue-200 text-xs font-semibold rounded-full animate-bounce">
-          ♠ Spades Tunnel: Click one face-down card to reveal it!
+          ♠ Spades Tunnel: Click one exposed pyramid card to move it to the Waste pile!
         </div>
       )}
 
@@ -72,10 +66,8 @@ export function PyramidBoard({
             const blocked = isBlocked(card.id, pyramid);
             let isTargetable = false;
 
-            if (interactionMode === 'targeting-hearts') {
+            if (interactionMode === 'targeting-spades') {
               isTargetable = !card.removed && !blocked && !card.faceDown;
-            } else if (interactionMode === 'targeting-spades') {
-              isTargetable = !card.removed && Boolean(card.faceDown);
             }
 
             const isPlayable = isTargetable || (!card.removed && !blocked && !card.faceDown && status === 'in-progress' && interactionMode === 'normal');

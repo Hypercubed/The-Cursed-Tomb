@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { GameState, CursedCard } from './game';
+import type { GameState, CursedCard, Card } from './game';
 import {
   canAnyMove,
   canRemovePair,
@@ -346,14 +346,58 @@ describe('Cursed Tomb campaign mechanics', () => {
     expect(canRemovePair(clubsHero, randomCard, 'cursed-tomb')).toBe(true);
   });
 
-  it('restricts Black Cursed cards from pairing with Stock or Waste', () => {
+  it('allows Black Cursed cards to pair with Stock, Waste, or Vault, and shuffles partner into Stock', () => {
     const blackCurseTen = { id: '♠10', suit: '♠' as const, rank: 10 as const, removed: false, selected: false, attritionStage: 4 as const, rewardStage: 0 as const, blessed: false };
-    const pyramidFour = { id: '♦4', suit: '♦' as const, rank: 4 as const, removed: false, selected: false, attritionStage: 0 as const, rewardStage: 0 as const, blessed: false };
+    const partnerFour = { id: '♦4', suit: '♦' as const, rank: 4 as const, removed: false, selected: false, attritionStage: 0 as const, rewardStage: 0 as const, blessed: false };
 
     // Pyramid to Pyramid pairing is allowed
-    expect(canRemovePair(blackCurseTen, pyramidFour, 'cursed-tomb', 'pyramid', 'pyramid')).toBe(true);
-    // Pyramid to Waste pairing is blocked for Black Curse
-    expect(canRemovePair(blackCurseTen, pyramidFour, 'cursed-tomb', 'discard', 'pyramid')).toBe(false);
+    expect(canRemovePair(blackCurseTen, partnerFour, 'cursed-tomb', 'pyramid', 'pyramid')).toBe(true);
+    // Pyramid to Waste pairing is also allowed now
+    expect(canRemovePair(blackCurseTen, partnerFour, 'cursed-tomb', 'discard', 'pyramid')).toBe(true);
+
+    let game = startGame(1, 'cursed-tomb');
+    const existingCardId = game.pyramid[6][0].id;
+    const cursedCard = { ...blackCurseTen, id: existingCardId };
+    game.pyramid[6][0] = cursedCard;
+    game.drawPile = game.drawPile.filter((c) => c.id !== '♦4');
+    game.pyramid = game.pyramid.map((row) => row.filter((c) => c.id !== '♦4'));
+    game.discardPile = [{ ...partnerFour }];
+    
+    game = playCard(game, '♦4');
+    expect(game.selectedCardId).toBe('♦4');
+
+    const nextGame = playCard(game, existingCardId);
+    // Partner card (♦4) should now be in drawPile, faceDown, removed: false
+    const recycledCardInDraw = nextGame.drawPile.find((c) => c.id === '♦4');
+    expect(recycledCardInDraw).toBeDefined();
+    expect(recycledCardInDraw?.faceDown).toBe(true);
+    expect(recycledCardInDraw?.removed).toBe(false);
+    expect(nextGame.discardPile.find((c) => c.id === '♦4')).toBeUndefined();
+  });
+
+  it('triggers Spades Tunnel targeting mode to move an exposed pyramid card to Waste', () => {
+    let game = startGame(1, 'cursed-tomb');
+    const spadesHero = { id: '♠8', suit: '♠' as const, rank: 8 as const, removed: false, selected: false, attritionStage: 0 as const, rewardStage: 0 as const, blessed: true };
+    const partnerFive = { id: '♦5', suit: '♦' as const, rank: 5 as const, removed: false, selected: false, attritionStage: 0 as const, rewardStage: 0 as const, blessed: false };
+
+    const heroId = game.pyramid[6][0].id;
+    const partnerId = game.pyramid[6][1].id;
+    const targetExposedId = game.pyramid[6][2].id;
+
+    game.pyramid[6][0] = { ...spadesHero, id: heroId };
+    game.pyramid[6][1] = { ...partnerFive, id: partnerId };
+
+    // Select partner and pair with Spades Hero
+    game = playCard(game, partnerId);
+    game = playCard(game, heroId);
+
+    // Spades Tunnel should activate targeting-spades mode
+    expect(game.interactionMode).toBe('targeting-spades');
+
+    // Click exposed card to move it to Waste
+    const afterTarget = playCard(game, targetExposedId);
+    expect(afterTarget.interactionMode).toBe('normal');
+    expect(afterTarget.discardPile[0].id).toBe(targetExposedId);
   });
 
   it('applies Attrition Phase to exposed pyramid bottlenecks on collapse', () => {
@@ -441,6 +485,8 @@ describe('Cursed Tomb campaign mechanics', () => {
 
   it('applies Hero Blessing and Anchor Reward when forceWin is called in campaign mode', () => {
     const campaign = createCampaign('cursed-tomb', 1, false);
+    campaign.currentRound.pyramid[0][0] = { ...campaign.currentRound.pyramid[0][0], rank: 7, suit: '♠', attritionStage: 0 };
+    campaign.currentRound.pyramid[6][0] = { ...campaign.currentRound.pyramid[6][0], rank: 6, suit: '♦', attritionStage: 0 };
     campaign.currentRound = forceWin(campaign.currentRound);
 
     const updated = applyEndOfWeekLifecycle(campaign);
@@ -521,6 +567,32 @@ describe('Cursed Tomb campaign mechanics', () => {
       const nextState = movePyramidToVault(state, exposedCard.id);
       expect(nextState.vaultCard).toEqual(state.vaultCard);
       expect(nextState.pyramid[6][0].removed).toBe(false);
+    });
+  });
+
+  describe('playCard discard King clearing', () => {
+    it('resets selectedCardId to null when single-clearing a King from the discard pile', () => {
+      const state = startGame(1);
+      const kingCard: Card = {
+        id: 'test-discard-king-13',
+        suit: '♠',
+        rank: 13,
+        removed: false,
+        selected: false,
+        attritionStage: 0,
+        rewardStage: 0,
+        blessed: false,
+        faceDown: false,
+      };
+      const stateWithKing: GameState = {
+        ...state,
+        discardPile: [kingCard, ...state.discardPile],
+        selectedCardId: state.pyramid[6][0].id,
+      };
+
+      const nextState = playCard(stateWithKing, kingCard.id);
+      expect(nextState.discardPile.some((c) => c.id === kingCard.id)).toBe(false);
+      expect(nextState.selectedCardId).toBeNull();
     });
   });
 });

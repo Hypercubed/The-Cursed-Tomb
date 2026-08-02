@@ -78,6 +78,7 @@ export function DrawZone({
               attritionStage={topDiscard.attritionStage}
               rewardStage={topDiscard.rewardStage}
               blessed={topDiscard.blessed}
+              faceDown={topDiscard.faceDown}
               selected={topDiscard.id === selectedCardId}
               disabled={!gameActive}
               animatingMatch={animatingMatchIds.includes(topDiscard.id)}
@@ -106,6 +107,7 @@ export function DrawZone({
               attritionStage={vaultCard.attritionStage}
               rewardStage={vaultCard.rewardStage}
               blessed={vaultCard.blessed}
+              faceDown={vaultCard.faceDown}
               selected={vaultCard.id === selectedCardId}
               disabled={!gameActive}
               animatingMatch={animatingMatchIds.includes(vaultCard.id)}

@@ -60,9 +60,9 @@ function SuitIcon({ suit, className = 'w-4 h-4' }: { suit: string; className?: s
 
 function getUpperLeftTooltip(suit: string, blessed: boolean, rewardStage: number): string {
   if (blessed) {
-    if (suit === '♥') return 'Blessed Fallen Hero [O]: Hearts Resurrection power (draws 1 random card from Graveyard Box as Cursed Stage 4 when cleared)';
+    if (suit === '♥') return 'Blessed Fallen Hero [O]: Hearts Stock Reshuffle power (shuffles all Waste pile cards back into Stock draw pile when cleared)';
     if (suit === '♦') return 'Blessed Fallen Hero [O]: Diamonds Vault power (can store 1 Waste card in Vault)';
-    if (suit === '♠') return 'Blessed Fallen Hero [O]: Spades Tunnel power (flips 1 face-down card when cleared)';
+    if (suit === '♠') return 'Blessed Fallen Hero [O]: Spades Tunnel power (moves 1 exposed pyramid card to Waste pile when cleared)';
     if (suit === '♣') return 'Blessed Fallen Hero [O]: Clubs Universal Wildcard power (pairs with ANY exposed card to total 13)';
     return 'Blessed Fallen Hero [O]: Unlocks Suit Blessing power when cleared';
   }
@@ -85,7 +85,7 @@ function getUpperRightTooltip(suit: string, attritionStage: number, rank: number
   if (attritionStage === 4) {
     return isRed
       ? `Red Curse (|X|): Red Curse active (+1 value shift & locks next lower row cards face-down)`
-      : `Black Curse (|X|): Black Curse active (-1 value shift & restricts pairing exclusively to Pyramid cards)`;
+      : `Black Curse (|X|): Black Curse active (-1 value shift & shuffles paired partner into Stock pile)`;
   }
   if (attritionStage === 5) return 'Entombed (💀): Permanently destroyed card';
   return '';

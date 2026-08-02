@@ -194,16 +194,17 @@ def play_round(pool, rng, max_redeals, flags, max_moves=4000, full_registry=None
         """Blessing side-effects that trigger whenever a blessed card clears."""
         if not flags.blessings or not card.blessed:
             return
-        if card.suit == 'H':  # Resurrection: draw 1 random card from Graveyard Box as Stage 4 (Cursed)
-            entombed = [c for c in full_registry if c.attrition_stage == 5]
-            if entombed:
-                revived = rng.choice(entombed)
-                revived.attrition_stage = 4
-        elif card.suit == 'S':  # Tunnel: flip one locked/face-down card free
-            for slot, lockers in list(locks.items()):
-                if slot not in removed and any(l not in removed for l in lockers):
-                    locks[slot] = set()
-                    break
+        if card.suit == 'H':  # Stock Reshuffle: free Waste pile reshuffle into Stock
+            if waste:
+                stock.extend(waste)
+                waste.clear()
+                rng.shuffle(stock)
+        elif card.suit == 'S':  # Tunnel: move highest-leverage exposed pyramid card to Waste
+            exp = exposed_slots(removed, locks)
+            if exp:
+                best_slot = max(exp, key=lambda s: newly_exposed_after(removed, locks, (s,)))
+                removed.add(best_slot)
+                waste.append(pyr[best_slot])
         # Diamonds (Vault) handled at draw time; Clubs (Universal Wildcard) handled in pair_sum
 
     while moves_played < max_moves:
@@ -239,8 +240,6 @@ def play_round(pool, rng, max_redeals, flags, max_moves=4000, full_registry=None
                 candidates.append((0, 'alone_single', (kind_s, vi)))
             for a in exp:
                 pcard = pyr[a]
-                if pcard.is_black_cursed(flags):
-                    continue  # Black Curse: pyramid-only pairing
                 if pair_sum(pcard, single_card, flags) == TARGET:
                     score = newly_exposed_after(removed, locks, (a,))
                     candidates.append((score, 'pw', (a, kind_s, vi)))
@@ -250,9 +249,22 @@ def play_round(pool, rng, max_redeals, flags, max_moves=4000, full_registry=None
             _, kind, payload = candidates[0]
             if kind == 'pp':
                 a, b = payload
+                card_a, card_b = pyr[a], pyr[b]
                 removed.add(a); removed.add(b)
-                fire_on_clear(pyr[a]); fire_on_clear(pyr[b])
-                last_clear_type, last_clear_cards = 'pair', (pyr[a], pyr[b])
+                a_bc = card_a.is_black_cursed(flags)
+                b_bc = card_b.is_black_cursed(flags)
+                if a_bc and not b_bc:
+                    stock.append(card_b)
+                    rng.shuffle(stock)
+                elif b_bc and not a_bc:
+                    stock.append(card_a)
+                    rng.shuffle(stock)
+                elif a_bc and b_bc:
+                    stock.append(card_a)
+                    stock.append(card_b)
+                    rng.shuffle(stock)
+                fire_on_clear(card_a); fire_on_clear(card_b)
+                last_clear_type, last_clear_cards = 'pair', (card_a, card_b)
             elif kind == 'p':
                 a, = payload
                 removed.add(a)
@@ -265,10 +277,23 @@ def play_round(pool, rng, max_redeals, flags, max_moves=4000, full_registry=None
                 last_clear_type, last_clear_cards = 'solo', (card,)
             elif kind == 'pw':
                 a, kind_s, vi = payload
-                card = waste.pop() if kind_s == 'waste' else vault.pop(vi)
+                card_w = waste.pop() if kind_s == 'waste' else vault.pop(vi)
+                card_a = pyr[a]
                 removed.add(a)
-                fire_on_clear(pyr[a]); fire_on_clear(card)
-                last_clear_type, last_clear_cards = 'pair', (pyr[a], card)
+                a_bc = card_a.is_black_cursed(flags)
+                w_bc = card_w.is_black_cursed(flags)
+                if a_bc and not w_bc:
+                    stock.append(card_w)
+                    rng.shuffle(stock)
+                elif w_bc and not a_bc:
+                    stock.append(card_a)
+                    rng.shuffle(stock)
+                elif a_bc and w_bc:
+                    stock.append(card_a)
+                    stock.append(card_w)
+                    rng.shuffle(stock)
+                fire_on_clear(card_a); fire_on_clear(card_w)
+                last_clear_type, last_clear_cards = 'pair', (card_a, card_w)
             moves_played += 1
             progress_this_pass = True
             continue

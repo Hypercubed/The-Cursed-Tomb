@@ -22,31 +22,16 @@ export type SolverStrategy = 'greedy' | 'smart' | 'perfect';
 export type WinnabilityStatus = 'complete-victory' | 'partial-victory' | 'unwinnable' | 'deadlocked';
 
 /**
- * If the game is waiting on a hero-power targeting action (Spades Tunnel or Hearts Resurrection),
+ * If the game is waiting on a hero-power targeting action (Spades Tunnel),
  * automatically selects a valid target card and resolves the interaction mode.
  * Returns null if no valid target exists (should not happen in a well-formed game state).
  */
 function resolveTargetingMode(state: GameState): GameState | null {
   if (state.interactionMode === 'targeting-spades') {
-    // Pick the first blocked face-down card in the pyramid to reveal
-    for (const row of state.pyramid) {
-      for (const card of row) {
-        if (!card.removed && card.faceDown) {
-          return applyTargetingAction(state, card.id);
-        }
-      }
-    }
-    // No face-down card found — just reset the interaction mode to unblock the solver
-    return { ...state, interactionMode: 'normal', pendingHeroCardId: null };
-  }
-
-  if (state.interactionMode === 'targeting-hearts') {
-    // Pick the first exposed (unblocked, face-up) pyramid card to grant temporary immunity
     const exposed = visibleCards(state.pyramid);
     if (exposed.length > 0) {
       return applyTargetingAction(state, exposed[0].id);
     }
-    // No exposed card — just reset the interaction mode
     return { ...state, interactionMode: 'normal', pendingHeroCardId: null };
   }
 
@@ -314,6 +299,15 @@ function scoreCandidateState(prevState: GameState, candidateState: GameState): n
   score += pyramidRemovedCount * 20;
   score += unblockedCount * 15;
   score += bottleneckBonus;
+
+  // Bonus for clearing cards from discard pile or vault without drawing
+  if (prevState.discardPile.length > candidateState.discardPile.length && pyramidRemovedCount === 0) {
+    score += 10;
+  }
+
+  if (prevState.vaultCard && !candidateState.vaultCard && pyramidRemovedCount === 0) {
+    score += 10;
+  }
 
   if (candidateState.drawPile.length < prevState.drawPile.length && pyramidRemovedCount === 0) {
     score -= 10;

@@ -62,6 +62,7 @@ export function useAutoplay(
         const nextState = findNextMove(gameRef.current, strategyRef.current);
         if (!nextState || nextState === gameRef.current) break;
 
+        gameRef.current = nextState;
         setGame(nextState);
         setMoveCount((prev) => prev + 1);
         steps += 1;

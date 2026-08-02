@@ -118,7 +118,7 @@ export class PersistenceManager {
           state.status = 'pyramid-collapse';
         }
         delete (state as any).winCondition;
-        return state;
+        return this.sanitizeLoadedGameState(state);
       }
     } catch {
       // Fall through on error
@@ -153,12 +153,29 @@ export class PersistenceManager {
       if (!raw) return null;
       const parsed = JSON.parse(raw);
       if (parsed && parsed.version === 1 && parsed.campaign) {
-        return parsed.campaign;
+        const campaign = parsed.campaign;
+        return {
+          ...campaign,
+          masterDeck: Array.isArray(campaign.masterDeck)
+            ? campaign.masterDeck.map((c: any) => ({ ...c, removed: false, faceDown: false, selected: false }))
+            : [],
+          currentRound: this.sanitizeLoadedGameState(campaign.currentRound),
+        };
       }
     } catch {
       // Ignore
     }
     return null;
+  }
+
+  private sanitizeLoadedGameState(state: GameState): GameState {
+    if (!state) return state;
+    return {
+      ...state,
+      drawPile: Array.isArray(state.drawPile) ? state.drawPile.map((c) => ({ ...c, removed: false })) : [],
+      discardPile: Array.isArray(state.discardPile) ? state.discardPile.map((c) => ({ ...c, removed: false })) : [],
+      vaultCard: state.vaultCard ? { ...state.vaultCard, removed: false } : null,
+    };
   }
 
   saveCampaignState(campaign: CampaignState): void {

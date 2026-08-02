@@ -33,9 +33,9 @@ describe('CampaignSetupModal difficulty options', () => {
     expect(survivalist?.standardWinRate).toBe('0.0%');
 
     // Part 3 (Cursed Tomb Full Rules Campaign)
-    expect(novice?.campaignWinRate).toBe('2.9%');
-    expect(explorer?.campaignWinRate).toBe('2.4%');
-    expect(archaeologist?.campaignWinRate).toBe('0.9%');
+    expect(novice?.campaignWinRate).toBe('10.5%');
+    expect(explorer?.campaignWinRate).toBe('7.8%');
+    expect(archaeologist?.campaignWinRate).toBe('2.6%');
     expect(survivalist?.campaignWinRate).toBe('0.0%');
   });
 });

@@ -25,7 +25,7 @@ export const DIFFICULTY_OPTIONS: DifficultyOption[] = [
     icon: '📜',
     winRate: '25.2%',
     standardWinRate: '25.2%',
-    campaignWinRate: '2.9%',
+    campaignWinRate: '10.5%',
   },
   {
     id: 'explorer',
@@ -37,7 +37,7 @@ export const DIFFICULTY_OPTIONS: DifficultyOption[] = [
     icon: '🧭',
     winRate: '21.2%',
     standardWinRate: '21.2%',
-    campaignWinRate: '2.4%',
+    campaignWinRate: '7.8%',
   },
   {
     id: 'archaeologist',
@@ -49,7 +49,7 @@ export const DIFFICULTY_OPTIONS: DifficultyOption[] = [
     icon: '🔍',
     winRate: '6.4%',
     standardWinRate: '6.4%',
-    campaignWinRate: '0.9%',
+    campaignWinRate: '2.6%',
   },
   {
     id: 'survivalist',

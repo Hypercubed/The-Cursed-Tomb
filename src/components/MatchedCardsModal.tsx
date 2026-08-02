@@ -185,9 +185,9 @@ export function MatchedCardsModal({
 
                       const statusParts: string[] = [];
                       if (isBlessed) {
-                        if (suit === '♥') statusParts.push('Blessed Hero (◯) (Hearts Resurrection: Revive from Graveyard)');
+                        if (suit === '♥') statusParts.push('Blessed Hero (◯) (Hearts Stock Reshuffle)');
                         else if (suit === '♦') statusParts.push('Blessed Hero (◯) (Diamonds Vault: Store 1 Waste Card)');
-                        else if (suit === '♠') statusParts.push('Blessed Hero (◯) (Spades Tunnel: Flip Face-Down Card)');
+                        else if (suit === '♠') statusParts.push('Blessed Hero (◯) (Spades Tunnel: Move Exposed Card to Waste)');
                         else if (suit === '♣') statusParts.push('Blessed Hero (◯) (Clubs Rally: Redraw Stock)');
                         else statusParts.push('Blessed Hero (◯)');
                       }

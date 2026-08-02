@@ -69,17 +69,17 @@ This section simulates campaigns with **all Cursed Tomb rules active**: scars, c
 
 | Difficulty          | Redraws | Victory Rate | Collapse Rate | Avg Rounds to Resolve |
 |:--------------------|:-------:|:------------:|:-------------:|:----------------------:|
-| Survivalist         | 0       |    0.00%     |   100.00%     |         97.7           |
-| Archaeologist       | 1       |    0.92%     |    99.08%     |        206.1           |
-| Explorer            | 2       |    2.37%     |    97.63%     |        426.5           |
-| Novice              | ∞       |    2.92%     |    97.08%     |        464.5           |
+| Survivalist         | 0       |    0.00%     |   100.00%     |         26.9           |
+| Archaeologist       | 1       |    2.60%     |    97.40%     |         28.9           |
+| Explorer            | 2       |    7.80%     |    92.20%     |         30.6           |
+| Novice              | ∞       |   10.50%     |    89.50%     |         31.6           |
 
 ### Observations
 
-- **Rule of Ink Overlap Fix & Attrition Threshold:** Correcting the Ink Overlap threshold to allow Stage 1 and Stage 2 cards to acquire defensive Anchors accurately reflects legacy card progression across multi-round campaigns.
-- **Resurrection Mechanics Balance:** With Hearts Resurrection (random Graveyard pull returning cards as Cursed Stage 4) and Clubs Universal Wildcard, Archaeologist campaign victory rates reach **0.92%** and Explorer reaches **2.37%** of resolved campaigns under full rules simulation.
-- **Circular Value Shifts ($A \leftrightarrow K$):** Circular modulo shifts eliminate value dead-ends at Ace and King, allowing Black-Scarred Aces (1 - 1 = 13) to act as solo-clearing Kings and Red-Scarred Kings (13 + 1 = 1) to pair with Queens.
-- **Extended Campaign Lifespan:** Average rounds to resolve Explorer campaigns reach 426.5 rounds as card revivals and anchor immunities counter early starvation collapse.
+- **Black Curse Recycling Impact:** Recycling the paired partner of a Stage 4 Black Cursed card directly into the Stock draw pile creates vital deck liquidity, giving players additional pairing targets without sacrificing cards to the Foundation.
+- **Hearts Waste Reshuffle Synergy:** Replacing post-round Graveyard resurrection with an immediate mid-round Waste pile reshuffle into Stock (`drawPile`) keeps the active card pool fluid, allowing players to instantly re-draw cleared Waste cards during active rounds.
+- **Spades Tunnel Waste Transfer:** Changing Spades Tunnel from flipping face-down cards to transferring any exposed pyramid card directly to the top of the Waste pile provides a high-leverage pathfinding tool, opening covered rows behind it while making the transferred card immediately playable.
+- **Dramatic Campaign Win-Rate Boost:** Together, these three mechanics boost Archaeologist campaign win rates from **0.92% → 2.60%** and Explorer win rates from **2.37% → 7.80%** (~3.3× increase), while streamlining campaign resolution length to an average of ~27–32 rounds.
 
 ---
 

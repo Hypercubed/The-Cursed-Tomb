@@ -315,8 +315,8 @@ export function RulesModal({ isOpen, onClose, initialTab = 'core-rules' }: Rules
                     When dealing the pyramid layout, overlapping cards dealt in the next row beneath a Red Curse must be dealt face-down.
                   </div>
                   <div className="bg-[#18130e] p-3 rounded border border-[#251e16]">
-                    <strong className="text-amber-300 block mb-1">3. Black Curses [ |X| ] (The Weight)</strong>
-                    Cannot pair with cards drawn from Stock or Waste. It can <em>only</em> pair with another exposed card inside the pyramid layout.
+                    <strong className="text-amber-300 block mb-1">3. Black Curses [ |X| ] (The Recycled Weight)</strong>
+                    When paired with a matching partner card, the Black Cursed card moves to Foundation, but its partner card is shuffled back into the Stock pile.
                   </div>
                 </div>
               </section>
@@ -366,8 +366,8 @@ export function RulesModal({ isOpen, onClose, initialTab = 'core-rules' }: Rules
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
                     <div className="bg-[#18130e] p-2.5 rounded border border-[#251e16]">
-                      <strong className="text-red-400 font-display block mb-0.5">♥ Hearts (Resurrection)</strong>
-                      Clearing this card draws 1 random card blindly from the Graveyard Box back into your active deck pool as Stage 4 Cursed.
+                      <strong className="text-red-400 font-display block mb-0.5">♥ Hearts (Stock Reshuffle)</strong>
+                      Clearing this card immediately shuffles all cards in the Waste pile back into the Stock draw pile without consuming a redeal.
                     </div>
                     <div className="bg-[#18130e] p-2.5 rounded border border-[#251e16]">
                       <strong className="text-cyan-300 font-display block mb-0.5">♦ Diamonds (The Vault)</strong>
@@ -375,7 +375,7 @@ export function RulesModal({ isOpen, onClose, initialTab = 'core-rules' }: Rules
                     </div>
                     <div className="bg-[#18130e] p-2.5 rounded border border-[#251e16]">
                       <strong className="text-indigo-300 font-display block mb-0.5">♠ Spades (The Tunnel)</strong>
-                      Clearing this card allows you to immediately flip 1 face-down card in the layout face-up.
+                      Clearing this card allows you to select 1 exposed pyramid card and move it directly to the Waste pile.
                     </div>
                     <div className="bg-[#18130e] p-2.5 rounded border border-[#251e16]">
                       <strong className="text-emerald-300 font-display block mb-0.5">♣ Clubs (Universal Wildcard)</strong>
@@ -426,11 +426,11 @@ export function RulesModal({ isOpen, onClose, initialTab = 'core-rules' }: Rules
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
                     <div className="bg-[#18130e] p-3 rounded border border-[#251e16]">
                       <span className="text-game-muted block text-[11px] uppercase tracking-wider font-semibold mb-1">Physical Rule</span>
-                      When a Spades Hero is cleared, immediately turn 1 face-down card face-up.
+                      When a Spades Hero is cleared, move 1 exposed pyramid card to the Waste pile.
                     </div>
                     <div className="bg-[#18130e] p-3 rounded border border-indigo-900/30">
                       <span className="text-indigo-300 block text-[11px] uppercase tracking-wider font-semibold mb-1">Web UI Interaction</span>
-                      Clearing a Spades Hero activates <strong>Targeting Mode</strong> (<code className="text-indigo-200 bg-indigo-950 px-1 py-0.5 rounded">select-facedown</code>). The pyramid layout pulses softly. Click any face-down card to reveal it.
+                      Clearing a Spades Hero activates <strong>Targeting Mode</strong>. The layout pulses softly. Click any exposed pyramid card to transfer it to the Waste pile.
                     </div>
                   </div>
                 </div>
@@ -464,7 +464,7 @@ export function RulesModal({ isOpen, onClose, initialTab = 'core-rules' }: Rules
                     </div>
                     <div className="bg-[#18130e] p-3 rounded border border-[#251e16]">
                       <span className="text-amber-400 font-semibold block mb-1">Black Curse Weight</span>
-                      The web engine automatically enforces that Black Cursed cards can only pair with exposed cards inside the pyramid layout.
+                      Clearing a Black Cursed card automatically shuffles its paired partner card back into the face-down Stock pile instead of moving it to Foundation.
                     </div>
                   </div>
                 </div>

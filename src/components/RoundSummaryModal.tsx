@@ -63,11 +63,11 @@ export function RoundSummaryModal({
   const getSuitBlessingDescription = (suit: string) => {
     switch (suit) {
       case '♥':
-        return '♥ Resurrection: Draw 1 random card from the Graveyard Box back into active deck as Stage 4';
+        return '♥ Stock Reshuffle: Shuffles all Waste pile cards back into Stock draw pile';
       case '♦':
         return '♦ Vault: Free move to Vault slot when top card of Waste pile';
       case '♠':
-        return '♠ Tunnel: Immediately flip 1 face-down card in layout face-up';
+        return '♠ Tunnel: Move 1 exposed pyramid card to the Waste pile when cleared';
       case '♣':
         return '♣ Equalizer: Partner card ignores all active scar value shifts';
       default:
@@ -266,7 +266,7 @@ export function RoundSummaryModal({
                             <span className="text-[11px] text-purple-300/90 leading-tight">
                               {isRedCurse
                                 ? 'Red Curse: Locks cards beneath it face-down when dealt into the pyramid.'
-                                : 'Black Curse: Restricted from pairing with Stock or Waste pile cards.'}
+                                : 'Black Curse: Shuffles its paired partner card back into the Stock pile.'}
                             </span>
                           </div>
                         </div>
