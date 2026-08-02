@@ -186,7 +186,7 @@ def play_round(pool, rng, max_redeals, flags, max_moves=4000, full_registry=None
 
     redeals_left = max_redeals
     moves_played = 0
-    progress_this_pass = False  # any clear since stock was last filled (deal or redeal)
+    clears_this_pass = 0
     last_clear_cards = None
     last_clear_type = None
 
@@ -295,7 +295,7 @@ def play_round(pool, rng, max_redeals, flags, max_moves=4000, full_registry=None
                 fire_on_clear(card_a); fire_on_clear(card_w)
                 last_clear_type, last_clear_cards = 'pair', (card_a, card_w)
             moves_played += 1
-            progress_this_pass = True
+            clears_this_pass += 1
             continue
 
         # Check Pyramid Diamond Hero self-vaulting if no immediate removal candidate took priority
@@ -307,7 +307,7 @@ def play_round(pool, rng, max_redeals, flags, max_moves=4000, full_registry=None
                     removed.add(i)
                     vault.append(card)
                     moves_played += 1
-                    progress_this_pass = True
+                    clears_this_pass += 1
                     vaulted_p_card = True
                     break
             if vaulted_p_card:
@@ -322,16 +322,16 @@ def play_round(pool, rng, max_redeals, flags, max_moves=4000, full_registry=None
                 waste.append(drawn)
             moves_played += 1
             continue
-        # stock just ran out for this pass
-        if redeals_left > 0 and waste and progress_this_pass:
-            # only worth redealing if this pass actually cleared something;
-            # a fully zero-progress pass is deterministic and would just
-            # replay identically forever.
+
+        # stock just ran out for this pass.
+        # allow redeal if redeals_left > 0 AND (progress was made OR this is the first pass of the round).
+        # this allows 1 extra pass to pair newly exposed waste/pyramid cards without looping infinitely.
+        if redeals_left > 0 and waste and (clears_this_pass > 0 or redeals_left == max_redeals):
             stock = waste
             waste = []
             redeals_left -= 1
             moves_played += 1
-            progress_this_pass = False
+            clears_this_pass = 0
             continue
 
         break  # truly stuck: no stock, no useful redeal, no legal move
@@ -415,17 +415,21 @@ def run_many_campaigns(difficulty, campaigns, seed, flags, max_rounds, verbose=F
     victories = 0
     collapses = 0
     timeouts = 0
+    victory_rounds = []
+    collapse_rounds = []
     rounds_to_resolution = []  # victories + collapses only (excludes timeouts)
 
     for i in range(campaigns):
         result = run_campaign(rng, max_redeals, flags, max_rounds)
         if result["result"] == "victory":
             victories += 1
+            victory_rounds.append(result["rounds"])
             rounds_to_resolution.append(result["rounds"])
         elif result["result"] == "timeout":
             timeouts += 1
         else:
             collapses += 1
+            collapse_rounds.append(result["rounds"])
             rounds_to_resolution.append(result["rounds"])
         if verbose:
             print(f"campaign {i + 1:>4}: {result['result']:<22} rounds={result['rounds']}")
@@ -449,9 +453,22 @@ def run_many_campaigns(difficulty, campaigns, seed, flags, max_rounds, verbose=F
         print(f"collapse rate:       {collapses / resolved:.2%} (of resolved campaigns)")
     print(f"victory rate (all):  {victories / campaigns:.2%}")
     print(f"collapse rate (all): {collapses / campaigns:.2%}")
+    if victory_rounds:
+        v_mean = statistics.mean(victory_rounds)
+        v_std = statistics.stdev(victory_rounds) if len(victory_rounds) > 1 else 0.0
+        print(f"avg rounds to win:      {v_mean:.1f} ± {v_std:.1f} (median {statistics.median(victory_rounds):.1f})")
+    else:
+        print(f"avg rounds to win:      N/A (0 wins)")
+    if collapse_rounds:
+        c_mean = statistics.mean(collapse_rounds)
+        c_std = statistics.stdev(collapse_rounds) if len(collapse_rounds) > 1 else 0.0
+        print(f"avg rounds to collapse: {c_mean:.1f} ± {c_std:.1f} (median {statistics.median(collapse_rounds):.1f})")
+    else:
+        print(f"avg rounds to collapse: N/A (0 collapses)")
     if rounds_to_resolution:
-        print(f"avg rounds to resolve a campaign: {statistics.mean(rounds_to_resolution):.1f}")
-        print(f"median rounds to resolve:         {statistics.median(rounds_to_resolution):.1f}")
+        r_mean = statistics.mean(rounds_to_resolution)
+        r_std = statistics.stdev(rounds_to_resolution) if len(rounds_to_resolution) > 1 else 0.0
+        print(f"overall avg to resolve: {r_mean:.1f} ± {r_std:.1f} (median {statistics.median(rounds_to_resolution):.1f})")
 
 
 def parse_args():

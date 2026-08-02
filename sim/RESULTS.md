@@ -18,11 +18,11 @@ Each game is one round of pyramid solitaire. A **Win** means all pyramid cards w
 **Sample size:** 10,000 games per setting
 
 | UI Redraw Setting | Redraws | Win Rate | Collapse Rate |
-|:------------------|:-------:|:--------:|:-------------:|
-| 0 redraws         | 0       |  0.61%   |    99.39%     |
-| 1 redraw          | 1       | 12.25%   |    87.75%     |
-| 2 redraws         | 2       | 33.66%   |    66.34%     |
-| Infinite          | ∞       | 40.67%   |    59.33%     |
+| :---------------- | :-----: | :------: | :-----------: |
+| 0 redraws         |    0    |  0.61%   |    99.39%     |
+| 1 redraw          |    1    |  12.25%  |    87.75%     |
+| 2 redraws         |    2    |  33.66%  |    66.34%     |
+| Infinite          |    ∞    |  40.67%  |    59.33%     |
 
 ### Observations
 
@@ -43,12 +43,12 @@ Since the base game has no attrition mechanics, **the tomb never collapses** —
 
 **Sample size:** 1,000 campaigns per setting, max 200 rounds each
 
-| Difficulty          | Redraws | Win Rate (200 rds) | Avg Rounds to Win | Median Rounds |
-|:--------------------|:-------:|:------------------:|:-----------------:|:-------------:|
-| Survivalist         | 0       |       0.0%         |        —          |       —       |
-| Archaeologist       | 1       |       6.4%         |       104.5       |       98      |
-| Explorer            | 2       |       21.2%        |       98.9        |       98      |
-| Novice (Infinite)   | ∞       |       25.2%        |       93.1        |       83      |
+| Difficulty        | Redraws | Win Rate (200 rds) | Avg Rounds to Win | Median Rounds |
+| :---------------- | :-----: | :----------------: | :---------------: | :-----------: |
+| Survivalist       |    0    |        0.0%        |         —         |       —       |
+| Archaeologist     |    1    |        6.4%        |       104.5       |      98       |
+| Explorer          |    2    |       21.2%        |       98.9        |      98       |
+| Novice (Infinite) |    ∞    |       25.2%        |       93.1        |      83       |
 
 ### Observations
 
@@ -67,29 +67,29 @@ This section simulates campaigns with **all Cursed Tomb rules active**: scars, c
 
 **Sample size:** 1,000 campaigns per difficulty, max 1,000 rounds each
 
-| Difficulty          | Redraws | Victory Rate | Collapse Rate | Avg Rounds to Resolve |
-|:--------------------|:-------:|:------------:|:-------------:|:----------------------:|
-| Survivalist         | 0       |    0.00%     |   100.00%     |         26.9           |
-| Archaeologist       | 1       |    2.60%     |    97.40%     |         28.9           |
-| Explorer            | 2       |    7.80%     |    92.20%     |         30.6           |
-| Novice              | ∞       |   10.50%     |    89.50%     |         31.6           |
+| Difficulty    | Redraws | Victory Rate | Collapse Rate | Avg Rounds to Win | Avg Rounds to Collapse | Overall Avg Resolve |
+| :------------ | :-----: | :----------: | :-----------: | :---------------: | :--------------------: | :-----------------: |
+| Survivalist   |    0    |    0.00%     |    100.00%    |         —         |     260.4 ± 166.4      |    260.4 ± 166.4    |
+| Archaeologist |    1    |    2.60%     |    97.40%     |   151.7 ± 86.4    |     274.6 ± 179.3      |    271.4 ± 179.2    |
+| Explorer      |    2    |    7.80%     |    92.20%     |   149.3 ± 103.7   |     285.5 ± 182.2      |    274.9 ± 182.1    |
+| Novice        |    ∞    |    10.50%    |    89.50%     |   143.2 ± 95.8    |     286.0 ± 179.4      |    271.0 ± 182.2    |
 
 ### Observations
 
-- **Black Curse Recycling Impact:** Recycling the paired partner of a Stage 4 Black Cursed card directly into the Stock draw pile creates vital deck liquidity, giving players additional pairing targets without sacrificing cards to the Foundation.
-- **Hearts Waste Reshuffle Synergy:** Replacing post-round Graveyard resurrection with an immediate mid-round Waste pile reshuffle into Stock (`drawPile`) keeps the active card pool fluid, allowing players to instantly re-draw cleared Waste cards during active rounds.
-- **Spades Tunnel Waste Transfer:** Changing Spades Tunnel from flipping face-down cards to transferring any exposed pyramid card directly to the top of the Waste pile provides a high-leverage pathfinding tool, opening covered rows behind it while making the transferred card immediately playable.
-- **Dramatic Campaign Win-Rate Boost:** Together, these three mechanics boost Archaeologist campaign win rates from **0.92% → 2.60%** and Explorer win rates from **2.37% → 7.80%** (~3.3× increase), while streamlining campaign resolution length to an average of ~27–32 rounds.
+- **Engine Alignment & Multi-Pass Recycling:** Updating the simulator to allow full pass recycling (while preventing infinite zero-clear loops) allows campaigns to model the in-game engine's multi-pass card pairing accurately, resolving campaigns over ~270 rounds on average.
+- **Separate Win vs. Collapse Metrics:** Reporting Victory and Collapse rounds separately highlights the campaign dynamics. Winning campaigns resolve in ~143–152 rounds, while Starvation Collapses unfold over ~260–286 rounds as deck liquidity degrades.
+- **High Standard Deviation Across Campaigns:** Standard deviations for both wins (±86–104 rounds) and collapses (±166–182 rounds) are large, explaining why individual campaign experiences vary widely in length.
+- **Black Curse & Blessing Synergy:** Black Curse recycling into stock, Hearts waste reshuffling, and Spades tunnel transfers maintain deck liquidity, sustaining campaign playability over hundreds of rounds.
 
 ---
 
 ## Simulation Scripts
 
-| Script | Purpose |
-|:-------|:--------|
-| [`base_game_sim.py`](./base_game_sim.py) | Part 1: single-game win/collapse rates (10k games) |
+| Script                                               | Purpose                                               |
+| :--------------------------------------------------- | :---------------------------------------------------- |
+| [`base_game_sim.py`](./base_game_sim.py)             | Part 1: single-game win/collapse rates (10k games)    |
 | [`campaign_rounds_sim.py`](./campaign_rounds_sim.py) | Part 2: campaign rounds to Perfect Win (2k campaigns) |
-| [`cursed_tomb_sim.py`](./cursed_tomb_sim.py) | Core simulation engine (shared) |
+| [`cursed_tomb_sim.py`](./cursed_tomb_sim.py)         | Core simulation engine (shared)                       |
 
 To reproduce Part 1:
 ```bash
