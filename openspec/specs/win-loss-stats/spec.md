@@ -40,6 +40,10 @@ The application SHALL maintain tracking of active campaign statistics, including
 - **WHEN** the current game status transitions to `complete-victory`
 - **THEN** the active campaign SHALL mark victory as achieved (`isVictory = true`) and total campaign attempts SHALL increment by 1
 
+#### Scenario: Campaign end screen reads stats for display
+- **WHEN** the `CampaignEndModal` opens at campaign end
+- **THEN** it SHALL read `campaignStats` (pyramidsExplored, pyramidsCollapsed, totalAttempts, isVictory) and display them alongside `campaign.roundNumber` and counts derived from `campaign.masterDeck`
+
 ### Requirement: Reset Confirmation Flow
 Clicking the New Campaign button SHALL open a confirmation modal asking for explicit player confirmation before starting a new campaign and resetting active campaign statistics.
 

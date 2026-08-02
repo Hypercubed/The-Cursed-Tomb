@@ -4,7 +4,7 @@
 
 Provides hotkey navigation and actions for core game controls including drawing, pile cycling, card selection clearing, and game resets.
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: Global key bindings for game actions
 The application SHALL listen for global keydown events during active gameplay to execute corresponding actions.
