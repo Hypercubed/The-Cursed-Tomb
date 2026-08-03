@@ -312,7 +312,7 @@ def print_ascii_chart(aggregated: List[Dict[str, Any]], max_rounds: int) -> None
     print("=" * 78)
 
 
-def print_summary(summary_stats: Dict[str, Any], args: argparse.Namespace) -> None:
+def print_summary(summary_stats: Dict[str, Any], args: argparse.Namespace, seed_label: str) -> None:
     """Print final summary block with config echo and key findings."""
     n = summary_stats["n_campaigns"]
     med = summary_stats["median_first_unwinnable"]
@@ -332,7 +332,7 @@ def print_summary(summary_stats: Dict[str, Any], args: argparse.Namespace) -> No
     print(f"   - Difficulty:        {args.difficulty}")
     print(f"   - Campaign Solver:   {args.solver}")
     print(f"   - Probe Solver:      {args.probe_solver}")
-    print(f"   - Seed:              {args.seed if args.seed is not None else 'None (Random)'}")
+    print(f"   - Seed:              {seed_label}")
     print("-" * 78)
     print(f" Findings:")
     print(f"   - Total Campaigns Evaluated:   {n}")
@@ -360,7 +360,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("-d", "--difficulty", choices=list(DIFFICULTIES.keys()), default="archaeologist", help="Difficulty level (default: archaeologist)")
     parser.add_argument("--solver", choices=["greedy", "heuristic", "beam", "dfs"], default="heuristic", help="Campaign solver strategy (default: heuristic)")
     parser.add_argument("--probe-solver", choices=["greedy", "heuristic", "beam", "dfs"], default="greedy", help="Oracle probe solver strategy (default: greedy)")
-    parser.add_argument("-s", "--seed", type=int, default=None, help="Random seed for reproducibility (default: None)")
+    parser.add_argument("-s", "--seed", type=int, default=None, help="Random seed for reproducibility (default: None - random seed generated)")
     parser.add_argument("-v", "--verbose", action="store_true", help="Print per-campaign round-of-first-unwinnable")
     return parser.parse_args()
 
@@ -368,7 +368,14 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
 
-    # RuleFlags with all terminal victory/collapse checks disabled, but mechanics active
+    # Generate random seed if --seed is not explicitly provided
+    if args.seed is None:
+        actual_seed = random.randint(0, 1_000_000_000)
+        seed_label = f"{actual_seed} (Randomly Generated)"
+    else:
+        actual_seed = args.seed
+        seed_label = str(actual_seed)
+
     flags = RuleFlags(
         scars=True,
         curses=True,
@@ -380,7 +387,7 @@ def main() -> None:
     )
 
     max_redeals = DIFFICULTIES[args.difficulty]
-    rng = random.Random(args.seed)
+    rng = random.Random(actual_seed)
 
     print("=" * 78)
     print(" Cursed Tomb: Deck Evolution & Unwinnable Solvability Analysis")
@@ -393,15 +400,14 @@ def main() -> None:
     print(f" Sample Interval:  {args.sample_interval}")
     print(f" Campaign Solver:  {args.solver}")
     print(f" Probe Solver:     {args.probe_solver}")
-    print(f" Seed:             {args.seed}")
+    print(f" Seed:             {seed_label}")
     print("=" * 78)
 
     all_campaign_results = []
     t0 = time.time()
 
     for i in range(1, args.campaigns + 1):
-        # Create fresh seed per campaign if base seed specified
-        camp_seed = rng.randint(0, 1_000_000_000) if args.seed is not None else None
+        camp_seed = rng.randint(0, 1_000_000_000)
         camp_rng = random.Random(camp_seed)
 
         res = run_infinite_campaign(
@@ -426,7 +432,7 @@ def main() -> None:
     aggregated, summary_stats = aggregate_results(all_campaign_results, args.max_rounds, args.sample_interval)
     print_round_table(aggregated, args.campaigns)
     print_ascii_chart(aggregated, args.max_rounds)
-    print_summary(summary_stats, args)
+    print_summary(summary_stats, args, seed_label)
 
 
 if __name__ == "__main__":

@@ -59,19 +59,25 @@ def run_single_game(pool, rng, max_redeals, solver):
 
 def simulate(n_games, max_redeals, solver_name="heuristic", seed=42):
     rng = random.Random(seed)
-    wins = 0    # pyramid_clear or perfect_win
-    losses = 0  # freeze
+    total_wins = 0    # pyramid_clear or perfect_win
+    perfect_wins = 0  # perfect_win (clearing all 52 cards)
+    pyramid_only = 0  # pyramid_clear (clearing 28 pyramid cards, stock remains)
+    losses = 0        # freeze
 
     for _ in range(n_games):
         pool = create_fresh_pool()
         solver = create_solver(solver_name)
         result = run_single_game(pool, rng, max_redeals, solver)
-        if result in ('perfect_win', 'pyramid_clear'):
-            wins += 1
+        if result == 'perfect_win':
+            perfect_wins += 1
+            total_wins += 1
+        elif result == 'pyramid_clear':
+            pyramid_only += 1
+            total_wins += 1
         else:
             losses += 1
 
-    return wins, losses
+    return total_wins, perfect_wins, pyramid_only, losses
 
 def parse_args():
     p = argparse.ArgumentParser(description="Base game single-round simulation")
@@ -86,20 +92,23 @@ def main():
     seed = args.seed
     solver_name = args.solver
 
-    print(f"\n{'='*60}")
+    print(f"\n{'='*75}")
     print(f"  Base Game Simulation (no legacy mechanics)")
     print(f"  {N:,} games per configuration, seed={seed}, solver={solver_name}")
-    print(f"{'='*60}\n")
-    print(f"{'Configuration':<30} {'Win Rate':>10} {'Loss Rate':>10} {'Wins':>8} {'Losses':>8}")
-    print(f"{'-'*30} {'-'*10} {'-'*10} {'-'*8} {'-'*8}")
+    print(f"{'='*75}\n")
+    print(f"{'Configuration':<28} {'Win Rate (Pyr)':>14} {'Total Vic Rate (52)':>19} {'Collapse Rate':>14} {'Perfect':>8} {'Pyr Only':>9} {'Losses':>8}")
+    print(f"{'-'*28} {'-'*14} {'-'*19} {'-'*14} {'-'*8} {'-'*9} {'-'*8}")
 
     for label, redraws in REDRAW_OPTIONS:
-        wins, losses = simulate(N, redraws, solver_name=solver_name, seed=seed)
-        win_rate = wins / N
+        total_wins, perfect_wins, pyramid_only, losses = simulate(N, redraws, solver_name=solver_name, seed=seed)
+        win_rate = total_wins / N
+        total_vic_rate = perfect_wins / N
         loss_rate = losses / N
-        print(f"{label:<30} {win_rate:>9.2%} {loss_rate:>10.2%} {wins:>8,} {losses:>8,}")
+        print(f"{label:<28} {win_rate:>13.2%} {total_vic_rate:>18.2%} {loss_rate:>13.2%} {perfect_wins:>8,} {pyramid_only:>9,} {losses:>8,}")
 
     print(f"\nNotes:")
+    print(f"  - 'Win Rate (Pyr)' = games where all 28 pyramid cards were cleared (includes Total Victories)")
+    print(f"  - 'Total Vic Rate (52)' = games where all 52 cards (pyramid + stock/waste) were cleared")
     print(f"  - 'Collapse rate' = games where the player ran out of moves")
     print(f"  - Strategy: {solver_name}")
     print()

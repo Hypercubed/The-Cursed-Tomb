@@ -13,22 +13,23 @@ Simulated with [`cursed_tomb_sim.py`](./cursed_tomb_sim.py), [`test_solvers.py`]
 
 > **Command to reproduce:** `python3 base_game_sim.py --solver heuristic`
 
-Each game is one round of pyramid solitaire. A **Win** means all pyramid cards were cleared (partial or complete victory). A **Collapse** means the player ran out of legal moves with no draws or redraws remaining.
+Each game is one round of pyramid solitaire. A **Win (Pyramid Clear)** means all 28 pyramid cards were cleared (partial or complete victory). A **Total Victory** means all 52 cards (pyramid *and* stock/waste) were cleared in that single round. A **Collapse** means the player ran out of legal moves with no draws or redraws remaining.
 
 **Sample size:** 10,000 games per setting
 
-| UI Redraw Setting | Redraws | Win Rate | Collapse Rate |
-| :---------------- | :-----: | :------: | :-----------: |
-| 0 redraws         |    0    |  0.61%   |    99.39%     |
-| 1 redraw          |    1    |  12.25%  |    87.75%     |
-| 2 redraws         |    2    |  33.66%  |    66.34%     |
-| Infinite          |    ∞    |  40.67%  |    59.33%     |
+| UI Redraw Setting | Redraws | Win Rate (Pyramid Clear) | Total Victory Rate (52 Cards) | Collapse Rate |
+| :---------------- | :-----: | :----------------------: | :---------------------------: | :-----------: |
+| 0 redraws         |    0    |          0.61%           |             0.00%             |    99.39%     |
+| 1 redraw          |    1    |          12.28%          |             0.03%             |    87.72%     |
+| 2 redraws         |    2    |          33.66%          |             0.10%             |    66.34%     |
+| Infinite          |    ∞    |          40.68%          |             0.12%             |    59.32%     |
 
 ### Observations
 
-- **0 redraws is brutally hard.** A single pass through the 24-card stock almost never exposes enough cards to clear all 28 pyramid positions.
-- **Each redraw has large marginal value.** Going from 0→1 redraws is a 20× improvement; 1→2 redraws nearly triples win rate again.
-- **Infinite redraws plateaus at ~41%.** The greedy heuristic creates board states it can't escape even with unlimited re-passes, because it doesn't look ahead.
+- **0 redraws is brutally hard.** A single pass through the 24-card stock almost never exposes enough cards to clear all 28 pyramid positions (0.61% pyramid clear, 0.00% total victory).
+- **Total Victory (clearing all 52 cards) is exceedingly rare in single-round play.** Even with infinite redraws, total victory occurs in only 0.12% of games (12 in 10,000 runs) because clearing all stock/waste cards requires perfect rank pairing across the entire deck without dead-ending.
+- **Each redraw has large marginal value for pyramid clearing.** Going from 0→1 redraws is a 20× improvement (0.61% → 12.28%); 1→2 redraws nearly triples pyramid clear rate again (12.28% → 33.66%).
+- **Infinite redraws plateaus at ~41%.** The domain-aware heuristic creates board states it can't escape even with unlimited re-passes, because it doesn't look ahead.
 - **The gap from 2→∞ is small (~7%).** Most of the practical benefit from redraws is captured within two cycles.
 
 ---
