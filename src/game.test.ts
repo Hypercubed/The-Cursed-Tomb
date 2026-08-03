@@ -448,7 +448,7 @@ describe('Cursed Tomb campaign mechanics', () => {
     expect(updatedLow?.rewardStage).toBe(1);
   });
 
-  it('allows Stage 1 and Stage 2 cards to receive Anchor rewards, while blocking Stage 3+ cards via Rule of Ink Overlap', () => {
+  it('allows active cards at all stages (including Stage 3+ Scarred/Cursed) to receive Anchor rewards until entombed', () => {
     const campaign = createCampaign('cursed-tomb', 1, false);
     const cardHigh = campaign.masterDeck.find((c) => c.rank === 10)!; // 10
     const cardLowStage1 = campaign.masterDeck.find((c) => c.rank === 2 && c.suit === '♥')!; // 2 of Hearts
@@ -465,7 +465,7 @@ describe('Cursed Tomb campaign mechanics', () => {
     const effects1 = computeRoundLifecycleEffects(beforeDeck1, updatedStage1.masterDeck, campaign.currentRound);
     expect(effects1.clearDetails?.anchorBlockedByScar).toBe(false);
 
-    // Now test Stage 3 card (Scarred)
+    // Now test Stage 3 card (Scarred) - should also receive Anchor reward
     const campaignStage3 = createCampaign('cursed-tomb', 1, false);
     const cardHigh3 = campaignStage3.masterDeck.find((c) => c.rank === 10)!;
     const cardLowStage3 = campaignStage3.masterDeck.find((c) => c.rank === 2 && c.suit === '♥')!;
@@ -477,10 +477,10 @@ describe('Cursed Tomb campaign mechanics', () => {
 
     const updatedStage3 = applyEndOfWeekLifecycle(campaignStage3);
     const updatedLow3 = updatedStage3.masterDeck.find((c: CursedCard) => c.id === cardLowStage3.id);
-    expect(updatedLow3?.rewardStage).toBe(0); // Blocked
+    expect(updatedLow3?.rewardStage).toBe(1); // Receives Anchor reward
 
     const effects3 = computeRoundLifecycleEffects(beforeDeck3, updatedStage3.masterDeck, campaignStage3.currentRound);
-    expect(effects3.clearDetails?.anchorBlockedByScar).toBe(true);
+    expect(effects3.clearDetails?.anchorBlockedByScar).toBe(false);
   });
 
   it('applies Hero Blessing and Anchor Reward when forceWin is called in campaign mode', () => {

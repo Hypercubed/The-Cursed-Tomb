@@ -73,6 +73,7 @@ class RuleFlags:
     anchor_absorption: bool = False # Anchored cards absorb 4 marks before anchor exhausts (disabled)
     anchor_max_absorption: int = 4  # Number of absorbed marks on + before exhaustion (default 4)
     sealed_tomb_victory: bool = False# Sealed Tomb Win: < 28 living (un-anchored) cards remain (disabled)
+    rank_anchor_victory: bool = True # Soft Win: at least 1 card of each printed rank (13 total) is Anchored
 
 
 @dataclass
@@ -446,19 +447,16 @@ def _apply_survival_reward(last_clear_type, last_clear_cards, flags):
         higher, lower = (a, b) if va > vb else (b, a)
         if flags.blessings and not higher.blessed:
             higher.blessed = True
-        if lower.attrition_stage < 3:
-            prev_stage = lower.reward_stage
-            lower.reward_stage = min(2, lower.reward_stage + 1)
-            if lower.reward_stage == 2 and prev_stage < 2:
-                lower.anchor_absorption = 0
-        # else: Ink Overlap -- reward lost
+        prev_stage = lower.reward_stage
+        lower.reward_stage = min(2, lower.reward_stage + 1)
+        if lower.reward_stage == 2 and prev_stage < 2:
+            lower.anchor_absorption = 0
     elif last_clear_type == 'solo':
         card, = last_clear_cards
-        if card.attrition_stage < 3:
-            prev_stage = card.reward_stage
-            card.reward_stage = min(2, card.reward_stage + 1)
-            if card.reward_stage == 2 and prev_stage < 2:
-                card.anchor_absorption = 0
+        prev_stage = card.reward_stage
+        card.reward_stage = min(2, card.reward_stage + 1)
+        if card.reward_stage == 2 and prev_stage < 2:
+            card.anchor_absorption = 0
 
 
 def run_campaign(rng, max_redeals, flags, max_rounds, deadlock_limit=None, solver=None):
@@ -493,6 +491,11 @@ def run_campaign(rng, max_redeals, flags, max_rounds, deadlock_limit=None, solve
 
         if outcome.kind == 'pyramid_clear':
             _apply_survival_reward(outcome.last_clear_type, outcome.last_clear_cards, flags)
+
+        if flags.rank_anchor_victory:
+            anchored_ranks = {c.rank for c in registry if c.is_anchored()}
+            if len(anchored_ranks) == len(RANKS):
+                return {"result": "victory_soft", "rounds": rounds_played}
 
         if outcome.kind == 'freeze' and flags.volatile_collapse:
             by_rank = {}

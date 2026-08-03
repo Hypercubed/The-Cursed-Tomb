@@ -38,6 +38,7 @@ def run_batch(n, seed, difficulty_name, max_rounds, deadlock_limit, volatile_col
     
     rounds_by_type = {
         'victory': [],
+        'soft_win': [],
         'sealed': [],
         'starvation': [],
         'volatile': [],
@@ -55,6 +56,8 @@ def run_batch(n, seed, difficulty_name, max_rounds, deadlock_limit, volatile_col
         
         if k == 'victory':
             rounds_by_type['victory'].append(rnd)
+        elif k == 'victory_soft':
+            rounds_by_type['soft_win'].append(rnd)
         elif k == 'victory_sealed':
             rounds_by_type['sealed'].append(rnd)
         elif k == 'collapse_starvation':
@@ -110,14 +113,16 @@ if __name__ == '__main__':
         d_name, max_redeals, elapsed, r_by_type = run_batch(args.campaigns, args.seed, diff, args.max_rounds, dl_val, volatile_collapse=volatile_enabled, solver_name=args.solver)
         batch_results.append((d_name, max_redeals, elapsed, r_by_type))
 
-    # Determine active end types: mandatory types + any optional type that triggered at least once
-    mandatory_types = ['victory', 'starvation', 'deadlock', 'round_cap']
-    optional_types = ['sealed', 'volatile', 'all_immune']
-    
-    active_end_types = []
-    for et in ['victory', 'sealed', 'starvation', 'volatile', 'all_immune', 'deadlock', 'round_cap']:
-        if et in mandatory_types or any(len(r_by_type[et]) > 0 for _, _, _, r_by_type in batch_results):
-            active_end_types.append(et)
+    sample_flags = cursed_tomb_sim.RuleFlags(volatile_collapse=volatile_enabled)
+    active_end_types = ['victory']
+    if getattr(sample_flags, 'rank_anchor_victory', False):
+        active_end_types.append('soft_win')
+    if getattr(sample_flags, 'sealed_tomb_victory', False):
+        active_end_types.append('sealed')
+    active_end_types.append('starvation')
+    if getattr(sample_flags, 'volatile_collapse', False):
+        active_end_types.append('volatile')
+    active_end_types.extend(['deadlock', 'round_cap'])
 
     # Print individual difficulty tables using active_end_types
     for d_name, max_redeals, elapsed, r_by_type in batch_results:

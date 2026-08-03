@@ -129,7 +129,7 @@ export function RoundSummaryModal({
                   </div>
                   <p className="m-0 text-game-muted/90 leading-relaxed">
                     {effects.clearDetails.anchorBlockedByScar
-                      ? 'Rule of Ink Overlap: Card already features upper-right scar marks, so defensive Anchor stroke could not be applied.'
+                      ? 'Card is entombed and cannot receive defensive Anchor strokes.'
                       : effects.clearDetails.anchorAlreadyMaxed
                         ? 'Card is already fully Anchored [+].'
                         : 'Defensive Anchor stroke added! (No Fallen Hero blessing is awarded for Solo King clears).'}
@@ -164,7 +164,7 @@ export function RoundSummaryModal({
                       <span>
                         <strong>Lower Card ({effects.clearDetails.anchorCard?.suit}{effects.clearDetails.anchorCard?.rank}):</strong>{' '}
                         {effects.clearDetails.anchorBlockedByScar
-                          ? 'Rule of Ink Overlap: Card features upper-right scar marks, so defensive Anchor stroke [—] cannot be applied.'
+                          ? 'Card is entombed and cannot receive defensive Anchor strokes.'
                           : effects.clearDetails.anchorAlreadyMaxed
                             ? 'Already fully Anchored [+].'
                             : 'Defensive Anchor stroke applied!'}

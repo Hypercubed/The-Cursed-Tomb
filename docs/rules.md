@@ -91,7 +91,7 @@ Compare the final two cards' active Functional Values:
 ### B. The Sibling Clear (Solo King Clear)
 If the final card clearing the board is a standalone King, it acts as both structural points. Progress its upper-right Anchor track by one stroke (`[ — ]` or `[ + ]`). No Fallen Hero blessing is awarded.
 
-*Rule of Ink Overlap:* If a selected card already features Stage 3 or 4 Attrition marks (`|N|`, `|X|`) from the failure track, it cannot become an Anchor; the horizontal stroke `[ — ]` cannot be applied and the defensive reward is lost. Ink never moves backward.
+*Anchor Progression & Entombment:* Cards continue to accumulate upper-right Anchor strokes (`[ — ]` and `[ + ]`) at all active attrition stages (including Scarred and Cursed cards at Stage 3 and 4) up until they are Entombed (Stage 5). Once a card reaches Stage 2 Anchored (`[ + ]`), it becomes immune to further pyramid collapse attrition. Once Entombed at Stage 5, a card is permanently removed to the Graveyard and can no longer receive Anchor marks.
 
 ---
 

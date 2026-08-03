@@ -50,16 +50,16 @@ When a round freezes (pyramid collapse), the campaign SHALL identify Bottlenecks
 - **WHEN** a round freezes AND a bottleneck card has a completed Anchor (`[+]`)
 - **THEN** its Attrition Stage SHALL NOT be modified
 
-### Requirement: Survival Reward Phase and Rule of Ink Overlap
-When a round achieves a Pyramid Clear, the campaign SHALL evaluate the final visual transaction (Pair Clear or Solo King Clear) to assign rewards. If a card already features upper-right failure ink, it SHALL NOT become an Anchor (Rule of Ink Overlap).
+### Requirement: Survival Reward Phase and Anchor Accumulation
+When a round achieves a Pyramid Clear, the campaign SHALL evaluate the final visual transaction (Pair Clear or Solo King Clear) to assign rewards. Cards SHALL accumulate Anchor progress up until they are Entombed (Attrition Stage 5).
 
 #### Scenario: Final pair clear grants Hero and Anchor
 - **WHEN** a pair clears the final pyramid cards
-- **THEN** the card with the higher functional value SHALL gain the Blessed status (`[O]`) AND the lower-value card SHALL increment its Reward Stage (`[—]` or `[+]`) provided it has no upper-right failure ink
+- **THEN** the card with the higher functional value SHALL gain the Blessed status (`[O]`) AND the lower-value card SHALL increment its Reward Stage (`[—]` or `[+]`) provided its Attrition Stage is less than 5
 
 #### Scenario: Solo King clear grants Anchor stroke
 - **WHEN** a standalone King clears the final pyramid card
-- **THEN** it SHALL increment its Reward Stage (`[—]` or `[+]`) provided it has no upper-right failure ink AND no Fallen Hero blessing SHALL be awarded
+- **THEN** it SHALL increment its Reward Stage (`[—]` or `[+]`) provided its Attrition Stage is less than 5 AND no Fallen Hero blessing SHALL be awarded
 
 ### Requirement: Trap mechanics enforcement (Red and Black Curses)
 The game SHALL enforce structural traps for Stage 4 Cursed cards.
