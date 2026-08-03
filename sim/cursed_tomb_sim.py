@@ -157,6 +157,20 @@ def pair_sum(card_a, card_b, flags):
     return val_a + val_b
 
 
+try:
+    from solvers.base import Move, BaseSolver
+    from solvers.greedy import GreedySolver
+    from solvers.heuristic import HeuristicSolver
+    from solvers.beam import BeamSearchSolver
+    from solvers.dfs import DFSSolver
+except ImportError:
+    from .solvers.base import Move, BaseSolver
+    from .solvers.greedy import GreedySolver
+    from .solvers.heuristic import HeuristicSolver
+    from .solvers.beam import BeamSearchSolver
+    from .solvers.dfs import DFSSolver
+
+
 @dataclass
 class RoundOutcome:
     kind: str            # 'perfect_win' | 'pyramid_clear' | 'freeze'
@@ -165,7 +179,220 @@ class RoundOutcome:
     last_clear_cards: tuple = None
 
 
-def play_round(pool, rng, max_redeals, flags, max_moves=300, full_registry=None):
+class GameState:
+    """Encapsulates a mutable Pyramid Solitaire / Cursed Tomb game state during a round."""
+    def __init__(self, pyr, stock, waste, vault, removed, locks, redeals_left, flags, rng, max_moves=300):
+        self.pyr = pyr
+        self.stock = stock
+        self.waste = waste
+        self.vault = vault
+        self.removed = set(removed)
+        self.locks = {k: set(v) for k, v in locks.items()}
+        self.redeals_left = redeals_left
+        self.flags = flags
+        self.rng = rng
+        self.max_moves = max_moves
+        self.moves_played = 0
+        self.clears_this_pass = 0
+        self.last_clear_type = None
+        self.last_clear_cards = None
+
+    def clone(self) -> GameState:
+        st = GameState(
+            pyr=list(self.pyr),
+            stock=list(self.stock),
+            waste=list(self.waste),
+            vault=list(self.vault),
+            removed=set(self.removed),
+            locks={k: set(v) for k, v in self.locks.items()},
+            redeals_left=self.redeals_left,
+            flags=self.flags,
+            rng=self.rng,
+            max_moves=self.max_moves,
+        )
+        st.moves_played = self.moves_played
+        st.clears_this_pass = self.clears_this_pass
+        st.last_clear_type = self.last_clear_type
+        st.last_clear_cards = self.last_clear_cards
+        return st
+
+    def is_terminal(self) -> tuple[bool, str | None]:
+        if len(self.removed) == N_PYR:
+            if not self.stock and not self.waste and not self.vault:
+                return True, 'perfect_win'
+            return True, 'pyramid_clear'
+        if self.moves_played >= self.max_moves:
+            return True, 'freeze'
+        return False, None
+
+    def get_legal_moves(self) -> list[Move]:
+        exp = exposed_slots(self.removed, self.locks)
+        moves: list[Move] = []
+
+        for i in range(len(exp)):
+            for j in range(i + 1, len(exp)):
+                a, b = exp[i], exp[j]
+                if pair_sum(self.pyr[a], self.pyr[b], self.flags) == TARGET:
+                    score = newly_exposed_after(self.removed, self.locks, (a, b))
+                    moves.append(Move('pp', (a, b), score=float(score)))
+
+        for a in exp:
+            if self.pyr[a].functional_value(self.flags) == TARGET:
+                score = newly_exposed_after(self.removed, self.locks, (a,))
+                moves.append(Move('p', (a,), score=float(score)))
+
+        singles = []
+        if self.waste:
+            singles.append(('waste', None))
+        for vi in range(len(self.vault)):
+            singles.append(('vault', vi))
+
+        for kind_s, vi in singles:
+            single_card = self.waste[-1] if kind_s == 'waste' else self.vault[vi]
+            if single_card.functional_value(self.flags) == TARGET:
+                moves.append(Move('alone_single', (kind_s, vi), score=0.0))
+            for a in exp:
+                pcard = self.pyr[a]
+                if pair_sum(pcard, single_card, self.flags) == TARGET:
+                    score = newly_exposed_after(self.removed, self.locks, (a,))
+                    moves.append(Move('pw', (a, kind_s, vi), score=float(score)))
+
+        if self.flags.blessings:
+            for i in exp:
+                card = self.pyr[i]
+                if card.blessed and card.suit == 'D':
+                    moves.append(Move('vault_p', (i,), score=0.0))
+
+        if self.stock:
+            moves.append(Move('draw', (), score=0.0))
+        elif self.redeals_left > 0 and self.waste and self.clears_this_pass > 0:
+            moves.append(Move('redeal', (), score=0.0))
+
+        return moves
+
+    def fire_on_clear(self, card: CardState) -> None:
+        if not self.flags.blessings or not card.blessed:
+            return
+        if card.suit == 'H':
+            if self.waste:
+                self.stock.extend(self.waste)
+                self.waste.clear()
+                self.rng.shuffle(self.stock)
+        elif card.suit == 'S':
+            exp = exposed_slots(self.removed, self.locks)
+            if exp:
+                best_slot = max(exp, key=lambda s: len(COVERS[s]) if s < len(COVERS) else 0)
+                self.removed.add(best_slot)
+                self.waste.append(self.pyr[best_slot])
+
+    def apply_move(self, move: Move) -> None:
+        kind = move.kind
+        payload = move.payload
+
+        if kind == 'pp':
+            a, b = payload
+            card_a, card_b = self.pyr[a], self.pyr[b]
+            self.removed.add(a); self.removed.add(b)
+            a_bc = card_a.is_black_cursed(self.flags)
+            b_bc = card_b.is_black_cursed(self.flags)
+            if a_bc and not b_bc:
+                self.stock.append(card_b)
+                self.rng.shuffle(self.stock)
+            elif b_bc and not a_bc:
+                self.stock.append(card_a)
+                self.rng.shuffle(self.stock)
+            elif a_bc and b_bc:
+                self.stock.append(card_a)
+                self.stock.append(card_b)
+                self.rng.shuffle(self.stock)
+            self.fire_on_clear(card_a); self.fire_on_clear(card_b)
+            self.last_clear_type, self.last_clear_cards = 'pair', (card_a, card_b)
+            self.moves_played += 1
+            self.clears_this_pass += 1
+
+        elif kind == 'p':
+            a, = payload
+            self.removed.add(a)
+            self.fire_on_clear(self.pyr[a])
+            self.last_clear_type, self.last_clear_cards = 'solo', (self.pyr[a],)
+            self.moves_played += 1
+            self.clears_this_pass += 1
+
+        elif kind == 'alone_single':
+            kind_s, vi = payload
+            card = self.waste.pop() if kind_s == 'waste' else self.vault.pop(vi)
+            self.fire_on_clear(card)
+            self.last_clear_type, self.last_clear_cards = 'solo', (card,)
+            self.moves_played += 1
+            self.clears_this_pass += 1
+
+        elif kind == 'pw':
+            a, kind_s, vi = payload
+            card_w = self.waste.pop() if kind_s == 'waste' else self.vault.pop(vi)
+            card_a = self.pyr[a]
+            self.removed.add(a)
+            a_bc = card_a.is_black_cursed(self.flags)
+            w_bc = card_w.is_black_cursed(self.flags)
+            if a_bc and not w_bc:
+                self.stock.append(card_w)
+                self.rng.shuffle(self.stock)
+            elif w_bc and not a_bc:
+                self.stock.append(card_a)
+                self.rng.shuffle(self.stock)
+            elif a_bc and w_bc:
+                self.stock.append(card_a)
+                self.stock.append(card_w)
+                self.rng.shuffle(self.stock)
+            self.fire_on_clear(card_a); self.fire_on_clear(card_w)
+            self.last_clear_type, self.last_clear_cards = 'pair', (card_a, card_w)
+            self.moves_played += 1
+            self.clears_this_pass += 1
+
+        elif kind == 'vault_p':
+            a, = payload
+            card = self.pyr[a]
+            self.removed.add(a)
+            self.vault.append(card)
+            self.moves_played += 1
+            self.clears_this_pass += 1
+
+        elif kind == 'draw':
+            if self.stock:
+                drawn = self.stock.pop(0)
+                if self.flags.blessings and drawn.blessed and drawn.suit == 'D':
+                    self.vault.append(drawn)
+                else:
+                    self.waste.append(drawn)
+                self.moves_played += 1
+
+        elif kind == 'redeal':
+            if self.redeals_left > 0 and self.waste and self.clears_this_pass > 0:
+                self.stock = self.waste
+                self.waste = []
+                self.redeals_left -= 1
+                self.moves_played += 1
+                self.clears_this_pass = 0
+
+    def apply_freeze_attrition(self) -> None:
+        exp = exposed_slots(self.removed, self.locks)
+        for i in exp:
+            card = self.pyr[i]
+            if card.temp_immune:
+                continue
+            if self.flags.anchor_absorption and card.reward_stage >= 2:
+                if card.anchor_absorption < self.flags.anchor_max_absorption:
+                    card.anchor_absorption += 1
+                    if card.anchor_absorption >= self.flags.anchor_max_absorption:
+                        card.reward_stage = 0
+                        card.attrition_stage = 0
+                    continue
+            if card.is_anchored():
+                continue
+            if card.attrition_stage < self.flags.max_attrition_stage:
+                card.attrition_stage += 1
+
+
+def play_round(pool, rng, max_redeals, flags, max_moves=300, full_registry=None, solver=None):
     """Plays one round in-place against the persistent CardState objects in
     `pool` (mutating attrition/reward/blessed/temp_immune fields as events
     happen). `pool` must have length >= 28. Returns a RoundOutcome."""
@@ -181,189 +408,35 @@ def play_round(pool, rng, max_redeals, flags, max_moves=300, full_registry=None)
 
     removed = set()
     locks = {}
-    # A red-cursed card at slot i traps the card(s) that physically overlap
-    # it from below (i.e. the slots in COVERS[i]) as face-down until slot i
-    # itself is cleared.
     for i, card in enumerate(pyr):
         if card.is_red_cursed(flags):
             for c in COVERS[i]:
                 locks.setdefault(c, set()).add(i)
 
-    redeals_left = max_redeals
-    moves_played = 0
-    clears_this_pass = 0
-    last_clear_cards = None
-    last_clear_type = None
+    state = GameState(pyr, stock, waste, vault, removed, locks, max_redeals, flags, rng, max_moves)
 
-    def fire_on_clear(card):
-        """Blessing side-effects that trigger whenever a blessed card clears."""
-        if not flags.blessings or not card.blessed:
-            return
-        if card.suit == 'H':  # Stock Reshuffle: free Waste pile reshuffle into Stock
-            if waste:
-                stock.extend(waste)
-                waste.clear()
-                rng.shuffle(stock)
-        elif card.suit == 'S':  # Tunnel: move exposed pyramid card to Waste
-            exp = exposed_slots(removed, locks)
-            if exp:
-                # Select exposed slot that unlocks the most cards below
-                best_slot = max(exp, key=lambda s: len(COVERS[s]) if s < len(COVERS) else 0)
-                removed.add(best_slot)
-                waste.append(pyr[best_slot])
-        # Diamonds (Vault) handled at draw time; Clubs (Universal Wildcard) handled in pair_sum
+    if solver is None:
+        solver = HeuristicSolver()
 
-    while moves_played < max_moves:
-        if len(removed) == N_PYR:
-            if not stock and not waste and not vault:
-                return RoundOutcome('perfect_win', moves_played, last_clear_type, last_clear_cards)
-            return RoundOutcome('pyramid_clear', moves_played, last_clear_type, last_clear_cards)
+    while True:
+        terminal, kind = state.is_terminal()
+        if terminal:
+            return RoundOutcome(kind, state.moves_played, state.last_clear_type, state.last_clear_cards)
 
-        exp = exposed_slots(removed, locks)
-        candidates = []  # (score, kind, payload)
+        legal_moves = state.get_legal_moves()
+        if not legal_moves:
+            break
 
-        for i in range(len(exp)):
-            for j in range(i + 1, len(exp)):
-                a, b = exp[i], exp[j]
-                if pair_sum(pyr[a], pyr[b], flags) == TARGET:
-                    score = newly_exposed_after(removed, locks, (a, b))
-                    candidates.append((score, 'pp', (a, b)))
+        selected_move = solver.select_move(state, legal_moves)
+        if selected_move is None:
+            break
 
-        for a in exp:
-            if pyr[a].functional_value(flags) == TARGET:
-                score = newly_exposed_after(removed, locks, (a,))
-                candidates.append((score, 'p', (a,)))
+        state.apply_move(selected_move)
 
-        singles = []  # ('waste', None) or ('vault', idx)
-        if waste:
-            singles.append(('waste', None))
-        for vi in range(len(vault)):
-            singles.append(('vault', vi))
-
-        for kind_s, vi in singles:
-            single_card = waste[-1] if kind_s == 'waste' else vault[vi]
-            if single_card.functional_value(flags) == TARGET:
-                candidates.append((0, 'alone_single', (kind_s, vi)))
-            for a in exp:
-                pcard = pyr[a]
-                if pair_sum(pcard, single_card, flags) == TARGET:
-                    score = newly_exposed_after(removed, locks, (a,))
-                    candidates.append((score, 'pw', (a, kind_s, vi)))
-
-        if candidates:
-            candidates.sort(key=lambda x: x[0], reverse=True)
-            _, kind, payload = candidates[0]
-            if kind == 'pp':
-                a, b = payload
-                card_a, card_b = pyr[a], pyr[b]
-                removed.add(a); removed.add(b)
-                a_bc = card_a.is_black_cursed(flags)
-                b_bc = card_b.is_black_cursed(flags)
-                if a_bc and not b_bc:
-                    stock.append(card_b)
-                    rng.shuffle(stock)
-                elif b_bc and not a_bc:
-                    stock.append(card_a)
-                    rng.shuffle(stock)
-                elif a_bc and b_bc:
-                    stock.append(card_a)
-                    stock.append(card_b)
-                    rng.shuffle(stock)
-                fire_on_clear(card_a); fire_on_clear(card_b)
-                last_clear_type, last_clear_cards = 'pair', (card_a, card_b)
-            elif kind == 'p':
-                a, = payload
-                removed.add(a)
-                fire_on_clear(pyr[a])
-                last_clear_type, last_clear_cards = 'solo', (pyr[a],)
-            elif kind == 'alone_single':
-                kind_s, vi = payload
-                card = waste.pop() if kind_s == 'waste' else vault.pop(vi)
-                fire_on_clear(card)
-                last_clear_type, last_clear_cards = 'solo', (card,)
-            elif kind == 'pw':
-                a, kind_s, vi = payload
-                card_w = waste.pop() if kind_s == 'waste' else vault.pop(vi)
-                card_a = pyr[a]
-                removed.add(a)
-                a_bc = card_a.is_black_cursed(flags)
-                w_bc = card_w.is_black_cursed(flags)
-                if a_bc and not w_bc:
-                    stock.append(card_w)
-                    rng.shuffle(stock)
-                elif w_bc and not a_bc:
-                    stock.append(card_a)
-                    rng.shuffle(stock)
-                elif a_bc and w_bc:
-                    stock.append(card_a)
-                    stock.append(card_w)
-                    rng.shuffle(stock)
-                fire_on_clear(card_a); fire_on_clear(card_w)
-                last_clear_type, last_clear_cards = 'pair', (card_a, card_w)
-            moves_played += 1
-            clears_this_pass += 1
-            continue
-
-        # Check Pyramid Diamond Hero self-vaulting if no immediate removal candidate took priority
-        if flags.blessings:
-            vaulted_p_card = False
-            for i in exp:
-                card = pyr[i]
-                if card.blessed and card.suit == 'D':
-                    removed.add(i)
-                    vault.append(card)
-                    moves_played += 1
-                    clears_this_pass += 1
-                    vaulted_p_card = True
-                    break
-            if vaulted_p_card:
-                continue
-
-        # no removal move available -- draw, or redeal, or freeze
-        if stock:
-            drawn = stock.pop(0)
-            if flags.blessings and drawn.blessed and drawn.suit == 'D':
-                vault.append(drawn)  # free Vault action, doesn't consume the "turn"
-            else:
-                waste.append(drawn)
-            moves_played += 1
-            continue
-
-        # stock just ran out for this pass.
-        # allow redeal if redeals_left > 0 AND (progress was made OR this is the first pass of the round).
-        if redeals_left > 0 and waste and clears_this_pass > 0:
-            stock = waste
-            waste = []
-            redeals_left -= 1
-            moves_played += 1
-            clears_this_pass = 0
-            continue
-
-        break  # truly stuck: no stock, no useful redeal, no legal move
-
-    # FREEZE: apply attrition to bottlenecks (currently exposed, non-immune cards)
     if flags.attrition:
-        exp = exposed_slots(removed, locks)
-        for i in exp:
-            card = pyr[i]
-            if card.temp_immune:
-                continue
-            if flags.anchor_absorption and card.reward_stage >= 2:
-                if card.anchor_absorption < flags.anchor_max_absorption:
-                    card.anchor_absorption += 1
-                    if card.anchor_absorption >= flags.anchor_max_absorption:
-                        card.reward_stage = 0
-                        card.attrition_stage = 0
-                    continue
-            if card.is_anchored():
-                continue
-            if card.attrition_stage < flags.max_attrition_stage:
-                card.attrition_stage += 1
+        state.apply_freeze_attrition()
 
-    # Reward pass, only meaningful if the pyramid actually got cleared this
-    # round (handled above via early return); reaching here means a freeze,
-    # so no survival reward applies.
-    return RoundOutcome('freeze', moves_played)
+    return RoundOutcome('freeze', state.moves_played)
 
 
 def _apply_survival_reward(last_clear_type, last_clear_cards, flags):
@@ -388,7 +461,7 @@ def _apply_survival_reward(last_clear_type, last_clear_cards, flags):
                 card.anchor_absorption = 0
 
 
-def run_campaign(rng, max_redeals, flags, max_rounds, deadlock_limit=None):
+def run_campaign(rng, max_redeals, flags, max_rounds, deadlock_limit=None, solver=None):
     # `registry` holds all 52 physical cards for the entire campaign,
     # including entombed ones (needed for the volatile-collapse rank check).
     registry = [CardState(r, s) for s in SUITS for r in RANKS]
@@ -413,7 +486,7 @@ def run_campaign(rng, max_redeals, flags, max_rounds, deadlock_limit=None):
         # Take snapshot of deck state before round
         state_before = [(c.attrition_stage, c.reward_stage, c.blessed, c.anchor_absorption) for c in registry]
 
-        outcome = play_round(active, rng, max_redeals, flags, full_registry=registry)
+        outcome = play_round(active, rng, max_redeals, flags, full_registry=registry, solver=solver)
 
         if outcome.kind == 'perfect_win':
             return {"result": "victory", "rounds": rounds_played}
@@ -456,7 +529,7 @@ DIFFICULTIES = {
 }
 
 
-def run_many_campaigns(difficulty, campaigns, seed, flags, max_rounds, verbose=False):
+def run_many_campaigns(difficulty, campaigns, seed, flags, max_rounds, verbose=False, solver=None):
     rng = random.Random(seed)
     max_redeals = DIFFICULTIES[difficulty]
 
@@ -469,7 +542,7 @@ def run_many_campaigns(difficulty, campaigns, seed, flags, max_rounds, verbose=F
     rounds_to_resolution = []  # victories + collapses only (excludes timeouts)
 
     for i in range(campaigns):
-        result = run_campaign(rng, max_redeals, flags, max_rounds)
+        result = run_campaign(rng, max_redeals, flags, max_rounds, solver=solver)
         if result["result"] == "victory":
             victories += 1
             victory_rounds.append(result["rounds"])
@@ -529,6 +602,7 @@ def parse_args():
     p = argparse.ArgumentParser(description="The Cursed Tomb: campaign simulator")
     p.add_argument("--campaigns", type=int, default=200, help="number of campaigns to simulate")
     p.add_argument("--difficulty", choices=list(DIFFICULTIES.keys()), default="archaeologist")
+    p.add_argument("--solver", choices=["greedy", "heuristic", "beam", "dfs"], default="heuristic", help="solver strategy")
     p.add_argument("--seed", type=int, default=None)
     p.add_argument("--volatile-collapse", action="store_true",
                    help="enable the optional Volatile Collapse variant rule")
@@ -544,6 +618,19 @@ def parse_args():
     return p.parse_args()
 
 
+def get_solver(name: str):
+    s = name.lower()
+    if s == 'greedy':
+        return GreedySolver()
+    elif s == 'heuristic':
+        return HeuristicSolver()
+    elif s == 'beam':
+        return BeamSearchSolver()
+    elif s == 'dfs':
+        return DFSSolver()
+    raise ValueError(f"Unknown solver: {name}")
+
+
 def main():
     args = parse_args()
     flags = RuleFlags(
@@ -553,6 +640,7 @@ def main():
         attrition=not args.no_attrition,
         volatile_collapse=args.volatile_collapse,
     )
+    solver = get_solver(args.solver)
     run_many_campaigns(
         difficulty=args.difficulty,
         campaigns=args.campaigns,
@@ -560,6 +648,7 @@ def main():
         flags=flags,
         max_rounds=args.max_rounds,
         verbose=args.verbose,
+        solver=solver,
     )
 
 

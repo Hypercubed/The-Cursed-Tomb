@@ -8,18 +8,11 @@ Since the tomb never collapses in the base game, each campaign plays rounds unti
   - Max rounds hit -> Timeout
 
 Reports: victory rate within cap, avg rounds to achieve a perfect win.
-
-NOTE on Novice (infinite redraws):
-  The retire logic in play_round is: only redeal if progress_this_pass is True.
-  A zero-progress pass breaks out correctly. However, a greedy player that makes
-  at least 1 clear per pass (but can't complete a Perfect Win) will churn through
-  up to 9999 redeals before terminating — potentially 100k+ moves per round.
-  This makes the novice case impractically slow for round-counting analysis.
-  Novice single-game win rate (40.67%) is reported separately in base_game_sim.py.
 """
 import sys, os, random, time, argparse
 sys.path.insert(0, os.path.dirname(__file__))
 from cursed_tomb_sim import play_round, CardState, RuleFlags, SUITS, RANKS
+from solvers import GreedySolver, HeuristicSolver, BeamSearchSolver, DFSSolver
 
 BASE_FLAGS = RuleFlags(scars=False, curses=False, blessings=False, attrition=False, volatile_collapse=False)
 
@@ -37,20 +30,33 @@ MAX_MOVES_PER_REDEAL = {
     "novice": 2000,
 }
 
+def create_solver(solver_name: str):
+    s = solver_name.lower()
+    if s == 'greedy':
+        return GreedySolver()
+    elif s == 'heuristic':
+        return HeuristicSolver()
+    elif s == 'beam':
+        return BeamSearchSolver()
+    elif s == 'dfs':
+        return DFSSolver()
+    raise ValueError(f"Unknown solver: {solver_name}")
+
 def create_pool():
     return [CardState(r, s) for s in SUITS for r in RANKS]
 
-def run_campaign(rng, max_redeals, max_rounds, max_moves):
+def run_campaign(rng, max_redeals, max_rounds, max_moves, solver_name="heuristic"):
     for round_num in range(1, max_rounds + 1):
-        pool = create_pool()  # fresh 52 cards (no attrition = always full deck)
-        outcome = play_round(pool, rng, max_redeals, BASE_FLAGS, max_moves=max_moves)
+        pool = create_pool()
+        solver = create_solver(solver_name)
+        outcome = play_round(pool, rng, max_redeals, BASE_FLAGS, max_moves=max_moves, solver=solver)
         if outcome.kind == 'perfect_win':
             return 'victory', round_num
     return 'timeout', max_rounds
 
-def simulate(difficulty, max_redeals, max_rounds, n_campaigns, max_moves, seed=42):
+def simulate(difficulty, max_redeals, max_rounds, n_campaigns, max_moves, solver_name="heuristic", seed=42):
     label = f"{difficulty} ({max_redeals} redraws)" if max_redeals < 9999 else f"{difficulty} (infinite redraws)"
-    print(f"\nRunning: {label} ({n_campaigns} campaigns, max {max_rounds} rounds each) ...", flush=True)
+    print(f"\nRunning: {label} ({n_campaigns} campaigns, max {max_rounds} rounds each, solver={solver_name}) ...", flush=True)
     rng = random.Random(seed)
     victories = 0
     timeouts = 0
@@ -58,7 +64,7 @@ def simulate(difficulty, max_redeals, max_rounds, n_campaigns, max_moves, seed=4
     t0 = time.time()
 
     for _ in range(n_campaigns):
-        result, rounds = run_campaign(rng, max_redeals, max_rounds, max_moves)
+        result, rounds = run_campaign(rng, max_redeals, max_rounds, max_moves, solver_name=solver_name)
         if result == 'victory':
             victories += 1
             win_rounds.append(rounds)
@@ -80,7 +86,6 @@ def simulate(difficulty, max_redeals, max_rounds, n_campaigns, max_moves, seed=4
     if avg_rounds:
         print(f"  Avg rounds to Perfect Win : {avg_rounds:.1f}")
         print(f"  Median rounds to win      : {median_rounds}")
-        # Distribution buckets
         buckets = [(1,1),(2,2),(3,5),(6,10),(11,20),(21,max_rounds)]
         print(f"  Win-round distribution:")
         for lo, hi in buckets:
@@ -109,6 +114,7 @@ def parse_args():
     p.add_argument("--campaigns", type=int, default=200, help="number of campaigns to simulate")
     p.add_argument("--difficulty", choices=list(DIFFICULTIES.keys()), default="archaeologist")
     p.add_argument("--max-rounds", type=int, default=200, help="max rounds per campaign")
+    p.add_argument("--solver", choices=["greedy", "heuristic", "beam", "dfs"], default="heuristic", help="solver strategy")
     p.add_argument("--seed", type=int, default=42, help="random seed for reproducibility")
     return p.parse_args()
 
@@ -123,10 +129,10 @@ def main():
     print(f"  No collapse possible (tomb never starves w/o attrition)")
     print(f"{'='*58}", flush=True)
 
-    simulate(args.difficulty, max_redeals, args.max_rounds, args.campaigns, max_moves, args.seed)
+    simulate(args.difficulty, max_redeals, args.max_rounds, args.campaigns, max_moves, solver_name=args.solver, seed=args.seed)
 
     print(f"{'='*58}")
-    print(f"  Strategy: greedy heuristic (max newly-exposed cards/move)")
+    print(f"  Strategy: {args.solver}")
     print(f"  seed={args.seed} for reproducibility")
     print(f"{'='*58}\n")
 

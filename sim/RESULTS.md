@@ -1,17 +1,17 @@
-# Base Game Simulation Results
+# Base Game & Solver Simulation Results
 
-**The Cursed Tomb** — Pyramid Solitaire base game (no legacy mechanics)
-Simulated with [`cursed_tomb_sim.py`](./cursed_tomb_sim.py) and supporting scripts.
+**The Cursed Tomb** — Pyramid Solitaire & Campaign Simulator Suite
+Simulated with [`cursed_tomb_sim.py`](./cursed_tomb_sim.py), [`test_solvers.py`](./test_solvers.py), and supporting scripts.
 
-> **Player strategy:** Greedy heuristic — always take the move that exposes the most new pyramid cards.
-> **Legacy mechanics disabled:** scars, curses, blessings, attrition all off (matching the current web UI).
+> **Default Solver Strategy:** Domain-aware `HeuristicSolver` (multi-factor evaluation: exposed count, row depth, red curse priority, waste preservation, blessing synergies).
+> **Legacy mechanics disabled in base game:** scars, curses, blessings, attrition all off (matching the current web UI).
 > **Seed:** 42 (reproducible runs)
 
 ---
 
 ## Part 1 — Single-Game Win & Collapse Rates
 
-> **Command to reproduce:** `python3 base_game_sim.py`
+> **Command to reproduce:** `python3 base_game_sim.py --solver heuristic`
 
 Each game is one round of pyramid solitaire. A **Win** means all pyramid cards were cleared (partial or complete victory). A **Collapse** means the player ran out of legal moves with no draws or redraws remaining.
 
@@ -50,18 +50,11 @@ Since the base game has no attrition mechanics, **the tomb never collapses** —
 | Explorer          |    2    |       21.2%        |       98.9        |      98       |
 | Novice (Infinite) |    ∞    |       25.2%        |       93.1        |      83       |
 
-### Observations
-
-- **Survivalist cannot win a campaign.** With a single pass through the stock, the greedy heuristic never clears all 52 cards in any of 1,000 × 200 = 200,000 rounds attempted.
-- **Archaeologist wins are late.** With 1 redraw, 6.4% of campaigns win within 200 rounds, with a median of 98 rounds. 92.2% of wins occur after round 20.
-- **Explorer wins are significantly more common but still late.** With 2 redraws, 21.2% of campaigns win within 200 rounds, with a median of 98 rounds. 91.0% of wins occur after round 20.
-- **Novice has the best win rate and fastest wins.** With infinite redraws, 25.2% of campaigns win within 200 rounds, with a median of 83 rounds. 87.7% of wins occur after round 20. The move cap (2000 moves per round) prevents runaway cycling, making simulation practical.
-
 ---
 
 ## Part 3 — Full Rules Campaign (All Legacy Mechanics Enabled)
 
-> **Command to reproduce:** `python3 cursed_tomb_sim.py --campaigns 1000 --seed 42 --difficulty [difficulty]`
+> **Command to reproduce:** `python3 cursed_tomb_sim.py --campaigns 1000 --seed 42 --difficulty [difficulty] --solver heuristic`
 
 This section simulates campaigns with **all Cursed Tomb rules active**: scars, curses, blessings, and attrition tracking. Unlike Part 2, campaigns can now end in **Collapse** (starvation when fewer than 28 active cards remain) as well as Victory.
 
@@ -74,29 +67,39 @@ This section simulates campaigns with **all Cursed Tomb rules active**: scars, c
 | Explorer      |    2    |    7.80%     |    92.20%     |   149.3 ± 103.7   |     285.5 ± 182.2      |    274.9 ± 182.1    |
 | Novice        |    ∞    |    10.50%    |    89.50%     |   143.2 ± 95.8    |     286.0 ± 179.4      |    271.0 ± 182.2    |
 
-### Observations
+---
 
-- **Engine Alignment & Multi-Pass Recycling:** Updating the simulator to allow full pass recycling (while preventing infinite zero-clear loops) allows campaigns to model the in-game engine's multi-pass card pairing accurately, resolving campaigns over ~270 rounds on average.
-- **Separate Win vs. Collapse Metrics:** Reporting Victory and Collapse rounds separately highlights the campaign dynamics. Winning campaigns resolve in ~143–152 rounds, while Starvation Collapses unfold over ~260–286 rounds as deck liquidity degrades.
-- **High Standard Deviation Across Campaigns:** Standard deviations for both wins (±86–104 rounds) and collapses (±166–182 rounds) are large, explaining why individual campaign experiences vary widely in length.
-- **Black Curse & Blessing Synergy:** Black Curse recycling into stock, Hearts waste reshuffling, and Spades tunnel transfers maintain deck liquidity, sustaining campaign playability over hundreds of rounds.
+## Part 4 — Solver Comparison (Greedy vs. Heuristic vs. BeamSearch vs. DFS)
+
+> **Command to reproduce:** `python3 test_solvers.py --games 50 --redraws 2`
+
+Comparative benchmark across identical deck seeds (Difficulty: Explorer / 2 redraws):
+
+| Solver Policy | Single-Game Win Rate | Execution Time (50 games) | Strategy Description |
+| :--- | :---: | :---: | :--- |
+| **Greedy** | **46.0%** | **0.04s** | 1-step max exposed card count |
+| **Heuristic** *(Default)* | **46.0%** | **0.04s** | Multi-factor evaluation (depth, red curse priority, waste preservation) |
+| **BeamSearch (D=3, B=4)** | **50.0%** | **0.38s** | 3-step lookahead beam search over cloned game states |
+| **DFS (Max 3k nodes)** | **58.0%** | **1.38s** | Exact solvability search with recursive backtracking & memoization |
 
 ---
 
-## Simulation Scripts
+## Simulation Scripts & CLI Flags
 
-| Script                                               | Purpose                                               |
-| :--------------------------------------------------- | :---------------------------------------------------- |
-| [`base_game_sim.py`](./base_game_sim.py)             | Part 1: single-game win/collapse rates (10k games)    |
-| [`campaign_rounds_sim.py`](./campaign_rounds_sim.py) | Part 2: campaign rounds to Perfect Win (2k campaigns) |
-| [`cursed_tomb_sim.py`](./cursed_tomb_sim.py)         | Core simulation engine (shared)                       |
+| Script                                               | Purpose                                               | CLI Flags |
+| :--------------------------------------------------- | :---------------------------------------------------- | :--- |
+| [`base_game_sim.py`](./base_game_sim.py)             | Part 1: single-game win/collapse rates (10k games)    | `--solver`, `--games`, `--seed` |
+| [`campaign_rounds_sim.py`](./campaign_rounds_sim.py) | Part 2: campaign rounds to Perfect Win (2k campaigns) | `--solver`, `--campaigns`, `--max-rounds` |
+| [`cursed_tomb_sim.py`](./cursed_tomb_sim.py)         | Core simulation engine & campaign runner              | `--solver`, `--difficulty`, `--campaigns` |
+| [`sweep_thresholds.py`](./sweep_thresholds.py)       | Cross-difficulty threshold sweep                      | `--solver`, `--campaigns`, `--max-rounds` |
+| [`test_solvers.py`](./test_solvers.py)               | Part 4: solver benchmark comparison                   | `--games`, `--redraws`, `--seed` |
 
-To reproduce Part 1:
+To run the solver benchmark:
 ```bash
-python3 base_game_sim.py
+python3 test_solvers.py --games 50
 ```
 
-To reproduce Part 2:
+To run a campaign difficulty sweep with the Heuristic solver:
 ```bash
-python3 campaign_rounds_sim.py
+python3 sweep_thresholds.py --campaigns 50 --solver heuristic
 ```

@@ -8,21 +8,19 @@ Simulates the base game as implemented in the UI:
 - Win = clearing all pyramid cards (pyramid_clear OR perfect_win)
 - Loss = frozen (no legal moves, no draws/redeals left)
 
-Runs N games and reports:
-  - Victory rate (% games where pyramid is cleared)
-  - Collapse rate (% games where player is stuck)
-  - Avg rounds (always 1, since each game = 1 round; not meaningful here)
-
-Redraw options tested match the UI: 0, 1, 2, Infinite (9999).
+Runs N games and reports win/collapse metrics using the specified solver.
 """
 
 import sys
 import os
-sys.path.insert(0, os.path.dirname(__file__))
-
+import argparse
 import random
 import statistics
+
+sys.path.insert(0, os.path.dirname(__file__))
+
 from cursed_tomb_sim import play_round, CardState, RuleFlags, SUITS, RANKS
+from solvers import GreedySolver, HeuristicSolver, BeamSearchSolver, DFSSolver
 
 BASE_FLAGS = RuleFlags(
     scars=False,
@@ -39,22 +37,35 @@ REDRAW_OPTIONS = [
     ("Infinite  (Novice)", 9999),
 ]
 
+def create_solver(solver_name: str):
+    s = solver_name.lower()
+    if s == 'greedy':
+        return GreedySolver()
+    elif s == 'heuristic':
+        return HeuristicSolver()
+    elif s == 'beam':
+        return BeamSearchSolver()
+    elif s == 'dfs':
+        return DFSSolver()
+    raise ValueError(f"Unknown solver: {solver_name}")
+
 def create_fresh_pool():
     """52 pristine cards — no campaign state."""
     return [CardState(r, s) for s in SUITS for r in RANKS]
 
-def run_single_game(pool, rng, max_redeals):
-    outcome = play_round(pool, rng, max_redeals, BASE_FLAGS)
+def run_single_game(pool, rng, max_redeals, solver):
+    outcome = play_round(pool, rng, max_redeals, BASE_FLAGS, solver=solver)
     return outcome.kind  # 'perfect_win' | 'pyramid_clear' | 'freeze'
 
-def simulate(n_games, max_redeals, seed=42):
+def simulate(n_games, max_redeals, solver_name="heuristic", seed=42):
     rng = random.Random(seed)
     wins = 0    # pyramid_clear or perfect_win
     losses = 0  # freeze
 
     for _ in range(n_games):
         pool = create_fresh_pool()
-        result = run_single_game(pool, rng, max_redeals)
+        solver = create_solver(solver_name)
+        result = run_single_game(pool, rng, max_redeals, solver)
         if result in ('perfect_win', 'pyramid_clear'):
             wins += 1
         else:
@@ -62,28 +73,35 @@ def simulate(n_games, max_redeals, seed=42):
 
     return wins, losses
 
+def parse_args():
+    p = argparse.ArgumentParser(description="Base game single-round simulation")
+    p.add_argument("--games", type=int, default=1000, help="number of games per configuration")
+    p.add_argument("--seed", type=int, default=42, help="random seed")
+    p.add_argument("--solver", choices=["greedy", "heuristic", "beam", "dfs"], default="heuristic", help="solver strategy")
+    return p.parse_args()
+
 def main():
-    N = 10_000
-    seed = 42
+    args = parse_args()
+    N = args.games
+    seed = args.seed
+    solver_name = args.solver
 
     print(f"\n{'='*60}")
     print(f"  Base Game Simulation (no legacy mechanics)")
-    print(f"  {N:,} games per configuration, seed={seed}")
+    print(f"  {N:,} games per configuration, seed={seed}, solver={solver_name}")
     print(f"{'='*60}\n")
     print(f"{'Configuration':<30} {'Win Rate':>10} {'Loss Rate':>10} {'Wins':>8} {'Losses':>8}")
     print(f"{'-'*30} {'-'*10} {'-'*10} {'-'*8} {'-'*8}")
 
     for label, redraws in REDRAW_OPTIONS:
-        wins, losses = simulate(N, redraws, seed=seed)
+        wins, losses = simulate(N, redraws, solver_name=solver_name, seed=seed)
         win_rate = wins / N
         loss_rate = losses / N
         print(f"{label:<30} {win_rate:>9.2%} {loss_rate:>10.2%} {wins:>8,} {losses:>8,}")
 
     print(f"\nNotes:")
     print(f"  - 'Collapse rate' = games where the player ran out of moves")
-    print(f"  - 'Avg rounds' is not applicable (always 1 round per game)")
-    print(f"  - Win = all pyramid cards cleared (partial OR complete victory)")
-    print(f"  - Strategy: greedy heuristic (maximise newly-exposed cards per move)")
+    print(f"  - Strategy: {solver_name}")
     print()
 
 if __name__ == "__main__":
