@@ -18,6 +18,7 @@ import random
 import statistics
 import time
 from dataclasses import dataclass
+from multiprocessing import Pool, cpu_count
 from typing import Dict, List, Optional, Tuple, Any
 
 import cursed_tomb_sim
@@ -36,6 +37,21 @@ try:
     from solvers import GreedySolver, HeuristicSolver, BeamSearchSolver, DFSSolver
 except ImportError:
     from .solvers import GreedySolver, HeuristicSolver, BeamSearchSolver, DFSSolver
+
+
+def _run_deck_evolution_worker(args: Tuple[int, int, RuleFlags, int, str, str, int, int]) -> Dict[str, Any]:
+    camp_seed, max_redeals, flags, max_rounds, solver_name, probe_solver_name, n_probes, sample_interval = args
+    camp_rng = random.Random(camp_seed)
+    return run_infinite_campaign(
+        rng=camp_rng,
+        max_redeals=max_redeals,
+        flags=flags,
+        max_rounds=max_rounds,
+        solver_name=solver_name,
+        probe_solver_name=probe_solver_name,
+        n_probes=n_probes,
+        sample_interval=sample_interval,
+    )
 
 
 def create_solver(solver_name: str):
@@ -98,33 +114,31 @@ def probe_solvability(
     else:
         snap_before = snapshot_deck(active_cards)
 
-    probe_wins = 0
+    wins = 0
+
     for _ in range(n_probes):
-        # Create independent cloned pool for probe run
-        cloned_active = [copy_card(c) for c in active_cards]
+        probe_pool = [copy_card(c) for c in active_cards]
         probe_solver = create_solver(probe_solver_name)
-        outcome = play_round(cloned_active, rng, max_redeals, flags, solver=probe_solver)
-        if outcome.kind in ('pyramid_clear', 'perfect_win'):
-            probe_wins += 1
+        probe_seed = rng.randint(0, 1_000_000_000)
+        probe_rng = random.Random(probe_seed)
 
-    # Sanity check: confirm live deck state was not mutated by probes
+        outcome = play_round(
+            pool=probe_pool,
+            rng=probe_rng,
+            max_redeals=max_redeals,
+            flags=flags,
+            solver=probe_solver,
+        )
+
+        if outcome.kind in ("perfect_win", "pyramid_clear"):
+            wins += 1
+
     if full_registry is not None:
-        snap_after = snapshot_deck(full_registry)
-        assert snap_before == snap_after, "Oracle mutated live registry state!"
+        restore_deck(full_registry, snap_before)
     else:
-        snap_after = snapshot_deck(active_cards)
-        assert snap_before == snap_after, "Oracle mutated live active card state!"
+        restore_deck(active_cards, snap_before)
 
-    return (probe_wins, n_probes)
-
-
-@dataclass
-class RoundData:
-    round_num: int
-    probe_wins: int
-    n_probes: int
-    is_unwinnable: bool
-    is_first_unwinnable: bool
+    return (wins, n_probes)
 
 
 def run_infinite_campaign(
@@ -137,215 +151,162 @@ def run_infinite_campaign(
     n_probes: int,
     sample_interval: int,
 ) -> Dict[str, Any]:
-    """
-    Runs a campaign for max_rounds rounds with all terminal victory and collapse
-    conditions disabled. At sampled rounds, evaluates empirical solvability via oracle.
-    """
+    """Run single campaign tracking per-round solvability across max_rounds."""
     registry = [CardState(r, s) for s in SUITS for r in RANKS]
-    first_unwinnable_round: Optional[int] = None
-    round_data_list: List[RoundData] = []
-    stalled = False
+    round_records = []
+    first_unwinnable_round = None
 
     for round_num in range(1, max_rounds + 1):
-        active = [c for c in registry if c.attrition_stage < flags.max_attrition_stage]
-        is_sampled = ((round_num - 1) % sample_interval == 0)
+        active_cards = [c for c in registry if c.attrition_stage < 5]
+        active_count = len(active_cards)
 
-        if len(active) < N_PYR or stalled:
-            # Active count below 28 (starvation) or all active anchored (equilibrium stall)
-            if is_sampled:
-                if len(active) < N_PYR:
-                    probe_wins = 0
-                    is_unwinnable = True
-                else:
-                    # All anchored stall: probe solvability once
-                    probe_wins, _ = probe_solvability(
-                        active, rng, max_redeals, flags, n_probes, probe_solver_name, registry
-                    )
-                    is_unwinnable = (probe_wins == 0)
-
-                is_first = False
-                if is_unwinnable and first_unwinnable_round is None:
-                    first_unwinnable_round = round_num
-                    is_first = True
-
-                round_data_list.append(RoundData(round_num, probe_wins, n_probes, is_unwinnable, is_first))
-            continue
-
-        # Check for all-anchored equilibrium stall
-        if all(c.is_anchored() for c in active):
-            stalled = True
-            if is_sampled:
-                probe_wins, _ = probe_solvability(
-                    active, rng, max_redeals, flags, n_probes, probe_solver_name, registry
-                )
-                is_unwinnable = (probe_wins == 0)
-                is_first = False
-                if is_unwinnable and first_unwinnable_round is None:
-                    first_unwinnable_round = round_num
-                    is_first = True
-                round_data_list.append(RoundData(round_num, probe_wins, n_probes, is_unwinnable, is_first))
-            continue
-
-        # Oracle probing before playing live round
-        if is_sampled:
-            probe_wins, _ = probe_solvability(
-                active, rng, max_redeals, flags, n_probes, probe_solver_name, registry
+        if round_num == 1 or (round_num % sample_interval == 0):
+            wins, total_probes = probe_solvability(
+                active_cards=active_cards,
+                rng=rng,
+                max_redeals=max_redeals,
+                flags=flags,
+                n_probes=n_probes,
+                probe_solver_name=probe_solver_name,
+                full_registry=registry,
             )
-            is_unwinnable = (probe_wins == 0)
-            is_first = False
+            solvability_ratio = wins / total_probes if total_probes > 0 else 0.0
+            is_unwinnable = wins == 0
+
             if is_unwinnable and first_unwinnable_round is None:
                 first_unwinnable_round = round_num
-                is_first = True
-            round_data_list.append(RoundData(round_num, probe_wins, n_probes, is_unwinnable, is_first))
 
-        # Play live campaign round
-        solver = create_solver(solver_name)
-        outcome = play_round(active, rng, max_redeals, flags, full_registry=registry, solver=solver)
+            round_records.append(
+                {
+                    "round": round_num,
+                    "active_cards": active_count,
+                    "solvability_ratio": solvability_ratio,
+                    "probe_wins": wins,
+                    "total_probes": total_probes,
+                    "is_unwinnable": is_unwinnable,
+                }
+            )
 
-        # Apply survival reward on pyramid clear or perfect win (freeze attrition is handled in play_round)
-        if outcome.kind in ('pyramid_clear', 'perfect_win') and outcome.last_clear_type:
-            _apply_survival_reward(outcome.last_clear_type, outcome.last_clear_cards, flags)
+        if active_count >= N_PYR:
+            solver = create_solver(solver_name)
+            outcome = play_round(
+                pool=active_cards,
+                rng=rng,
+                max_redeals=max_redeals,
+                flags=flags,
+                solver=solver,
+                full_registry=registry,
+            )
+            if outcome.kind in ("perfect_win", "pyramid_clear"):
+                _apply_survival_reward(outcome.last_clear_type, outcome.last_clear_cards, flags)
 
     return {
-        "round_data": round_data_list,
         "first_unwinnable_round": first_unwinnable_round,
+        "round_records": round_records,
     }
 
 
 def aggregate_results(
-    all_campaign_results: List[Dict[str, Any]],
-    max_rounds: int,
-    sample_interval: int,
+    all_campaigns: List[Dict[str, Any]], max_rounds: int, sample_interval: int
 ) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
-    """
-    Builds per-round aggregate statistics across all campaigns and computes overall summary stats.
-    """
-    n_campaigns = len(all_campaign_results)
-    sampled_rounds = list(range(1, max_rounds + 1, sample_interval))
+    """Aggregate per-round stats and overall summary statistics across all campaigns."""
+    total_campaigns = len(all_campaigns)
+    sampled_rounds = [1] + [r for r in range(sample_interval, max_rounds + 1) if r % sample_interval == 0 and r != 1]
+    sampled_rounds = sorted(list(set(sampled_rounds)))
+
+    round_buckets: Dict[int, List[Dict[str, Any]]] = {r: [] for r in sampled_rounds}
+
+    for camp in all_campaigns:
+        for rec in camp["round_records"]:
+            r = rec["round"]
+            if r in round_buckets:
+                round_buckets[r].append(rec)
+
     aggregated_rounds = []
+    for r in sampled_rounds:
+        recs = round_buckets[r]
+        if not recs:
+            continue
+        unwinnable_count = sum(1 for rec in recs if rec["is_unwinnable"])
+        unwinnable_pct = (unwinnable_count / total_campaigns) * 100.0
+        avg_active = statistics.mean(rec["active_cards"] for rec in recs)
+        avg_solvability = statistics.mean(rec["solvability_ratio"] for rec in recs)
 
-    first_unwinnable_list = [
-        res["first_unwinnable_round"] for res in all_campaign_results if res["first_unwinnable_round"] is not None
+        aggregated_rounds.append(
+            {
+                "round": r,
+                "unwinnable_count": unwinnable_count,
+                "unwinnable_pct": unwinnable_pct,
+                "avg_active": avg_active,
+                "avg_solvability": avg_solvability,
+            }
+        )
+
+    first_unwinnable_rounds = [
+        camp["first_unwinnable_round"] for camp in all_campaigns if camp["first_unwinnable_round"] is not None
     ]
-    never_unwinnable_count = sum(1 for res in all_campaign_results if res["first_unwinnable_round"] is None)
-    always_unwinnable_count = sum(1 for res in all_campaign_results if res["first_unwinnable_round"] == 1)
-
-    for idx, r in enumerate(sampled_rounds):
-        unwinnable_count = 0
-        first_unwinnable_count = 0
-        win_rates = []
-        cumul_unwinnable_count = 0
-
-        for res in all_campaign_results:
-            rd_list = res["round_data"]
-            if idx < len(rd_list):
-                rd = rd_list[idx]
-                if rd.is_unwinnable:
-                    unwinnable_count += 1
-                if rd.is_first_unwinnable:
-                    first_unwinnable_count += 1
-                win_rates.append(rd.probe_wins / rd.n_probes)
-
-            fur = res["first_unwinnable_round"]
-            if fur is not None and fur <= r:
-                cumul_unwinnable_count += 1
-
-        mean_win_rate = statistics.mean(win_rates) if win_rates else 0.0
-
-        aggregated_rounds.append({
-            "round_num": r,
-            "unwinnable_count": unwinnable_count,
-            "unwinnable_pct": (unwinnable_count / n_campaigns) * 100.0,
-            "first_unwinnable_count": first_unwinnable_count,
-            "first_unwinnable_pct": (first_unwinnable_count / n_campaigns) * 100.0,
-            "mean_win_rate": mean_win_rate,
-            "cumul_unwinnable_count": cumul_unwinnable_count,
-            "cumul_unwinnable_pct": (cumul_unwinnable_count / n_campaigns) * 100.0,
-        })
+    ever_unwinnable_count = len(first_unwinnable_rounds)
+    ever_unwinnable_pct = (ever_unwinnable_count / total_campaigns) * 100.0
 
     summary_stats = {
-        "n_campaigns": n_campaigns,
-        "max_rounds": max_rounds,
-        "sample_interval": sample_interval,
-        "first_unwinnable_list": first_unwinnable_list,
-        "median_first_unwinnable": statistics.median(first_unwinnable_list) if first_unwinnable_list else None,
-        "mean_first_unwinnable": statistics.mean(first_unwinnable_list) if first_unwinnable_list else None,
-        "never_unwinnable_count": never_unwinnable_count,
-        "never_unwinnable_pct": (never_unwinnable_count / n_campaigns) * 100.0,
-        "always_unwinnable_count": always_unwinnable_count,
-        "always_unwinnable_pct": (always_unwinnable_count / n_campaigns) * 100.0,
+        "total_campaigns": total_campaigns,
+        "ever_unwinnable_count": ever_unwinnable_count,
+        "ever_unwinnable_pct": ever_unwinnable_pct,
+        "mean_first_unwinnable": statistics.mean(first_unwinnable_rounds) if first_unwinnable_rounds else None,
+        "median_first_unwinnable": statistics.median(first_unwinnable_rounds) if first_unwinnable_rounds else None,
+        "min_first_unwinnable": min(first_unwinnable_rounds) if first_unwinnable_rounds else None,
+        "max_first_unwinnable": max(first_unwinnable_rounds) if first_unwinnable_rounds else None,
     }
 
-    return aggregated_rounds, summary_stats
+    return (aggregated_rounds, summary_stats)
 
 
-def print_round_table(aggregated: List[Dict[str, Any]], n_campaigns: int) -> None:
-    """Print the per-round statistics table."""
-    print("\n" + "=" * 78)
-    print(f" PER-ROUND SOLVABILITY TABLE ({n_campaigns} campaigns)")
-    print("=" * 78)
-    print(f" {'Round':<7} | {'Unwinnable%':<12} | {'1st-Unwin%':<12} | {'Mean-Win-Rate':<14} | {'Cumul-Unwin%':<12}")
-    print(" " + "-" * 76)
-
-    for row in aggregated:
-        r = row["round_num"]
-        u_pct = row["unwinnable_pct"]
-        f_pct = row["first_unwinnable_pct"]
-        m_win = row["mean_win_rate"] * 100.0
-        c_pct = row["cumul_unwinnable_pct"]
-        print(f" {r:<7} | {u_pct:>10.1f}% | {f_pct:>10.1f}% | {m_win:>12.1f}% | {c_pct:>10.1f}%")
-    print("=" * 78)
-
-
-def print_ascii_chart(aggregated: List[Dict[str, Any]], max_rounds: int) -> None:
-    """Render an ASCII bar chart of mean probe win rate vs round."""
-    print("\n" + "=" * 78)
-    print(" MEAN PROBE WIN RATE VS ROUND (50-char scale)")
-    print("=" * 78)
-
-    for row in aggregated:
-        r = row["round_num"]
-        win_rate = row["mean_win_rate"]
-        bar_len = int(round(win_rate * 50))
-        bar = "#" * bar_len
-        print(f" R{r:<4} | {win_rate * 100:>5.1f}% | {bar:<50}")
-    print("=" * 78)
-
-
-def print_summary(summary_stats: Dict[str, Any], args: argparse.Namespace, seed_label: str) -> None:
-    """Print final summary block with config echo and key findings."""
-    n = summary_stats["n_campaigns"]
-    med = summary_stats["median_first_unwinnable"]
-    mean = summary_stats["mean_first_unwinnable"]
-    never_pct = summary_stats["never_unwinnable_pct"]
-    always_pct = summary_stats["always_unwinnable_pct"]
-    ever_count = len(summary_stats["first_unwinnable_list"])
-
-    print("\n" + "=" * 78)
-    print(" SUMMARY STATISTICS & FINDINGS")
-    print("=" * 78)
-    print(f" Configuration:")
-    print(f"   - Campaigns:         {args.campaigns}")
-    print(f"   - Max Rounds:        {args.max_rounds}")
-    print(f"   - Probes per Sample: {args.probes}")
-    print(f"   - Sample Interval:   {args.sample_interval}")
-    print(f"   - Difficulty:        {args.difficulty}")
-    print(f"   - Campaign Solver:   {args.solver}")
-    print(f"   - Probe Solver:      {args.probe_solver}")
-    print(f"   - Seed:              {seed_label}")
+def print_round_table(aggregated_rounds: List[Dict[str, Any]], total_campaigns: int) -> None:
+    """Print tabular per-round breakdown of unwinnable rate & average active cards."""
+    print(f"\nPer-Round Unwinnable Solvability Breakdown ({total_campaigns} campaigns)")
     print("-" * 78)
-    print(f" Findings:")
-    print(f"   - Total Campaigns Evaluated:   {n}")
-    print(f"   - Campaigns Becoming Unwinnable:{ever_count} ({(ever_count / n) * 100.0:.1f}%)")
+    print(f"{'Round':<8} | {'Unwinnable %':<15} | {'Unwinnable Count':<18} | {'Avg Active Cards':<18} | {'Avg Solvability':<15}")
+    print("-" * 78)
 
-    if ever_count > 0:
-        print(f"   - First Unwinnable Round (Median): R{med:.1f}" if med is not None else "   - First Unwinnable Round (Median): N/A")
-        print(f"   - First Unwinnable Round (Mean):   R{mean:.1f}" if mean is not None else "   - First Unwinnable Round (Mean):   N/A")
+    for row in aggregated_rounds:
+        print(
+            f"{row['round']:<8} | {row['unwinnable_pct']:>13.1f}% | {row['unwinnable_count']:>10}/{total_campaigns:<6} | {row['avg_active']:>17.1f} | {row['avg_solvability']:>14.2%}"
+        )
+    print("-" * 78)
+
+
+def print_ascii_chart(aggregated_rounds: List[Dict[str, Any]], max_rounds: int) -> None:
+    """Print ASCII progress chart tracking Unwinnable % over campaign rounds."""
+    print("\nUnwinnable Deck % Over Campaign Rounds (ASCII Visual)")
+    print("-" * 78)
+
+    chart_width = 40
+    for row in aggregated_rounds:
+        pct = row["unwinnable_pct"]
+        filled = int(round((pct / 100.0) * chart_width))
+        bar = "█" * filled + "░" * (chart_width - filled)
+        print(f" Round {row['round']:>3}: [{bar}] {pct:>5.1f}%")
+
+    print("-" * 78)
+
+
+def print_summary(summary: Dict[str, Any], args: argparse.Namespace, seed_label: str) -> None:
+    """Print summary statistics for deck evolution solvability."""
+    print("\nSummary Statistics — Deck Evolution & Unwinnability")
+    print("=" * 78)
+    print(f" Difficulty Setting:       {args.difficulty}")
+    print(f" Total Campaigns Analyzed: {summary['total_campaigns']}")
+    print(f" Random Seed:             {seed_label}")
+    print(f" Campaigns Ever Unwinnable:{summary['ever_unwinnable_count']}/{summary['total_campaigns']} ({summary['ever_unwinnable_pct']:.1f}%)")
+
+    if summary["mean_first_unwinnable"] is not None:
+        print(f" Mean Round 1st Unwinnable:{summary['mean_first_unwinnable']:.1f}")
+        print(f" Median Round 1st Unwinnable:{summary['median_first_unwinnable']:.1f}")
+        print(f" Earliest Unwinnable Round: {summary['min_first_unwinnable']}")
+        print(f" Latest Unwinnable Round:   {summary['max_first_unwinnable']}")
     else:
-        print(f"   - No campaigns became unwinnable within {args.max_rounds} rounds.")
+        print(" Mean Round 1st Unwinnable: N/A (No campaigns became unwinnable)")
 
-    print(f"   - Never Unwinnable Rate:        {never_pct:.1f}% ({summary_stats['never_unwinnable_count']}/{n})")
-    print(f"   - Always Unwinnable Rate (R1):  {always_pct:.1f}% ({summary_stats['always_unwinnable_count']}/{n})")
     print("=" * 78 + "\n")
 
 
@@ -362,6 +323,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--probe-solver", choices=["greedy", "heuristic", "beam", "dfs"], default="greedy", help="Oracle probe solver strategy (default: greedy)")
     parser.add_argument("-s", "--seed", type=int, default=None, help="Random seed for reproducibility (default: None - random seed generated)")
     parser.add_argument("-v", "--verbose", action="store_true", help="Print per-campaign round-of-first-unwinnable")
+    parser.add_argument("--workers", type=int, default=cpu_count(), help="Number of parallel worker processes (default: CPU cores)")
     return parser.parse_args()
 
 
@@ -387,7 +349,8 @@ def main() -> None:
     )
 
     max_redeals = DIFFICULTIES[args.difficulty]
-    rng = random.Random(actual_seed)
+    base_rng = random.Random(actual_seed)
+    n_workers = args.workers
 
     print("=" * 78)
     print(" Cursed Tomb: Deck Evolution & Unwinnable Solvability Analysis")
@@ -400,31 +363,42 @@ def main() -> None:
     print(f" Sample Interval:  {args.sample_interval}")
     print(f" Campaign Solver:  {args.solver}")
     print(f" Probe Solver:     {args.probe_solver}")
+    print(f" Workers:          {n_workers}")
     print(f" Seed:             {seed_label}")
     print("=" * 78)
+
+    worker_args = [
+        (
+            base_rng.randint(0, 1_000_000_000),
+            max_redeals,
+            flags,
+            args.max_rounds,
+            args.solver,
+            args.probe_solver,
+            args.probes,
+            args.sample_interval,
+        )
+        for _ in range(args.campaigns)
+    ]
 
     all_campaign_results = []
     t0 = time.time()
 
-    for i in range(1, args.campaigns + 1):
-        camp_seed = rng.randint(0, 1_000_000_000)
-        camp_rng = random.Random(camp_seed)
-
-        res = run_infinite_campaign(
-            rng=camp_rng,
-            max_redeals=max_redeals,
-            flags=flags,
-            max_rounds=args.max_rounds,
-            solver_name=args.solver,
-            probe_solver_name=args.probe_solver,
-            n_probes=args.probes,
-            sample_interval=args.sample_interval,
-        )
-        all_campaign_results.append(res)
-
-        if args.verbose:
-            fur_str = f"R{res['first_unwinnable_round']}" if res["first_unwinnable_round"] is not None else "Never"
-            print(f" Campaign {i:>4}/{args.campaigns}: 1st Unwinnable = {fur_str}")
+    if n_workers > 1 and args.campaigns >= 2:
+        chunk = max(1, args.campaigns // (n_workers * 4))
+        with Pool(processes=n_workers) as pool:
+            for i, res in enumerate(pool.imap_unordered(_run_deck_evolution_worker, worker_args, chunksize=chunk), 1):
+                all_campaign_results.append(res)
+                if args.verbose:
+                    fur_str = f"R{res['first_unwinnable_round']}" if res["first_unwinnable_round"] is not None else "Never"
+                    print(f" Campaign {i:>4}/{args.campaigns}: 1st Unwinnable = {fur_str}")
+    else:
+        for i, args_item in enumerate(worker_args, 1):
+            res = _run_deck_evolution_worker(args_item)
+            all_campaign_results.append(res)
+            if args.verbose:
+                fur_str = f"R{res['first_unwinnable_round']}" if res["first_unwinnable_round"] is not None else "Never"
+                print(f" Campaign {i:>4}/{args.campaigns}: 1st Unwinnable = {fur_str}")
 
     elapsed = time.time() - t0
     print(f"\nSimulation completed in {elapsed:.1f}s.")
@@ -433,7 +407,6 @@ def main() -> None:
     print_round_table(aggregated, args.campaigns)
     print_ascii_chart(aggregated, args.max_rounds)
     print_summary(summary_stats, args, seed_label)
-
 
 if __name__ == "__main__":
     main()

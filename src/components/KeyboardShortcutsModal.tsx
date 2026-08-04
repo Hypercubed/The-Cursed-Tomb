@@ -55,7 +55,7 @@ export function KeyboardShortcutsModal({ isOpen, onClose }: KeyboardShortcutsMod
 
         <div className="space-y-4">
           <div className="flex items-center justify-between py-2 border-b border-[#2d2319]">
-            <span className="text-game-text">Draw Card / Cycle Deck</span>
+            <span className="text-game-text">Pass to Waste / Cycle Deck</span>
             <div className="flex gap-2">
               <kbd className="px-2 py-1 text-sm font-mono bg-[#120e0a] border border-[#251e16] rounded text-amber-400">Space</kbd>
               <kbd className="px-2 py-1 text-sm font-mono bg-[#120e0a] border border-[#251e16] rounded text-amber-400">D</kbd>

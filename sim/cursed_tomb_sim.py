@@ -49,6 +49,7 @@ from __future__ import annotations
 import argparse
 import random
 import statistics
+from multiprocessing import Pool, cpu_count
 from dataclasses import dataclass, field
 
 RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K']
@@ -258,6 +259,22 @@ class GameState:
                     score = newly_exposed_after(self.removed, self.locks, (a,))
                     moves.append(Move('pw', (a, kind_s, vi), score=float(score)))
 
+        if self.stock:
+            stock_top = self.stock[0]
+            if stock_top.functional_value(self.flags) == TARGET:
+                moves.append(Move('alone_single', ('stock', None), score=0.0))
+
+            for a in exp:
+                pcard = self.pyr[a]
+                if pair_sum(pcard, stock_top, self.flags) == TARGET:
+                    score = newly_exposed_after(self.removed, self.locks, (a,))
+                    moves.append(Move('stock_pyramid', (a,), score=float(score)))
+
+            for kind_s, vi in singles:
+                other_card = self.waste[-1] if kind_s == 'waste' else self.vault[vi]
+                if pair_sum(stock_top, other_card, self.flags) == TARGET:
+                    moves.append(Move('stock_waste', (kind_s, vi), score=0.0))
+
         if self.flags.blessings:
             for i in exp:
                 card = self.pyr[i]
@@ -321,7 +338,12 @@ class GameState:
 
         elif kind == 'alone_single':
             kind_s, vi = payload
-            card = self.waste.pop() if kind_s == 'waste' else self.vault.pop(vi)
+            if kind_s == 'stock':
+                card = self.stock.pop(0)
+            elif kind_s == 'waste':
+                card = self.waste.pop()
+            else:
+                card = self.vault.pop(vi)
             self.fire_on_clear(card)
             self.last_clear_type, self.last_clear_cards = 'solo', (card,)
             self.moves_played += 1
@@ -346,6 +368,49 @@ class GameState:
                 self.rng.shuffle(self.stock)
             self.fire_on_clear(card_a); self.fire_on_clear(card_w)
             self.last_clear_type, self.last_clear_cards = 'pair', (card_a, card_w)
+            self.moves_played += 1
+            self.clears_this_pass += 1
+
+        elif kind == 'stock_pyramid':
+            a, = payload
+            stock_card = self.stock.pop(0)
+            pyr_card = self.pyr[a]
+            self.removed.add(a)
+            s_bc = stock_card.is_black_cursed(self.flags)
+            p_bc = pyr_card.is_black_cursed(self.flags)
+            if s_bc and not p_bc:
+                self.stock.append(pyr_card)
+                self.rng.shuffle(self.stock)
+            elif p_bc and not s_bc:
+                self.stock.append(stock_card)
+                self.rng.shuffle(self.stock)
+            elif s_bc and p_bc:
+                self.stock.append(stock_card)
+                self.stock.append(pyr_card)
+                self.rng.shuffle(self.stock)
+            self.fire_on_clear(stock_card); self.fire_on_clear(pyr_card)
+            self.last_clear_type, self.last_clear_cards = 'pair', (stock_card, pyr_card)
+            self.moves_played += 1
+            self.clears_this_pass += 1
+
+        elif kind == 'stock_waste':
+            kind_s, vi = payload
+            stock_card = self.stock.pop(0)
+            other_card = self.waste.pop() if kind_s == 'waste' else self.vault.pop(vi)
+            s_bc = stock_card.is_black_cursed(self.flags)
+            o_bc = other_card.is_black_cursed(self.flags)
+            if s_bc and not o_bc:
+                self.stock.append(other_card)
+                self.rng.shuffle(self.stock)
+            elif o_bc and not s_bc:
+                self.stock.append(stock_card)
+                self.rng.shuffle(self.stock)
+            elif s_bc and o_bc:
+                self.stock.append(stock_card)
+                self.stock.append(other_card)
+                self.rng.shuffle(self.stock)
+            self.fire_on_clear(stock_card); self.fire_on_clear(other_card)
+            self.last_clear_type, self.last_clear_cards = 'pair', (stock_card, other_card)
             self.moves_played += 1
             self.clears_this_pass += 1
 
@@ -532,8 +597,20 @@ DIFFICULTIES = {
 }
 
 
-def run_many_campaigns(difficulty, campaigns, seed, flags, max_rounds, verbose=False, solver=None):
-    rng = random.Random(seed)
+def _run_single_campaign_worker(args):
+    camp_seed, difficulty, flags, max_rounds, solver_name = args
+    rng = random.Random(camp_seed)
+    max_redeals = DIFFICULTIES[difficulty]
+    solver = get_solver(solver_name) if isinstance(solver_name, str) else solver_name
+    return run_campaign(rng, max_redeals, flags, max_rounds, solver=solver)
+
+
+def run_many_campaigns(difficulty, campaigns, seed, flags, max_rounds, verbose=False, solver=None, n_workers=None, solver_name="heuristic"):
+    if n_workers is None:
+        n_workers = cpu_count() or 1
+
+    actual_seed = seed if seed is not None else random.randint(0, 1_000_000_000)
+    base_rng = random.Random(actual_seed)
     max_redeals = DIFFICULTIES[difficulty]
 
     victories = 0
@@ -544,22 +621,39 @@ def run_many_campaigns(difficulty, campaigns, seed, flags, max_rounds, verbose=F
     collapse_rounds = []
     rounds_to_resolution = []  # victories + collapses only (excludes timeouts)
 
-    for i in range(campaigns):
-        result = run_campaign(rng, max_redeals, flags, max_rounds, solver=solver)
-        if result["result"] == "victory":
+    worker_args = [
+        (base_rng.randint(0, 1_000_000_000), difficulty, flags, max_rounds, solver_name)
+        for _ in range(campaigns)
+    ]
+
+    def process_result(i, result):
+        nonlocal victories, collapses, timeouts, stall_deadlocks
+        res_type = result["result"]
+        rds = result["rounds"]
+        if res_type == "victory":
             victories += 1
-            victory_rounds.append(result["rounds"])
-            rounds_to_resolution.append(result["rounds"])
-        elif result["result"] == "timeout":
+            victory_rounds.append(rds)
+            rounds_to_resolution.append(rds)
+        elif res_type == "timeout":
             timeouts += 1
-        elif result["result"] == "stall_deadlock":
+        elif res_type == "stall_deadlock":
             stall_deadlocks += 1
         else:
             collapses += 1
-            collapse_rounds.append(result["rounds"])
-            rounds_to_resolution.append(result["rounds"])
+            collapse_rounds.append(rds)
+            rounds_to_resolution.append(rds)
         if verbose:
-            print(f"campaign {i + 1:>4}: {result['result']:<22} rounds={result['rounds']}")
+            print(f"campaign {i:>4}: {res_type:<22} rounds={rds}")
+
+    if n_workers > 1 and campaigns >= 10:
+        chunk = max(1, campaigns // (n_workers * 4))
+        with Pool(processes=n_workers) as pool:
+            for i, result in enumerate(pool.imap_unordered(_run_single_campaign_worker, worker_args, chunksize=chunk), 1):
+                process_result(i, result)
+    else:
+        for i, args_item in enumerate(worker_args, 1):
+            result = _run_single_campaign_worker(args_item)
+            process_result(i, result)
 
     print(f"\n=== The Cursed Tomb -- Campaign Simulation ===")
     print(f"difficulty:          {difficulty} (max_redeals={max_redeals})")
@@ -570,6 +664,7 @@ def run_many_campaigns(difficulty, campaigns, seed, flags, max_rounds, verbose=F
     print(f"volatile collapse:   {'enabled' if flags.volatile_collapse else 'disabled'}")
     print(f"campaign round cap:  {max_rounds}")
     print(f"campaigns run:       {campaigns}")
+    print(f"workers:             {n_workers}")
     print(f"victories:           {victories}")
     print(f"collapses:           {collapses}")
     if stall_deadlocks:
@@ -618,6 +713,7 @@ def parse_args():
     p.add_argument("--max-rounds", type=int, default=500,
                    help="safety cap on rounds per campaign before declaring a timeout")
     p.add_argument("--verbose", action="store_true", help="print per-campaign results")
+    p.add_argument("--workers", type=int, default=cpu_count(), help="number of parallel worker processes")
     return p.parse_args()
 
 
@@ -643,7 +739,6 @@ def main():
         attrition=not args.no_attrition,
         volatile_collapse=args.volatile_collapse,
     )
-    solver = get_solver(args.solver)
     run_many_campaigns(
         difficulty=args.difficulty,
         campaigns=args.campaigns,
@@ -651,7 +746,8 @@ def main():
         flags=flags,
         max_rounds=args.max_rounds,
         verbose=args.verbose,
-        solver=solver,
+        solver_name=args.solver,
+        n_workers=args.workers,
     )
 
 

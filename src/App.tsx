@@ -4,6 +4,7 @@ import {
   canRemovePair,
   canRemoveSingle,
   cyclePile,
+  discardStockCard,
   drawCard,
   getCardById,
   getCardLocation,
@@ -236,6 +237,7 @@ function App() {
   }, [game.status, hasRecordedOutcome, campaign, game, stopAutoplay]);
 
   const topDiscard = game.discardPile[0] ?? null;
+  const topStock = game.drawPile[0] ?? null;
 
   const removedCardsSet = useMemo(() => getRemovedCardIds(game), [game]);
   const removedCardsCount = useMemo(() => getRemovedCardsCount(game), [game]);
@@ -315,7 +317,7 @@ function App() {
 
   const handleDraw = () => {
     setGame((state) => {
-      const next = state.drawPile.length > 0 ? drawCard(state) : cyclePile(state);
+      const next = state.drawPile.length > 0 ? discardStockCard(state) : cyclePile(state);
       return { ...next, selectedCardId: null };
     });
   };
@@ -530,6 +532,7 @@ function App() {
             <div className="border-t border-game-border mt-2">
               <DrawZone
                 drawPileCount={game.drawPile.length}
+                topStock={topStock}
                 topDiscard={topDiscard}
                 vaultCard={game.vaultCard}
                 selectedCardId={game.selectedCardId}

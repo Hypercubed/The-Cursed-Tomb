@@ -19,37 +19,36 @@ Each game is one round of pyramid solitaire. A **Win (Pyramid Clear)** means all
 
 | UI Redraw Setting | Redraws | Win Rate (Pyramid Clear) | Total Victory Rate (52 Cards) | Collapse Rate |
 | :---------------- | :-----: | :----------------------: | :---------------------------: | :-----------: |
-| 0 redraws         |    0    |          0.61%           |             0.00%             |    99.39%     |
-| 1 redraw          |    1    |          12.28%          |             0.03%             |    87.72%     |
-| 2 redraws         |    2    |          33.66%          |             0.10%             |    66.34%     |
-| Infinite          |    ∞    |          40.68%          |             0.12%             |    59.32%     |
+| 0 redraws         |    0    |          1.17%           |             0.28%             |    98.83%     |
+| 1 redraw          |    1    |          14.91%          |             3.58%             |    85.09%     |
+| 2 redraws         |    2    |          31.07%          |             6.34%             |    68.93%     |
+| Infinite          |    ∞    |          34.57%          |             6.81%             |    65.43%     |
 
 ### Observations
 
-- **0 redraws is brutally hard.** A single pass through the 24-card stock almost never exposes enough cards to clear all 28 pyramid positions (0.61% pyramid clear, 0.00% total victory).
-- **Total Victory (clearing all 52 cards) is exceedingly rare in single-round play.** Even with infinite redraws, total victory occurs in only 0.12% of games (12 in 10,000 runs) because clearing all stock/waste cards requires perfect rank pairing across the entire deck without dead-ending.
-- **Each redraw has large marginal value for pyramid clearing.** Going from 0→1 redraws is a 20× improvement (0.61% → 12.28%); 1→2 redraws nearly triples pyramid clear rate again (12.28% → 33.66%).
-- **Infinite redraws plateaus at ~41%.** The domain-aware heuristic creates board states it can't escape even with unlimited re-passes, because it doesn't look ahead.
-- **The gap from 2→∞ is small (~7%).** Most of the practical benefit from redraws is captured within two cycles.
+- **0 redraws remains very difficult.** A single pass through the 24-card stock exposes enough cards to clear the pyramid in 1.17% of games, and achieves Total Victory in 0.28%.
+- **Total Victory (clearing all 52 cards) is significantly more achievable.** Under in-flight stock pairing rules, Total Victory reaches **6.81%** with infinite redraws (up from 0.12%), because exposed Stock cards can be matched directly with Waste or Pyramid cards before entering the Waste pile.
+- **Each redraw provides substantial value.** Going from 0→1 redraws increases pyramid clear rate from 1.17% → 14.91% (a 12.7× improvement); 1→2 redraws more than doubles pyramid clear rate again to 31.07%.
+- **Infinite redraws plateaus around ~35%.** Most of the practical benefit from redraws is captured within two cycles (31.07% vs 34.57%).
 
 ---
 
 ## Part 2 — Campaign Rounds to Perfect Win
 
-> **Command to reproduce:** `python3 campaign_rounds_sim.py --campaigns 1000 --difficulty [difficulty] --max-rounds 200`
+> **Command to reproduce:** `python3 campaign_rounds_sim.py --campaigns 1000 --difficulty [difficulty] --max-rounds 500`
 
 The rules define the campaign victory condition as a **Perfect Win**: all 52 cards (pyramid *and* stock/waste) cleared in a single round. This is harder than a standard pyramid clear.
 
 Since the base game has no attrition mechanics, **the tomb never collapses** — there is no starvation and no entombment. Every non-victory within the cap is a timeout (the campaign just keeps going).
 
-**Sample size:** 1,000 campaigns per setting, max 200 rounds each
+**Sample size:** 1,000 campaigns per setting, max 500 rounds each
 
-| Difficulty        | Redraws | Win Rate (200 rds) | Avg Rounds to Win | Median Rounds |
+| Difficulty        | Redraws | Win Rate (500 rds) | Avg Rounds to Win | Median Rounds |
 | :---------------- | :-----: | :----------------: | :---------------: | :-----------: |
-| Survivalist       |    0    |        0.0%        |         —         |       —       |
-| Archaeologist     |    1    |        6.4%        |       104.5       |      98       |
-| Explorer          |    2    |       21.2%        |       98.9        |      98       |
-| Novice (Infinite) |    ∞    |       25.2%        |       93.1        |      83       |
+| Survivalist       |    0    |       75.7%        |       246.3       |      219      |
+| Archaeologist     |    1    |       100.0%       |       27.5        |      19       |
+| Explorer          |    2    |       100.0%       |       15.3        |      10       |
+| Novice (Infinite) |    ∞    |       100.0%       |       14.5        |      10       |
 
 ---
 
@@ -63,10 +62,10 @@ This section simulates campaigns with **all Cursed Tomb rules active**: scars, c
 
 | Difficulty    | Redraws | Victory Rate | Collapse Rate | Avg Rounds to Win | Avg Rounds to Collapse | Overall Avg Resolve |
 | :------------ | :-----: | :----------: | :-----------: | :---------------: | :--------------------: | :-----------------: |
-| Survivalist   |    0    |    0.00%     |    100.00%    |         —         |     260.4 ± 166.4      |    260.4 ± 166.4    |
-| Archaeologist |    1    |    2.60%     |    97.40%     |   151.7 ± 86.4    |     274.6 ± 179.3      |    271.4 ± 179.2    |
-| Explorer      |    2    |    7.80%     |    92.20%     |   149.3 ± 103.7   |     285.5 ± 182.2      |    274.9 ± 182.1    |
-| Novice        |    ∞    |    10.50%    |    89.50%     |   143.2 ± 95.8    |     286.0 ± 179.4      |    271.0 ± 182.2    |
+| Survivalist   |    0    |    0.00%     |    100.00%    |         —         |     261.2 ± 167.3      |    261.2 ± 167.3    |
+| Archaeologist |    1    |    6.90%     |    93.10%     |   124.9 ± 98.4    |     279.7 ± 186.7      |    269.0 ± 186.0    |
+| Explorer      |    2    |    18.90%    |    81.10%     |   131.7 ± 103.0   |     297.0 ± 195.9      |    265.8 ± 194.2    |
+| Novice        |    ∞    |    23.50%    |    76.50%     |   129.5 ± 101.6   |     297.0 ± 188.7      |    257.6 ± 186.5    |
 
 ---
 
@@ -78,10 +77,10 @@ Comparative benchmark across identical deck seeds (Difficulty: Explorer / 2 redr
 
 | Solver Policy | Single-Game Win Rate | Execution Time (50 games) | Strategy Description |
 | :--- | :---: | :---: | :--- |
-| **Greedy** | **46.0%** | **0.04s** | 1-step max exposed card count |
-| **Heuristic** *(Default)* | **46.0%** | **0.04s** | Multi-factor evaluation (depth, red curse priority, waste preservation) |
-| **BeamSearch (D=3, B=4)** | **50.0%** | **0.38s** | 3-step lookahead beam search over cloned game states |
-| **DFS (Max 3k nodes)** | **58.0%** | **1.38s** | Exact solvability search with recursive backtracking & memoization |
+| **Greedy** | **42.0%** | **0.03s** | 1-step max exposed card count |
+| **Heuristic** *(Default)* | **42.0%** | **0.03s** | Multi-factor evaluation (depth, red curse priority, waste preservation) |
+| **BeamSearch (D=3, B=4)** | **46.0%** | **0.49s** | 3-step lookahead beam search over cloned game states |
+| **DFS (Max 3k nodes)** | **56.0%** | **1.07s** | Exact solvability search with recursive backtracking & memoization |
 
 ---
 

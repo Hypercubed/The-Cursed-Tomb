@@ -10,6 +10,7 @@ import {
   createDeck,
   cyclePile,
   dealPyramid,
+  discardStockCard,
   drawCard,
   getActiveRankCounts,
   getFunctionalValue,
@@ -593,6 +594,62 @@ describe('Cursed Tomb campaign mechanics', () => {
       const nextState = playCard(stateWithKing, kingCard.id);
       expect(nextState.discardPile.some((c) => c.id === kingCard.id)).toBe(false);
       expect(nextState.selectedCardId).toBeNull();
+    });
+  });
+
+  describe('Stock-to-Waste in-flight pairing and discard', () => {
+    it('allows pairing top Stock card with an exposed Pyramid card', () => {
+      const state = createDeterministicGameState(1);
+      const topStock = state.drawPile[0];
+      topStock.rank = 5;
+
+      const exposedPyramid = state.pyramid[6][0];
+      exposedPyramid.rank = 8;
+
+      let nextState = playCard(state, topStock.id);
+      expect(nextState.selectedCardId).toBe(topStock.id);
+
+      nextState = playCard(nextState, exposedPyramid.id);
+      expect(nextState.drawPile.some((c) => c.id === topStock.id)).toBe(false);
+      expect(nextState.pyramid[6][0].removed).toBe(true);
+      expect(nextState.selectedCardId).toBeNull();
+    });
+
+    it('allows pairing top Stock card with top Waste card', () => {
+      const state = createDeterministicGameState(1);
+      const withWaste = discardStockCard(state);
+      const topWaste = withWaste.discardPile[0];
+      topWaste.rank = 4;
+
+      const topStock = withWaste.drawPile[0];
+      topStock.rank = 9;
+
+      let nextState = playCard(withWaste, topStock.id);
+      expect(nextState.selectedCardId).toBe(topStock.id);
+
+      nextState = playCard(nextState, topWaste.id);
+      expect(nextState.drawPile.some((c) => c.id === topStock.id)).toBe(false);
+      expect(nextState.discardPile.some((c) => c.id === topWaste.id)).toBe(false);
+      expect(nextState.selectedCardId).toBeNull();
+    });
+
+    it('clears single King directly from top Stock card', () => {
+      const state = createDeterministicGameState(1);
+      const topStock = state.drawPile[0];
+      topStock.rank = 13;
+
+      const nextState = playCard(state, topStock.id);
+      expect(nextState.drawPile.some((c) => c.id === topStock.id)).toBe(false);
+      expect(nextState.selectedCardId).toBeNull();
+    });
+
+    it('moves top Stock card to Waste when discardStockCard is called', () => {
+      const state = createDeterministicGameState(1);
+      const topStock = state.drawPile[0];
+
+      const nextState = discardStockCard(state);
+      expect(nextState.drawPile.some((c) => c.id === topStock.id)).toBe(false);
+      expect(nextState.discardPile[0].id).toBe(topStock.id);
     });
   });
 });

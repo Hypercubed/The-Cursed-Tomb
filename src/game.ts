@@ -328,12 +328,19 @@ export function movePyramidToVault(state: GameState, cardId: string): GameState 
   };
 }
 
-export function drawCard(state: GameState): GameState {
+export function discardStockCard(state: GameState): GameState {
+  if (state.drawPile.length === 0) return state;
+  const topStock = state.drawPile[0];
   const nextState = moveCardToDiscard(state);
   return {
     ...nextState,
+    selectedCardId: state.selectedCardId === topStock.id ? null : state.selectedCardId,
     status: checkForWin(nextState),
   };
+}
+
+export function drawCard(state: GameState): GameState {
+  return discardStockCard(state);
 }
 
 export function cyclePile(state: GameState): GameState {
@@ -375,7 +382,7 @@ export function cardIsVisible(card: Card, state: GameState): boolean {
     return location.index === 0;
   }
   if (location.zone === 'draw') {
-    return canRemoveSingle(card, state.mode);
+    return location.index === 0;
   }
   if (location.zone === 'vault') {
     return true;
@@ -418,6 +425,7 @@ export function checkForWin(state: GameState): GameStatus {
 export function canAnyMove(state: GameState, extraCards: Card[] = []): boolean {
   const visible = visibleCards(state.pyramid);
   const topDiscard = state.discardPile[0] ?? null;
+  const topStock = state.drawPile[0] ?? null;
   const vaultCard = state.vaultCard ?? null;
 
   const available: { card: Card; location: 'pyramid' | 'draw' | 'discard' | 'vault' }[] = [
@@ -425,6 +433,9 @@ export function canAnyMove(state: GameState, extraCards: Card[] = []): boolean {
   ];
   if (topDiscard) {
     available.push({ card: topDiscard, location: 'discard' });
+  }
+  if (topStock) {
+    available.push({ card: topStock, location: 'draw' });
   }
   if (vaultCard) {
     available.push({ card: vaultCard, location: 'vault' });
@@ -620,7 +631,35 @@ export function playCard(state: GameState, cardId: string): GameState {
   }
 
   if (located.zone === 'draw') {
-    return selectCard(state, cardId);
+    const drawCard = state.drawPile.find((item) => item.id === cardId);
+    if (!drawCard || located.index !== 0) return state;
+
+    if (canRemoveSingle(drawCard, state.mode)) {
+      let nextState: GameState = {
+        ...removeCard(state, drawCard.id),
+        lastClearedPair: [drawCard],
+      };
+      nextState.pyramid = updateRedCurseFaceDownState(nextState.pyramid, state.mode);
+      nextState = handleHeroBlessings(nextState, [drawCard]);
+      return { ...nextState, status: checkForWin(nextState) };
+    }
+
+    if (!state.selectedCardId || state.selectedCardId === cardId) {
+      return selectCard(state, cardId);
+    }
+
+    const selectedCard = getCardById(state.selectedCardId, state);
+    const selectedLoc = selectedCard ? getCardLocation(selectedCard.id, state).zone : 'none';
+    if (!selectedCard || !canRemovePair(drawCard, selectedCard, state.mode, 'draw', selectedLoc === 'none' ? undefined : selectedLoc)) {
+      return state;
+    }
+
+    let nextState = removePair(state, drawCard, selectedCard);
+    nextState.lastClearedPair = [drawCard, selectedCard];
+    nextState.pyramid = updateRedCurseFaceDownState(nextState.pyramid, state.mode);
+    nextState = handleHeroBlessings(nextState, [drawCard, selectedCard]);
+    nextState.status = checkForWin(nextState);
+    return nextState;
   }
 
   if (located.zone === 'discard') {

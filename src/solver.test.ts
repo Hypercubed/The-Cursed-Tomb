@@ -374,4 +374,79 @@ describe('solver', () => {
       expect(nexts[0].interactionMode).toBe('normal');
     });
   });
+
+  describe('solver Stock-to-Waste pairing handling', () => {
+    it('evaluates and plays in-flight Stock-to-Pyramid pair before passing to waste', () => {
+      const game = startGame(1);
+      const topStock = game.drawPile[0];
+      topStock.rank = 6;
+
+      const customPyramid = game.pyramid.map((row, rIdx) => {
+        if (rIdx === 6) {
+          return row.map((card, cIdx) => (cIdx === 0 ? { ...card, rank: 7 as const } : { ...card, rank: 2 as const }));
+        }
+        return row;
+      });
+
+      const state: GameState = {
+        ...game,
+        pyramid: customPyramid,
+        discardPile: [],
+      };
+
+      const nextState = findNextGreedyMove(state);
+      expect(nextState).not.toBeNull();
+      expect(nextState!.drawPile.some((c) => c.id === topStock.id)).toBe(false);
+      expect(nextState!.pyramid[6][0].removed).toBe(true);
+    });
+
+    it('evaluates and plays in-flight Stock-to-Waste pair', () => {
+      const game = startGame(1);
+      const topStock = game.drawPile[0];
+      topStock.rank = 9;
+
+      const wasteCard = { ...game.drawPile[1], rank: 4 as const };
+
+      const customPyramid = game.pyramid.map((row) =>
+        row.map((card) => ({ ...card, rank: 2 as const }))
+      );
+
+      const state: GameState = {
+        ...game,
+        pyramid: customPyramid,
+        drawPile: game.drawPile.filter((c) => c.id !== wasteCard.id),
+        discardPile: [wasteCard],
+      };
+
+      const nextState = findNextGreedyMove(state);
+      expect(nextState).not.toBeNull();
+      expect(nextState!.drawPile.some((c) => c.id === topStock.id)).toBe(false);
+      expect(nextState!.discardPile.some((c) => c.id === wasteCard.id)).toBe(false);
+    });
+
+    it('includes Stock pairing moves in getLegalNextStates', () => {
+      const game = startGame(1);
+      const topStock = game.drawPile[0];
+      topStock.rank = 5;
+
+      const customPyramid = game.pyramid.map((row, rIdx) => {
+        if (rIdx === 6) {
+          return row.map((card, cIdx) => (cIdx === 0 ? { ...card, rank: 8 as const } : { ...card, rank: 2 as const }));
+        }
+        return row;
+      });
+
+      const state: GameState = {
+        ...game,
+        pyramid: customPyramid,
+        discardPile: [],
+      };
+
+      const legalNext = getLegalNextStates(state);
+      const pairedState = legalNext.find(
+        (s) => s.pyramid[6][0].removed && !s.drawPile.some((c) => c.id === topStock.id)
+      );
+      expect(pairedState).toBeDefined();
+    });
+  });
 });

@@ -10,6 +10,7 @@ Usage:
   python3 sweep_thresholds.py [--campaigns N] [--max-rounds R] [--deadlock-limit D] [--seed S] [--solver SOLVER] [--no-volatile]
 """
 import argparse, random, time, statistics, cursed_tomb_sim
+from multiprocessing import Pool, cpu_count
 from solvers import GreedySolver, HeuristicSolver, BeamSearchSolver, DFSSolver
 
 def create_solver(solver_name: str):
@@ -31,10 +32,23 @@ def get_stats_str(rounds_list):
     std = statistics.stdev(rounds_list) if len(rounds_list) > 1 else 0.0
     return f"{avg:5.1f} ± {std:<4.1f} rnds"
 
-def run_batch(n, seed, difficulty_name, max_rounds, deadlock_limit, volatile_collapse=True, solver_name="heuristic"):
-    rng = random.Random(seed)
+def _run_sweep_worker(args):
+    camp_seed, max_redeals, volatile_collapse, max_rounds, deadlock_limit, solver_name = args
+    rng = random.Random(camp_seed)
     flags = cursed_tomb_sim.RuleFlags(volatile_collapse=volatile_collapse)
+    solver = create_solver(solver_name)
+    return cursed_tomb_sim.run_campaign(rng, max_redeals, flags, max_rounds, deadlock_limit=deadlock_limit, solver=solver)
+
+def run_batch(n, seed, difficulty_name, max_rounds, deadlock_limit, volatile_collapse=True, solver_name="heuristic", n_workers=None):
+    if n_workers is None:
+        n_workers = cpu_count() or 1
+
+    base_rng = random.Random(seed)
     max_redeals = cursed_tomb_sim.DIFFICULTIES[difficulty_name]
+    worker_args = [
+        (base_rng.randint(0, 1_000_000_000), max_redeals, volatile_collapse, max_rounds, deadlock_limit, solver_name)
+        for _ in range(n)
+    ]
     
     rounds_by_type = {
         'victory': [],
@@ -48,12 +62,10 @@ def run_batch(n, seed, difficulty_name, max_rounds, deadlock_limit, volatile_col
     }
     
     t0 = time.time()
-    for _ in range(n):
-        solver = create_solver(solver_name)
-        r = cursed_tomb_sim.run_campaign(rng, max_redeals, flags, max_rounds, deadlock_limit=deadlock_limit, solver=solver)
+
+    def process_result(r):
         k = r['result']
         rnd = r['rounds']
-        
         if k == 'victory':
             rounds_by_type['victory'].append(rnd)
         elif k == 'victory_soft':
@@ -70,6 +82,16 @@ def run_batch(n, seed, difficulty_name, max_rounds, deadlock_limit, volatile_col
             rounds_by_type['deadlock'].append(rnd)
         elif k == 'timeout':
             rounds_by_type['round_cap'].append(rnd)
+
+    if n_workers > 1 and n >= 10:
+        chunk = max(1, n // (n_workers * 4))
+        with Pool(processes=n_workers) as pool:
+            for r in pool.imap_unordered(_run_sweep_worker, worker_args, chunksize=chunk):
+                process_result(r)
+    else:
+        for args_item in worker_args:
+            r = _run_sweep_worker(args_item)
+            process_result(r)
             
     elapsed = time.time() - t0
     return difficulty_name, max_redeals, elapsed, rounds_by_type
@@ -96,6 +118,7 @@ def parse_args():
     parser.add_argument("-s", "--seed", type=int, default=42, help="Random seed (default: 42)")
     parser.add_argument("--solver", choices=["greedy", "heuristic", "beam", "dfs"], default="heuristic", help="Solver strategy")
     parser.add_argument("--no-volatile", action="store_true", help="Disable Volatile Collapse variant rule (default: Volatile Collapse is ENABLED)")
+    parser.add_argument("--workers", type=int, default=cpu_count(), help="Number of parallel worker processes (default: CPU cores)")
     return parser.parse_args()
 
 if __name__ == '__main__':
@@ -105,12 +128,12 @@ if __name__ == '__main__':
     volatile_enabled = not args.no_volatile
     
     dl_desc = f"{dl_val:.0%}" if isinstance(dl_val, float) and dl_val < 1.0 else f"{dl_val} rounds"
-    print(f"Running difficulty sweep: campaigns/diff={args.campaigns}, max_rounds={args.max_rounds}, deadlock_limit={dl_desc}, volatile_collapse={volatile_enabled}, solver={args.solver}, seed={args.seed}")
+    print(f"Running difficulty sweep: campaigns/diff={args.campaigns}, max_rounds={args.max_rounds}, deadlock_limit={dl_desc}, volatile_collapse={volatile_enabled}, solver={args.solver}, seed={args.seed}, workers={args.workers}")
     
     batch_results = []
     difficulties = ["novice", "explorer", "archaeologist", "survivalist"]
     for diff in difficulties:
-        d_name, max_redeals, elapsed, r_by_type = run_batch(args.campaigns, args.seed, diff, args.max_rounds, dl_val, volatile_collapse=volatile_enabled, solver_name=args.solver)
+        d_name, max_redeals, elapsed, r_by_type = run_batch(args.campaigns, args.seed, diff, args.max_rounds, dl_val, volatile_collapse=volatile_enabled, solver_name=args.solver, n_workers=args.workers)
         batch_results.append((d_name, max_redeals, elapsed, r_by_type))
 
     sample_flags = cursed_tomb_sim.RuleFlags(volatile_collapse=volatile_enabled)

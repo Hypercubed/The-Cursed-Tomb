@@ -7,6 +7,7 @@ import copy
 import random
 import argparse
 import statistics
+from multiprocessing import Pool, cpu_count
 from dataclasses import dataclass
 from cursed_tomb_sim import (
     CardState, RuleFlags, RoundOutcome, SUITS, RANKS, RANK_VALUES,
@@ -196,7 +197,16 @@ def run_campaign_compare(rng, max_redeals, flags, max_rounds, allow_pyramid_vaul
     return 'timeout', rounds_played
 
 
-def run_experiment(num_campaigns=1000, seed=42):
+def _run_campaign_compare_worker(args):
+    camp_seed, redeals, flags, max_rounds, allow_pyramid_vault = args
+    rng = random.Random(camp_seed)
+    return run_campaign_compare(rng, redeals, flags, max_rounds=max_rounds, allow_pyramid_vault=allow_pyramid_vault)
+
+
+def run_experiment(num_campaigns=1000, seed=42, n_workers=None):
+    if n_workers is None:
+        n_workers = cpu_count() or 1
+
     difficulties = [
         ('Survivalist', 0),
         ('Archaeologist', 1),
@@ -204,28 +214,42 @@ def run_experiment(num_campaigns=1000, seed=42):
         ('Novice (Infinite)', 999)
     ]
 
-    print(f"=== Running Vault Rule Comparison ({num_campaigns} campaigns per setting, seed={seed}) ===\n")
+    print(f"=== Running Vault Rule Comparison ({num_campaigns} campaigns per setting, seed={seed}, workers={n_workers}) ===\n")
     print(f"{'Difficulty':<20} | {'Mode':<18} | {'Victory Rate':<14} | {'Collapse Rate':<14} | {'Avg Rounds':<12}")
     print("-" * 88)
 
     for diff_name, redeals in difficulties:
         for allow_pyr, mode_name in [(False, "Baseline (Waste)"), (True, "Pyramid Self-Vault")]:
-            rng = random.Random(seed)
+            base_rng = random.Random(seed)
             flags = RuleFlags(scars=True, curses=True, blessings=True, attrition=True)
+            worker_args = [(base_rng.randint(0, 1_000_000_000), redeals, flags, 500, allow_pyr) for _ in range(num_campaigns)]
+
             wins = 0
             collapses = 0
             timeouts = 0
             rounds_list = []
 
-            for _ in range(num_campaigns):
-                res, rds = run_campaign_compare(rng, redeals, flags, max_rounds=500, allow_pyramid_vault=allow_pyr)
-                rounds_list.append(rds)
-                if res == 'win':
-                    wins += 1
-                elif res == 'collapse':
-                    collapses += 1
-                else:
-                    timeouts += 1
+            if n_workers > 1 and num_campaigns >= 10:
+                chunk = max(1, num_campaigns // (n_workers * 4))
+                with Pool(processes=n_workers) as pool:
+                    for res, rds in pool.imap_unordered(_run_campaign_compare_worker, worker_args, chunksize=chunk):
+                        rounds_list.append(rds)
+                        if res == 'win':
+                            wins += 1
+                        elif res == 'collapse':
+                            collapses += 1
+                        else:
+                            timeouts += 1
+            else:
+                for args_item in worker_args:
+                    res, rds = _run_campaign_compare_worker(args_item)
+                    rounds_list.append(rds)
+                    if res == 'win':
+                        wins += 1
+                    elif res == 'collapse':
+                        collapses += 1
+                    else:
+                        timeouts += 1
 
             win_pct = (wins / num_campaigns) * 100
             col_pct = (collapses / num_campaigns) * 100
@@ -237,5 +261,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--campaigns', type=int, default=1000)
     parser.add_argument('--seed', type=int, default=42)
+    parser.add_argument('--workers', type=int, default=cpu_count(), help="number of parallel worker processes")
     args = parser.parse_args()
-    run_experiment(num_campaigns=args.campaigns, seed=args.seed)
+    run_experiment(num_campaigns=args.campaigns, seed=args.seed, n_workers=args.workers)

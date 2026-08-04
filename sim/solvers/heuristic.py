@@ -24,7 +24,7 @@ class HeuristicSolver(BaseSolver):
         super().__init__(name="HeuristicSolver")
 
     def _evaluate_move(self, state: GameState, move: Move) -> float:
-        if move.kind not in ('pp', 'p', 'pw', 'alone_single', 'vault_p'):
+        if move.kind not in ('pp', 'p', 'pw', 'alone_single', 'vault_p', 'stock_pyramid', 'stock_waste'):
             return 0.0
 
         score = move.score * 10.0  # Base exposed cards weight
@@ -60,6 +60,16 @@ class HeuristicSolver(BaseSolver):
             if move.score == 0:
                 score -= 2.0
 
+        elif move.kind == 'stock_pyramid':
+            score += 4.0
+            a, = move.payload
+            card_a = state.pyr[a]
+            if card_a.is_red_cursed(state.flags):
+                score += 6.0
+
+        elif move.kind == 'stock_waste':
+            score += 2.0
+
         elif move.kind == 'alone_single':
             # Low priority to clear waste solo unless it's a King
             score -= 3.0
@@ -71,13 +81,12 @@ class HeuristicSolver(BaseSolver):
         # Blessing synergy evaluation
         if state.flags.blessings:
             # Spades Tunnel check
-            if move.kind in ('pp', 'p', 'pw'):
-                # check if any cleared card is a Spades hero
+            if move.kind in ('pp', 'p', 'pw', 'stock_pyramid'):
                 cards = []
                 if move.kind == 'pp':
                     a, b = move.payload
                     cards = [state.pyr[a], state.pyr[b]]
-                elif move.kind in ('p', 'pw'):
+                elif move.kind in ('p', 'pw', 'stock_pyramid'):
                     a = move.payload[0]
                     cards = [state.pyr[a]]
                 for c in cards:
@@ -92,7 +101,7 @@ class HeuristicSolver(BaseSolver):
         if not legal_moves:
             return None
 
-        removal_moves = [m for m in legal_moves if m.kind in ('pp', 'p', 'pw', 'alone_single', 'vault_p')]
+        removal_moves = [m for m in legal_moves if m.kind in ('pp', 'p', 'pw', 'alone_single', 'vault_p', 'stock_pyramid', 'stock_waste')]
         if removal_moves:
             # Score each removal move
             scored_moves = [(self._evaluate_move(state, m), m) for m in removal_moves]

@@ -29,20 +29,24 @@ This change adds optional icons to the existing mark system without breaking the
 
 ## Decisions
 
-### 1. Icon Placement Strategy
+### 1. Card Face Illustration Placement Strategy
 
-**Decision:** Blessing icons integrate with existing suit pip placement, curse icons appear below the X mark.
+**Decision:** Prominent hand-drawn illustrations are rendered directly on the center face of mutated cards.
 
 **Rationale:**
-- Blessings already circle the suit pip in the upper-left corner. Adding icons adjacent to this maintains the existing visual hierarchy.
-- Clubs blessing specifically covers the rank number with a question mark, as requested, to communicate that value doesn't matter for wildcards.
-- Curses appear as X marks over the rank. Adding icons below the X keeps the rank area clean while providing visual differentiation.
-- This placement maps to the physical game's ink zones (upper-left for blessings, rank area for curses).
+- Drawing images directly on the center face of the card creates an immediate, bold visual identity for mutated cards across the pyramid layout.
+- Prevents visual clutter around corner rank/suit pips.
+- Center face drawings clearly communicate game mechanics in both physical tabletop play and digital UI:
+  - ♥ **Hearts (Resurrection)**: Tomb archway with upward arrow (`∩` + `↑`)
+  - ♦ **Diamonds (Vault Safe)**: Rectangular safe box with central keyhole circle (`□` with `o`)
+  - ♠ **Spades (Tunneling)**: Left-facing rounded capsule (`[ ⊃ ]`, rectangle with rounded left cap and flat right edge)
+  - ♣ **Clubs (Wildcard)**: Infinity symbol (`∞`)
+  - **Red Curse (Trap)**: Downward-pointing triangle (`▼`)
+  - **Black Curse (Weight)**: Unicode trapezoid weight (`⏍`, trapezoid body with handle loop)
 
 **Alternatives Considered:**
-- *Icons in center of card:* Too disruptive to existing layout, harder to draw physically.
-- *Icons replacing existing marks:* Would break backward compatibility and remove information.
-- *Separate icon badge in corner:* Adds visual clutter, doesn't integrate with existing mark system.
+- *Small marks in corners:* Hard to scan during active play and creates visual clutter near rank digits.
+- *Full-card background fills:* Overwhelms the card art and suit symbols.
 
 ### 2. SVG Icon Implementation
 
@@ -102,6 +106,21 @@ This change adds optional icons to the existing mark system without breaking the
 - *Icon beside rank:* Doesn't communicate that value is irrelevant.
 - *Icon over suit pip:* Doesn't address the value-ignoring mechanic.
 - *Color change only:* Doesn't work for physical game constraint.
+
+### 6. Blessing and Curse Mutual Exclusivity Rules
+
+**Decision:** Enforce strict mutual exclusivity between Blessings and Curses across game lifecycle logic and card visual rendering.
+- **Blessed Card Attrition (Stage 3 -> 4)**: A Blessed card at Stage 3 that takes Attrition advances to Stage 4 rank marking (slash over rank) and can be Entombed (Stage 5) on a subsequent attrition mark, but **skips the Curse trap effect (Red face-down / Black pyramid-only lock) and skips the Curse icon**. It retains its Blessing power and Blessing icon on the card face.
+- **Cursed Card Hero Award**: A Cursed card (Stage 4 with active Curse effect) cleared as a Fallen Hero at round end **skips the Blessing award** and remains Cursed only.
+- **Single-Identity Rendering**: A card face renders EITHER a Blessing icon OR a Curse icon, never both.
+
+**Rationale:**
+- Prevents hybrid visual clutter (overlapping blue circles and curse trap symbols).
+- Gives players tactical motivation to bless vulnerable cards to shield them from future Stage 4 trap effects.
+- Simplifies rules and state understanding for both tabletop and digital play.
+
+**Alternatives Considered:**
+- *Blessing consumed on Attrition:* Stripping the blessing on Stage 4 attrition was considered, but keeping the blessing and suppressing the curse provides a clearer reward for earning hero blessings while allowing cards to still progress toward entombed rank marks.
 
 ## Risks / Trade-offs
 

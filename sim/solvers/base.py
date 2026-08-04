@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 @dataclass(frozen=True)
 class Move:
     """Represents a discrete action in the game."""
-    kind: str  # 'pp', 'p', 'pw', 'alone_single', 'draw', 'redeal'
+    kind: str  # 'pp', 'p', 'pw', 'alone_single', 'vault_p', 'stock_pyramid', 'stock_waste', 'draw', 'redeal'
     payload: Tuple[Any, ...] = ()
     score: float = 0.0
 
