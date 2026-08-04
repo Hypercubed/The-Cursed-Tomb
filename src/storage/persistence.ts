@@ -160,6 +160,13 @@ export class PersistenceManager {
             ? campaign.masterDeck.map((c: any) => ({ ...c, removed: false, faceDown: false, selected: false }))
             : [],
           currentRound: this.sanitizeLoadedGameState(campaign.currentRound),
+          achievements: campaign.achievements ?? {
+            roundsSurvived: (campaign.roundNumber ?? 1) - 1,
+            pyramidsCleared: 0,
+            perfectWins: 0,
+            rankAnchorUnlocked: false,
+            unlockedBadges: [],
+          },
         };
       }
     } catch {

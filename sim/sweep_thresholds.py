@@ -51,28 +51,30 @@ def run_batch(n, seed, difficulty_name, max_rounds, deadlock_limit, volatile_col
     ]
     
     rounds_by_type = {
-        'victory': [],
-        'soft_win': [],
-        'sealed': [],
         'starvation': [],
         'volatile': [],
         'all_immune': [],
         'deadlock': [],
         'round_cap': []
     }
+    all_survived_rounds = []
+    all_pyramids_cleared = []
+    all_perfect_wins = []
+    rank_anchor_unlocked_count = 0
     
     t0 = time.time()
 
     def process_result(r):
+        nonlocal rank_anchor_unlocked_count
         k = r['result']
         rnd = r['rounds']
-        if k == 'victory':
-            rounds_by_type['victory'].append(rnd)
-        elif k == 'victory_soft':
-            rounds_by_type['soft_win'].append(rnd)
-        elif k == 'victory_sealed':
-            rounds_by_type['sealed'].append(rnd)
-        elif k == 'collapse_starvation':
+        all_survived_rounds.append(rnd)
+        all_pyramids_cleared.append(r.get('pyramids_cleared', 0))
+        all_perfect_wins.append(r.get('perfect_wins', 0))
+        if r.get('rank_anchor_unlocked_round') is not None:
+            rank_anchor_unlocked_count += 1
+
+        if k == 'collapse_starvation':
             rounds_by_type['starvation'].append(rnd)
         elif k == 'collapse_volatile':
             rounds_by_type['volatile'].append(rnd)
@@ -94,16 +96,33 @@ def run_batch(n, seed, difficulty_name, max_rounds, deadlock_limit, volatile_col
             process_result(r)
             
     elapsed = time.time() - t0
-    return difficulty_name, max_redeals, elapsed, rounds_by_type
+    endurance_stats = {
+        'survived': all_survived_rounds,
+        'pyramids_cleared': all_pyramids_cleared,
+        'perfect_wins': all_perfect_wins,
+        'rank_anchor_unlocked_count': rank_anchor_unlocked_count,
+    }
+    return difficulty_name, max_redeals, elapsed, rounds_by_type, endurance_stats
 
-def print_difficulty_table(difficulty_name, max_redeals, elapsed, n, rounds_by_type, end_types):
+def print_difficulty_table(difficulty_name, max_redeals, elapsed, n, rounds_by_type, end_types, endurance_stats):
     print(f"\n==========================================================================")
     print(f" Difficulty: {difficulty_name.upper()} (max_redeals={max_redeals}) -- {n} campaigns ({elapsed:.1f}s)")
     print(f"==========================================================================")
+    surv = endurance_stats['survived']
+    pyr_cl = endurance_stats['pyramids_cleared']
+    pw = endurance_stats['perfect_wins']
+    ra_cnt = endurance_stats['rank_anchor_unlocked_count']
+
+    print(f" Endless Campaign Endurance Metrics:")
+    print(f"   Mean Rounds Survived:      {statistics.mean(surv):.1f} ± {statistics.stdev(surv) if len(surv)>1 else 0:.1f}")
+    print(f"   Mean Pyramids Cleared:     {statistics.mean(pyr_cl):.1f} per campaign")
+    print(f"   Mean Perfect Wins:         {statistics.mean(pw):.1f} per campaign")
+    print(f"   Rank-Anchor Achievement:   {ra_cnt/n:.1%} ({ra_cnt}/{n} campaigns)")
+    print(f" -------------------------------------------------------------------------")
     print(f" {'End Type':<15} | {'Count':<7} | {'Rate':<7} | {'Rounds (Mean ± Std Dev)':<25}")
     print(f" -------------------------------------------------------------------------")
     for end_type in end_types:
-        r_list = rounds_by_type[end_type]
+        r_list = rounds_by_type.get(end_type, [])
         cnt = len(r_list)
         pct = (cnt / n) * 100
         stats_str = get_stats_str(r_list)
@@ -133,23 +152,18 @@ if __name__ == '__main__':
     batch_results = []
     difficulties = ["novice", "explorer", "archaeologist", "survivalist"]
     for diff in difficulties:
-        d_name, max_redeals, elapsed, r_by_type = run_batch(args.campaigns, args.seed, diff, args.max_rounds, dl_val, volatile_collapse=volatile_enabled, solver_name=args.solver, n_workers=args.workers)
-        batch_results.append((d_name, max_redeals, elapsed, r_by_type))
+        d_name, max_redeals, elapsed, r_by_type, endurance_stats = run_batch(args.campaigns, args.seed, diff, args.max_rounds, dl_val, volatile_collapse=volatile_enabled, solver_name=args.solver, n_workers=args.workers)
+        batch_results.append((d_name, max_redeals, elapsed, r_by_type, endurance_stats))
 
     sample_flags = cursed_tomb_sim.RuleFlags(volatile_collapse=volatile_enabled)
-    active_end_types = ['victory']
-    if getattr(sample_flags, 'rank_anchor_victory', False):
-        active_end_types.append('soft_win')
-    if getattr(sample_flags, 'sealed_tomb_victory', False):
-        active_end_types.append('sealed')
-    active_end_types.append('starvation')
+    active_end_types = ['starvation']
     if getattr(sample_flags, 'volatile_collapse', False):
         active_end_types.append('volatile')
     active_end_types.extend(['deadlock', 'round_cap'])
 
     # Print individual difficulty tables using active_end_types
-    for d_name, max_redeals, elapsed, r_by_type in batch_results:
-        print_difficulty_table(d_name, max_redeals, elapsed, args.campaigns, r_by_type, active_end_types)
+    for d_name, max_redeals, elapsed, r_by_type, endurance_stats in batch_results:
+        print_difficulty_table(d_name, max_redeals, elapsed, args.campaigns, r_by_type, active_end_types, endurance_stats)
 
     # Print cross-difficulty comparison summary
     headers = ['difficulty'] + active_end_types
@@ -164,10 +178,10 @@ if __name__ == '__main__':
     print(hdr_str)
     print(" " + "-" * (table_width - 2))
     
-    for d_name, _, _, r_by_type in batch_results:
+    for d_name, _, _, r_by_type, _ in batch_results:
         col_strs = []
         for et in active_end_types:
-            r_list = r_by_type[et]
+            r_list = r_by_type.get(et, [])
             pct = (len(r_list) / args.campaigns) * 100
             if r_list:
                 avg = statistics.mean(r_list)

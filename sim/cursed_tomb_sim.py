@@ -102,10 +102,10 @@ class CardState:
         return v
 
     def is_black_cursed(self, flags):
-        return flags.curses and self.attrition_stage >= 4 and self.suit in BLACK
+        return flags.curses and not self.blessed and self.attrition_stage >= 4 and self.suit in BLACK
 
     def is_red_cursed(self, flags):
-        return flags.curses and self.attrition_stage >= 4 and self.suit in RED
+        return flags.curses and not self.blessed and self.attrition_stage >= 4 and self.suit in RED
 
     def is_anchored(self):
         return self.reward_stage >= 2
@@ -510,7 +510,7 @@ def _apply_survival_reward(last_clear_type, last_clear_cards, flags):
         a, b = last_clear_cards
         va, vb = a.functional_value(flags), b.functional_value(flags)
         higher, lower = (a, b) if va > vb else (b, a)
-        if flags.blessings and not higher.blessed:
+        if flags.blessings and not higher.blessed and higher.attrition_stage < 4:
             higher.blessed = True
         prev_stage = lower.reward_stage
         lower.reward_stage = min(2, lower.reward_stage + 1)
@@ -529,22 +529,43 @@ def run_campaign(rng, max_redeals, flags, max_rounds, deadlock_limit=None, solve
     # including entombed ones (needed for the volatile-collapse rank check).
     registry = [CardState(r, s) for s in SUITS for r in RANKS]
     rounds_played = 0
+    pyramids_cleared = 0
+    perfect_wins = 0
+    rank_anchor_unlocked_round = None
 
     consecutive_stalls = 0
     for round_num in range(1, max_rounds + 1):
         rounds_played = round_num
         active = [c for c in registry if c.attrition_stage < flags.max_attrition_stage]
         if len(active) < N_PYR:
-            return {"result": "collapse_starvation", "rounds": rounds_played}
+            return {
+                "result": "collapse_starvation",
+                "rounds": rounds_played,
+                "pyramids_cleared": pyramids_cleared,
+                "perfect_wins": perfect_wins,
+                "rank_anchor_unlocked_round": rank_anchor_unlocked_round,
+            }
 
         if flags.sealed_tomb_victory:
             living = [c for c in active if not c.is_anchored()]
             if len(living) < N_PYR:
-                return {"result": "victory_sealed", "rounds": rounds_played}
+                return {
+                    "result": "victory_sealed",
+                    "rounds": rounds_played,
+                    "pyramids_cleared": pyramids_cleared,
+                    "perfect_wins": perfect_wins,
+                    "rank_anchor_unlocked_round": rank_anchor_unlocked_round,
+                }
 
         # Check if ALL remaining active cards in the campaign are immune/anchored
         if all(c.is_anchored() for c in active):
-            return {"result": "all_immune_stall", "rounds": rounds_played}
+            return {
+                "result": "all_immune_stall",
+                "rounds": rounds_played,
+                "pyramids_cleared": pyramids_cleared,
+                "perfect_wins": perfect_wins,
+                "rank_anchor_unlocked_round": rank_anchor_unlocked_round,
+            }
 
         # Take snapshot of deck state before round
         state_before = [(c.attrition_stage, c.reward_stage, c.blessed, c.anchor_absorption) for c in registry]
@@ -552,15 +573,22 @@ def run_campaign(rng, max_redeals, flags, max_rounds, deadlock_limit=None, solve
         outcome = play_round(active, rng, max_redeals, flags, full_registry=registry, solver=solver)
 
         if outcome.kind == 'perfect_win':
-            return {"result": "victory", "rounds": rounds_played}
+            return {
+                "result": "victory",
+                "rounds": rounds_played,
+                "pyramids_cleared": pyramids_cleared + 1,
+                "perfect_wins": perfect_wins + 1,
+                "rank_anchor_unlocked_round": rank_anchor_unlocked_round,
+            }
 
         if outcome.kind == 'pyramid_clear':
+            pyramids_cleared += 1
             _apply_survival_reward(outcome.last_clear_type, outcome.last_clear_cards, flags)
 
-        if flags.rank_anchor_victory:
+        if rank_anchor_unlocked_round is None:
             anchored_ranks = {c.rank for c in registry if c.is_anchored()}
             if len(anchored_ranks) == len(RANKS):
-                return {"result": "victory_soft", "rounds": rounds_played}
+                rank_anchor_unlocked_round = rounds_played
 
         if outcome.kind == 'freeze' and flags.volatile_collapse:
             by_rank = {}
@@ -569,7 +597,13 @@ def run_campaign(rng, max_redeals, flags, max_rounds, deadlock_limit=None, solve
                     by_rank.setdefault(c.rank, 0)
                     by_rank[c.rank] += 1
             if any(count >= 4 for count in by_rank.values()):
-                return {"result": "collapse_volatile", "rounds": rounds_played}
+                return {
+                    "result": "collapse_volatile",
+                    "rounds": rounds_played,
+                    "pyramids_cleared": pyramids_cleared,
+                    "perfect_wins": perfect_wins,
+                    "rank_anchor_unlocked_round": rank_anchor_unlocked_round,
+                }
 
         # Check if any physical card state changed during this round
         state_after = [(c.attrition_stage, c.reward_stage, c.blessed, c.anchor_absorption) for c in registry]
@@ -582,11 +616,23 @@ def run_campaign(rng, max_redeals, flags, max_rounds, deadlock_limit=None, solve
             else:
                 deadlock_threshold = int(deadlock_limit)
             if consecutive_stalls >= deadlock_threshold:
-                return {"result": "stall_deadlock", "rounds": rounds_played}
+                return {
+                    "result": "stall_deadlock",
+                    "rounds": rounds_played,
+                    "pyramids_cleared": pyramids_cleared,
+                    "perfect_wins": perfect_wins,
+                    "rank_anchor_unlocked_round": rank_anchor_unlocked_round,
+                }
         else:
             consecutive_stalls = 0
 
-    return {"result": "timeout", "rounds": rounds_played}
+    return {
+        "result": "timeout",
+        "rounds": rounds_played,
+        "pyramids_cleared": pyramids_cleared,
+        "perfect_wins": perfect_wins,
+        "rank_anchor_unlocked_round": rank_anchor_unlocked_round,
+    }
 
 
 DIFFICULTIES = {

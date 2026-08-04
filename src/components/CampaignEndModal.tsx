@@ -72,6 +72,10 @@ export function CampaignEndModal({
       : "The tomb's ancient curse has claimed all remaining cards"
     : 'Perfect Win — all 52 cards cleared to the Foundation';
 
+  const activeCardsCount = 52 - entombedCount;
+  const deckHealthPct = Math.round((activeCardsCount / 52) * 100);
+  const achievements = campaign.achievements;
+
   return (
     <div
       className="fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in"
@@ -117,19 +121,27 @@ export function CampaignEndModal({
             <div className="grid grid-cols-2 gap-3 text-xs">
               <div className="bg-[#18130e] p-2.5 rounded border border-[#251e16] flex flex-col">
                 <span className="text-game-muted">Rounds Survived</span>
-                <span className="text-lg font-bold text-game-text font-display">{effectiveRoundNumber}</span>
+                <span className="text-lg font-bold text-game-text font-display">
+                  {achievements?.roundsSurvived ?? effectiveRoundNumber}
+                </span>
               </div>
               <div className="bg-[#18130e] p-2.5 rounded border border-[#251e16] flex flex-col">
                 <span className="text-game-muted">Pyramids Cleared</span>
-                <span className="text-lg font-bold text-emerald-400 font-display">{campaignStats.pyramidsExplored}</span>
+                <span className="text-lg font-bold text-emerald-400 font-display">
+                  {achievements?.pyramidsCleared ?? campaignStats.pyramidsExplored}
+                </span>
               </div>
               <div className="bg-[#18130e] p-2.5 rounded border border-[#251e16] flex flex-col">
-                <span className="text-game-muted">Pyramids Collapsed</span>
-                <span className="text-lg font-bold text-red-400 font-display">{campaignStats.pyramidsCollapsed}</span>
+                <span className="text-game-muted">Perfect Wins</span>
+                <span className="text-lg font-bold text-amber-300 font-display">
+                  {achievements?.perfectWins ?? 0}
+                </span>
               </div>
               <div className="bg-[#18130e] p-2.5 rounded border border-[#251e16] flex flex-col">
-                <span className="text-game-muted">Total Attempts</span>
-                <span className="text-lg font-bold text-game-text font-display">{campaignStats.totalAttempts}</span>
+                <span className="text-game-muted">Deck Health</span>
+                <span className="text-lg font-bold text-blue-400 font-display">
+                  {deckHealthPct}%
+                </span>
               </div>
             </div>
 

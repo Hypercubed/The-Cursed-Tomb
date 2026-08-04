@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { GameState, CursedCard, Card } from './game';
+import type { GameState, CursedCard, Card, Suit } from './game';
 import {
   canAnyMove,
   canRemovePair,
@@ -23,6 +23,7 @@ import {
   isBlocked,
   movePyramidToVault,
   playCard,
+  removePair,
   resignGame,
   startGame,
   updateRedCurseFaceDownState,
@@ -357,11 +358,13 @@ describe('Cursed Tomb campaign mechanics', () => {
     expect(canRemovePair(blackCurseTen, partnerFour, 'cursed-tomb', 'discard', 'pyramid')).toBe(true);
 
     let game = startGame(1, 'cursed-tomb');
-    const existingCardId = game.pyramid[6][0].id;
-    const cursedCard = { ...blackCurseTen, id: existingCardId };
-    game.pyramid[6][0] = cursedCard;
-    game.drawPile = game.drawPile.filter((c) => c.id !== '♦4');
-    game.pyramid = game.pyramid.map((row) => row.filter((c) => c.id !== '♦4'));
+    const replacedId = game.pyramid[6][0].id;
+    const existingCardId = '♠10';
+    game.pyramid[6][0] = { ...blackCurseTen, id: existingCardId };
+    game.drawPile = game.drawPile.filter((c) => c.id !== '♦4' && c.id !== existingCardId).map((c) => (c.id === existingCardId ? { ...c, id: replacedId } : c));
+    game.pyramid = game.pyramid.map((row, r) =>
+      row.map((c, col) => (r === 6 && col === 0 ? c : c.id === '♦4' || c.id === existingCardId ? { ...c, id: `dummy_${c.id}` } : c))
+    );
     game.discardPile = [{ ...partnerFour }];
     
     game = playCard(game, '♦4');
@@ -499,13 +502,39 @@ describe('Cursed Tomb campaign mechanics', () => {
 
   it('triggers Starvation defeat when fewer than 28 active cards remain', () => {
     const campaign = createCampaign('cursed-tomb', 1, false);
-    // Move 25 cards to Stage 5
+    // Entomb 25 cards so only 27 active cards remain
     for (let i = 0; i < 25; i += 1) {
       campaign.masterDeck[i].attritionStage = 5;
     }
+
     const updated = applyEndOfWeekLifecycle(campaign);
     expect(updated.status).toBe('defeat');
     expect(updated.defeatReason).toBe('starvation');
+  });
+
+  it('allows campaign to continue past Perfect Win with achievements updated', () => {
+    const campaign = createCampaign('cursed-tomb', 1, false);
+    campaign.currentRound.status = 'complete-victory';
+
+    const updated = applyEndOfWeekLifecycle(campaign);
+    expect(updated.status).toBe('active');
+    expect(updated.achievements.perfectWins).toBe(1);
+    expect(updated.achievements.pyramidsCleared).toBe(1);
+    expect(updated.achievements.roundsSurvived).toBe(1);
+    expect(updated.achievements.unlockedBadges).toContain('Perfect Win');
+  });
+
+  it('sets volatilityWarning advisory flag when 4 of a rank are entombed without triggering defeat', () => {
+    const campaign = createCampaign('cursed-tomb', 1, true);
+    // Entomb all 4 Kings (rank 13)
+    const kings = campaign.masterDeck.filter((c) => c.rank === 13);
+    kings.forEach((k) => {
+      k.attritionStage = 5;
+    });
+
+    const updated = applyEndOfWeekLifecycle(campaign);
+    expect(updated.status).toBe('active');
+    expect(updated.volatilityWarning).toBe(true);
   });
 
   it('locks next lower row cards face-down when parent has Red Curse and reveals them when exposed', () => {
@@ -650,6 +679,52 @@ describe('Cursed Tomb campaign mechanics', () => {
       const nextState = discardStockCard(state);
       expect(nextState.drawPile.some((c) => c.id === topStock.id)).toBe(false);
       expect(nextState.discardPile[0].id).toBe(topStock.id);
+    });
+  });
+
+  describe('Blessing and Curse mutual exclusivity', () => {
+    it('skips Blessing award if hero card has attritionStage === 4 (Cursed)', () => {
+      const campaign = createCampaign('cursed-tomb', 1, false);
+      campaign.currentRound.status = 'complete-victory';
+      // Setup masterDeck[0] as Cursed (Stage 4) and masterDeck[1] as non-cursed
+      campaign.masterDeck[0].attritionStage = 4;
+      campaign.masterDeck[0].rank = 10;
+      campaign.masterDeck[0].suit = '♥';
+      campaign.masterDeck[0].blessed = false;
+
+      campaign.masterDeck[1].attritionStage = 0;
+      campaign.masterDeck[1].rank = 3;
+      campaign.masterDeck[1].suit = '♠';
+      campaign.masterDeck[1].blessed = false;
+
+      campaign.currentRound.lastClearedPair = [campaign.masterDeck[0], campaign.masterDeck[1]];
+
+      const updated = applyEndOfWeekLifecycle(campaign);
+      const updatedHero = updated.masterDeck.find((c) => c.id === campaign.masterDeck[0].id);
+      expect(updatedHero?.blessed).toBe(false);
+    });
+
+    it('suppresses Red Curse face-down lock on Stage 4 Blessed cards', () => {
+      const deck = createDeck();
+      const pyramid = dealPyramid(deck);
+      // Mark row 4 card (index 0) as Blessed and Stage 4 Attrition
+      pyramid[4][0].attritionStage = 4;
+      pyramid[4][0].suit = '♥';
+      pyramid[4][0].blessed = true;
+
+      const lockedPyramid = updateRedCurseFaceDownState(pyramid, 'cursed-tomb');
+      // Card at row 5 index 0 should NOT be locked face-down because parent is Blessed
+      expect(lockedPyramid[5][0].faceDown).toBe(false);
+    });
+
+    it('suppresses Black Curse partner reshuffle on Stage 4 Blessed cards', () => {
+      const state = createDeterministicGameState(1);
+      const card1: Card = { ...state.pyramid[6][0], suit: '♠', rank: 6, attritionStage: 4, blessed: true };
+      const card2: Card = { ...state.pyramid[6][1], suit: '♦', rank: 7, attritionStage: 0, blessed: false };
+
+      const nextState = removePair(state, card1, card2);
+      // Partner card2 should NOT be reshuffled into drawPile because card1 is Blessed
+      expect(nextState.drawPile.some((c: Card) => c.id === card2.id)).toBe(false);
     });
   });
 });

@@ -56,16 +56,27 @@ Since the base game has no attrition mechanics, **the tomb never collapses** —
 
 > **Command to reproduce:** `python3 cursed_tomb_sim.py --campaigns 1000 --seed 42 --difficulty [difficulty] --solver heuristic`
 
-This section simulates campaigns with **all Cursed Tomb rules active**: scars, curses, blessings, and attrition tracking. Unlike Part 2, campaigns can now end in **Collapse** (starvation when fewer than 28 active cards remain) as well as Victory.
+This section simulates campaigns with **all Cursed Tomb rules active**: scars, curses, blessings, and attrition tracking, including the strict Blessing/Curse mutual exclusivity rule. Unlike Part 2, campaigns can end in **Collapse** (starvation when fewer than 28 active cards remain) or **Victory** (when a Perfect Win clears all 52 cards).
 
-**Sample size:** 1,000 campaigns per difficulty, max 1,000 rounds each
+**Sample size:** 500–1,000 campaigns per difficulty, max 500 rounds each
 
-| Difficulty    | Redraws | Victory Rate | Collapse Rate | Avg Rounds to Win | Avg Rounds to Collapse | Overall Avg Resolve |
-| :------------ | :-----: | :----------: | :-----------: | :---------------: | :--------------------: | :-----------------: |
-| Survivalist   |    0    |    0.00%     |    100.00%    |         —         |     261.2 ± 167.3      |    261.2 ± 167.3    |
-| Archaeologist |    1    |    6.90%     |    93.10%     |   124.9 ± 98.4    |     279.7 ± 186.7      |    269.0 ± 186.0    |
-| Explorer      |    2    |    18.90%    |    81.10%     |   131.7 ± 103.0   |     297.0 ± 195.9      |    265.8 ± 194.2    |
-| Novice        |    ∞    |    23.50%    |    76.50%     |   129.5 ± 101.6   |     297.0 ± 188.7      |    257.6 ± 186.5    |
+| Difficulty    | Redraws | Victory Rate (Resolved) | Collapse Rate (Resolved) | Avg Rounds to Win | Avg Rounds to Collapse | Overall Avg Resolve |
+| :------------ | :-----: | :---------------------: | :----------------------: | :---------------: | :--------------------: | :-----------------: |
+| Survivalist   |    0    |          3.00%          |          97.00%          |     7.3 ± 4.2     |      113.2 ± 10.8      |    110.0 ± 21.0     |
+| Archaeologist |    1    |         46.55%          |          53.45%          |    9.3 ± 10.0     |      205.3 ± 74.2      |    114.1 ± 112.1    |
+| Explorer      |    2    |         72.02%          |          27.98%          |     7.8 ± 8.8     |     287.0 ± 105.3      |    85.9 ± 137.5     |
+| Novice        |    ∞    |         76.53%          |          23.47%          |    8.3 ± 10.7     |     302.4 ± 106.2      |    77.3 ± 135.2     |
+
+### Endless Campaign Endurance Metrics (Volatile Collapse Enabled)
+
+> **Command to reproduce:** `python3 sweep_thresholds.py --campaigns 1000 --max-rounds 300 --solver heuristic`
+
+| Difficulty    | Redraws | Mean Rounds Survived | Pyramids Cleared / Camp. | Perfect Wins / Camp. | Starvation Rate | Volatile Collapse Rate |
+| :------------ | :-----: | :------------------: | :----------------------: | :------------------: | :-------------: | :--------------------: |
+| Survivalist   |    0    |     108.5 ± 17.1     |           0.2            |         0.0          |      24.8%      |         75.2%          |
+| Archaeologist |    1    |     209.8 ± 63.2     |           17.2           |         0.6          |      15.3%      |         60.3%          |
+| Explorer      |    2    |     270.9 ± 46.6     |           62.8           |         0.9          |      4.4%       |         20.2%          |
+| Novice        |    ∞    |     273.9 ± 44.3     |           67.5           |         0.9          |      3.3%       |         16.8%          |
 
 ---
 

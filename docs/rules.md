@@ -53,9 +53,11 @@ Deal 28 cards face-up into a standard pyramid layout consisting of 7 rows. The r
 
 ### The Traps & Modifications Modifiers
 1.  **Value Shifts:** If a card has a **Scar** marked across its rank number pip (`|7̸| 8`), its functional value is modified for the duration of the game (+1 for Red, -1 for Black), with the effective modified value written directly to the right of the slashed base rank. *Functional values wrap circularly between 1 (Ace) and 13 (King); a -1 shift on a Black Ace wraps to value 13 (allowing it to clear solo as a King), and a +1 shift on a Red King wraps to value 1 (allowing it to pair with a Queen).*
-2.  **Red Curses `[ |X| ]` (The Trap):** When dealing the pyramid, once a Red Curse card (`|X|`) is placed into a row, the overlapping cards placed into the next lower row must be dealt face-down. Face-down cards are revealed (flipped face-up) as soon as they become exposed and playable (or when targeted by a ♠ Spades Hero blessing). *(Note: This means Red Curses have no mechanical face-down effect when dealt in the last or second-to-last row, since there are either no rows beneath them or the cards in the bottom row are exposed immediately at the start of play.)*
-3.  **Black Curses `[ |X| ]` (The Recycled Weight):** When paired with a matching partner card, the Black Cursed card moves to the Foundation stack, but the paired partner card is shuffled back into the face-down Stock draw pile instead of moving to the Foundation stack.
-4.  **The Scarred Hero Interaction:** A single card can be both Blessed (encircling the suit pip `(♦)`) and Cursed (crossing the rank pip `|X|`). It enforces its math shift and layout trap while in the pyramid, but successfully clearing it still unleashes its Suit Blessing.
+2.  **Red Curses `[ |X| ]` (The Trap):** When dealing the pyramid, once a Red Curse card (`|X|`) is placed into a row, the overlapping cards placed into the next lower row must be dealt face-down. Face-down cards are revealed (flipped face-up) as soon as they become exposed and playable (or when targeted by a ♠ Spades Hero blessing). *(Recommended Center-Face Icon: Downward Triangle `▼` representing a trap door).*
+3.  **Black Curses `[ |X| ]` (The Recycled Weight):** When paired with a matching partner card, the Black Cursed card moves to the Foundation stack, but the paired partner card is shuffled back into the face-down Stock draw pile instead of moving to the Foundation stack. *(Recommended Center-Face Icon: Trapezoid Weight `⏍` representing a heavy weight).*
+4.  **Single-Identity & Mutual Exclusivity Rule:** Cards possess a single visual center face illustration: EITHER a Blessing drawing OR a Curse drawing, never both.
+    - If a Blessed card advances to Stage 4 Attrition, it receives the Stage 4 rank marking (`|X|` over rank digit) and can advance to Stage 5 Entombed on a subsequent attrition mark, but its **Curse trap mechanics (Red face-down deals / Black weight partner reshuffle) and Curse drawing are skipped**. The card retains its Blessing drawing on the center face.
+    - If a Stage 4 Cursed card is cleared as the higher-value Fallen Hero at round end, the **Blessing award is skipped**.
 5.  **Retrospective Anchor Rules:** An Anchor `[ + ]` drawn in the card's upper-right corner stops *future* degradation. If a card already has a Scar or Curse, those ink marks remain active; the Anchor simply blocks the card from progressing to Stage 5 (Entombed).
 6.  **180° Symmetry:** For physical deck play, all pen strokes are marked symmetrically (scars, curses, and blessings in top-left/bottom-right corners; anchors in top-right/bottom-left corners) so cards remain readable when rotated.
 
@@ -83,11 +85,11 @@ Isolate the **final visual transaction** used to remove the last card(s) from th
 
 ### A. The Final Pair Clear
 Compare the final two cards' active Functional Values:
-*   **The Higher-Value Card becomes the Fallen Hero:** Draw a circle completely enclosing its printed suit symbol `[ (♦) ]` in both corner indices to permanently unlock its blessing for all future games. *(If already circled, skip this effect).*
-    *   ♥ **Hearts (Stock Reshuffle):** When cleared, immediately shuffle all cards currently in the face-up Waste pile back into the face-down Stock draw pile without consuming a redeal. *(If the Waste pile is empty, no action is taken).*
-    *   ♦ **Diamonds (The Vault):** When exposed on the Waste pile OR on the Pyramid layout, you may instantly place this card face-up into a separate area on the side of the table (the Diamond Vault slot). **This action is completely free and does not interrupt your turn.** Placing a Pyramid Diamond card into the Vault unblocks cards beneath it. You may immediately proceed to draw a new stock card, interact with the layout, or choose to pair the newly vaulted Diamond right away. It survives all subsequent Waste pile Redeals for the duration of this game.
-    *   ♠ **Spades (The Tunnel):** When cleared, select any one exposed card in the pyramid layout and move it directly onto the top of the face-up Waste pile. *(If no exposed cards remain in the layout, no action is taken).*
-    *   ♣ **Clubs (Universal Wildcard):** When pairing, this card can legally pair with **ANY exposed card** regardless of that partner card's functional value (treating the combined sum as 13).
+*   **The Higher-Value Card becomes the Fallen Hero:** Draw a circle completely enclosing its printed suit symbol `[ (♦) ]` in both corner indices to permanently unlock its blessing for all future games. *(If already circled or if the card is Stage 4 Cursed, skip this effect).* In addition to the circled suit pip, you may draw a recommended center-face illustration for quick visual identification:
+    *   ♥ **Hearts (Stock Reshuffle):** Recommended icon: Tomb Archway with Upward Arrow (`∩` + `↑`) representing resurrection from the graveyard. When cleared, immediately shuffle all cards currently in the face-up Waste pile back into the face-down Stock draw pile without consuming a redeal.
+    *   ♦ **Diamonds (The Vault):** Recommended icon: Vault Safe Box (`□` with center keyhole circle `o`). When exposed on the Waste pile OR on the Pyramid layout, you may instantly place this card face-up into a separate area on the side of the table (the Diamond Vault slot). **This action is completely free and does not interrupt your turn.**
+    *   ♠ **Spades (The Tunnel):** Recommended icon: Tunnel Capsule (`[ ⊃ ]`). When cleared, select any one exposed card in the pyramid layout and move it directly onto the top of the face-up Waste pile.
+    *   ♣ **Clubs (Universal Wildcard):** Recommended icon: Infinity Symbol (`∞`). When pairing, this card can legally pair with **ANY exposed card** regardless of that partner card's functional value (treating the combined sum as 13).
 *   **The Lower-Value Card builds the Anchor:** Progress its defensive immunity track by one stroke in the upper-right corner margin (and bottom-left corner rotated 180°):
     *   *First Stroke `[ — ]` (Fortifying):* Draw a single bold dark horizontal line in the upper-right corner margin. No mechanical effect yet.
     *   *Second Stroke `[ + ]` (Anchored):* Cross it vertically with a bold dark stroke (`+`) in the upper-right corner margin. The card is now permanently immune to rank loss marks.
@@ -96,6 +98,24 @@ Compare the final two cards' active Functional Values:
 If the final card clearing the board is a standalone King, it acts as both structural points. Progress its upper-right Anchor track by one stroke (`[ — ]` or `[ + ]`). No Fallen Hero blessing is awarded.
 
 *Anchor Progression & Entombment:* Cards continue to accumulate upper-right Anchor strokes (`[ — ]` and `[ + ]`) at all active attrition stages (including Scarred and Cursed cards at Stage 3 and 4) up until they are Entombed (Stage 5). Once a card reaches Stage 2 Anchored (`[ + ]`), it becomes immune to further pyramid collapse attrition. Once Entombed at Stage 5, a card is permanently removed to the Graveyard and can no longer receive Anchor marks.
+
+### C. Visual Reference Guide & Single-Identity Layout
+Mutated physical cards retain clear visual separation between corner index marks and center face drawings:
+
+```
++───────────────────────────+
+| |7̸| 8  (♥)           [+]  |   <- Upper-Left: Slashed Rank, Functional Val, Encircled Suit
+|  ♥                        |   <- Upper-Right: Anchor Badge [+]
+|                           |
+|           ╭───╮           |
+|           │ ∩ │           |   <- Center Face: Blessing OR Curse Illustration
+|           │ ↑ │           |      (Single identity: Archway, Vault Box, Capsule,
+|           ╰───╯           |       Infinity, Triangle, or Weight)
+|                           |
+|                        ♥  |
+|  [+]          |7̸| 8  (♥)  |   <- 180° Symmetrical Bottom Index
++───────────────────────────+
+```
 
 ---
 

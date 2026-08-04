@@ -44,16 +44,26 @@ export interface GameState {
   lifecycleProcessed?: boolean;
 }
 
+export interface CampaignAchievements {
+  roundsSurvived: number;
+  pyramidsCleared: number;
+  perfectWins: number;
+  rankAnchorUnlocked: boolean;
+  unlockedBadges: string[];
+}
+
 export interface CampaignState {
   mode: GameMode;
   difficulty: number | null;
   volatileCollapse: boolean;
+  volatilityWarning?: boolean;
   masterDeck: CursedCard[];
   graveyard: CursedCard[];
   currentRound: GameState;
   roundNumber: number;
   status: 'active' | 'defeat';
   defeatReason?: 'starvation' | 'volatile-collapse';
+  achievements: CampaignAchievements;
 }
 
 const suits: Suit[] = ['♠', '♥', '♦', '♣'];
@@ -115,9 +125,9 @@ export function updateRedCurseFaceDownState(pyramid: Card[][], mode: GameMode = 
       const parent2 = c < parentRow.length ? parentRow[c] : null;
 
       const parent1RedCurse =
-        parent1 && !parent1.removed && parent1.attritionStage === 4 && (parent1.suit === '♥' || parent1.suit === '♦');
+        parent1 && !parent1.removed && !parent1.blessed && parent1.attritionStage === 4 && (parent1.suit === '♥' || parent1.suit === '♦');
       const parent2RedCurse =
-        parent2 && !parent2.removed && parent2.attritionStage === 4 && (parent2.suit === '♥' || parent2.suit === '♦');
+        parent2 && !parent2.removed && !parent2.blessed && parent2.attritionStage === 4 && (parent2.suit === '♥' || parent2.suit === '♦');
 
       if (parent1RedCurse || parent2RedCurse) {
         // Face-down card is revealed as soon as it becomes exposed (playable) or if manually revealed by Spades Tunnel
@@ -495,8 +505,12 @@ function removeCard(state: GameState, cardId: string): GameState {
   };
 }
 
-function isBlackCursed(card: Card, mode: GameMode): boolean {
-  return mode === 'cursed-tomb' && card.attritionStage === 4 && (card.suit === '♠' || card.suit === '♣');
+export function isCursed(card: Card, mode: GameMode = 'cursed-tomb'): boolean {
+  return mode === 'cursed-tomb' && !card.blessed && card.attritionStage === 4;
+}
+
+export function isBlackCursed(card: Card, mode: GameMode): boolean {
+  return mode === 'cursed-tomb' && !card.blessed && card.attritionStage === 4 && (card.suit === '♠' || card.suit === '♣');
 }
 
 export function removePair(state: GameState, card1: Card, card2: Card): GameState {
@@ -745,7 +759,8 @@ export function createCampaign(
   volatileCollapse: boolean = false,
   existingMasterDeck?: CursedCard[],
   existingGraveyard?: CursedCard[],
-  roundNumber: number = 1
+  roundNumber: number = 1,
+  existingAchievements?: Partial<CampaignAchievements>
 ): CampaignState {
   const masterDeck = existingMasterDeck ?? createDeck();
   const graveyard = existingGraveyard ?? [];
@@ -762,16 +777,37 @@ export function createCampaign(
     }
   }
 
+  let volatilityWarning = false;
+  if (mode === 'cursed-tomb') {
+    for (let r = 1; r <= 13; r += 1) {
+      const entombedCount = graveyard.filter((c) => c.rank === r && c.attritionStage === 5).length;
+      if (entombedCount === 4) {
+        volatilityWarning = true;
+        break;
+      }
+    }
+  }
+
+  const achievements: CampaignAchievements = {
+    roundsSurvived: existingAchievements?.roundsSurvived ?? (roundNumber - 1),
+    pyramidsCleared: existingAchievements?.pyramidsCleared ?? 0,
+    perfectWins: existingAchievements?.perfectWins ?? 0,
+    rankAnchorUnlocked: existingAchievements?.rankAnchorUnlocked ?? false,
+    unlockedBadges: existingAchievements?.unlockedBadges ?? [],
+  };
+
   return {
     mode,
     difficulty,
     volatileCollapse,
+    volatilityWarning,
     masterDeck,
     graveyard,
     currentRound,
     roundNumber,
     status,
     defeatReason,
+    achievements,
   };
 }
 
@@ -812,7 +848,9 @@ export function applyEndOfWeekLifecycle(campaign: CampaignState): CampaignState 
 
       const hIdx = masterDeck.findIndex((c) => c.id === heroCard.id);
       if (hIdx !== -1) {
-        masterDeck[hIdx].blessed = true;
+        if (masterDeck[hIdx].attritionStage < 4) {
+          masterDeck[hIdx].blessed = true;
+        }
       }
 
       const aIdx = masterDeck.findIndex((c) => c.id === anchorCard.id);
@@ -838,6 +876,55 @@ export function applyEndOfWeekLifecycle(campaign: CampaignState): CampaignState 
     }
   }
 
+  const prevAchievements = campaign.achievements ?? {
+    roundsSurvived: campaign.roundNumber - 1,
+    pyramidsCleared: 0,
+    perfectWins: 0,
+    rankAnchorUnlocked: false,
+    unlockedBadges: [],
+  };
+
+  let perfectWins = prevAchievements.perfectWins;
+  let pyramidsCleared = prevAchievements.pyramidsCleared;
+  const roundsSurvived = prevAchievements.roundsSurvived + 1;
+
+  if (round.status === 'complete-victory') {
+    perfectWins += 1;
+    pyramidsCleared += 1;
+  } else if (round.status === 'partial-victory') {
+    pyramidsCleared += 1;
+  }
+
+  // Check Rank-Anchor achievement (at least 1 card of each printed rank 1..13 is anchored)
+  let rankAnchorUnlocked = prevAchievements.rankAnchorUnlocked;
+  if (!rankAnchorUnlocked) {
+    const ranksWithAnchor = new Set<number>();
+    for (const card of masterDeck) {
+      if ((card.rewardStage ?? 0) >= 1) {
+        ranksWithAnchor.add(card.rank);
+      }
+    }
+    if (ranksWithAnchor.size === 13) {
+      rankAnchorUnlocked = true;
+    }
+  }
+
+  const unlockedBadges = [...prevAchievements.unlockedBadges];
+  if (perfectWins > 0 && !unlockedBadges.includes('Perfect Win')) {
+    unlockedBadges.push('Perfect Win');
+  }
+  if (rankAnchorUnlocked && !unlockedBadges.includes('Rank-Anchor Master')) {
+    unlockedBadges.push('Rank-Anchor Master');
+  }
+
+  const achievements: CampaignAchievements = {
+    roundsSurvived,
+    pyramidsCleared,
+    perfectWins,
+    rankAnchorUnlocked,
+    unlockedBadges,
+  };
+
   const activeDeck = masterDeck.filter((c) => c.attritionStage < 5);
   let status: 'active' | 'defeat' = campaign.status;
   let defeatReason = campaign.defeatReason;
@@ -847,14 +934,12 @@ export function applyEndOfWeekLifecycle(campaign: CampaignState): CampaignState 
     defeatReason = 'starvation';
   }
 
-  if (campaign.volatileCollapse) {
-    for (let r = 1; r <= 13; r += 1) {
-      const entombedCount = graveyard.filter((c) => c.rank === r && c.attritionStage === 5).length;
-      if (entombedCount === 4) {
-        status = 'defeat';
-        defeatReason = 'volatile-collapse';
-        break;
-      }
+  let volatilityWarning = false;
+  for (let r = 1; r <= 13; r += 1) {
+    const entombedCount = graveyard.filter((c) => c.rank === r && c.attritionStage === 5).length;
+    if (entombedCount === 4) {
+      volatilityWarning = true;
+      break;
     }
   }
 
@@ -864,6 +949,8 @@ export function applyEndOfWeekLifecycle(campaign: CampaignState): CampaignState 
     graveyard,
     status,
     defeatReason,
+    volatilityWarning,
+    achievements,
     currentRound: {
       ...round,
       lifecycleProcessed: true,

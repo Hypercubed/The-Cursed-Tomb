@@ -42,7 +42,8 @@ describe('solver', () => {
       }
       return row;
     });
-    const state: GameState = { ...game, pyramid: customPyramid, discardPile: [] };
+    const customDraw = game.drawPile.map((c, idx) => (idx === 0 ? { ...c, rank: 2 as const } : c));
+    const state: GameState = { ...game, pyramid: customPyramid, drawPile: customDraw, discardPile: [] };
 
     const nextState = findNextGreedyMove(state);
     expect(nextState).not.toBeNull();
@@ -59,7 +60,8 @@ describe('solver', () => {
       }
       return row;
     });
-    const state: GameState = { ...game, pyramid: customPyramid, discardPile: [] };
+    const customDraw = game.drawPile.map((c, idx) => (idx === 0 ? { ...c, rank: 2 as const } : c));
+    const state: GameState = { ...game, pyramid: customPyramid, drawPile: customDraw, discardPile: [] };
 
     const initialDrawCount = state.drawPile.length;
     const nextState = findNextGreedyMove(state);
@@ -262,7 +264,8 @@ describe('solver', () => {
         }
         return row;
       });
-      const state: GameState = { ...game, pyramid: customPyramid, vaultCard: null };
+      const customDraw = game.drawPile.map((c, idx) => (idx === 0 ? { ...c, rank: 2 as const } : c));
+      const state: GameState = { ...game, pyramid: customPyramid, drawPile: customDraw, vaultCard: null };
 
       const nextState = findNextGreedyMove(state);
       expect(nextState).not.toBeNull();
@@ -340,11 +343,14 @@ describe('solver', () => {
       const partnerFive = { id: '♣5', suit: '♣' as const, rank: 5 as const, removed: false, selected: false, attritionStage: 0 as const, rewardStage: 0 as const, blessed: false };
       const extraWaste = { id: '♠3', suit: '♠' as const, rank: 3 as const, removed: false, selected: false, attritionStage: 0 as const, rewardStage: 0 as const, blessed: false };
 
-      const existingId = game.pyramid[6][0].id;
+      const existingId = '♥8';
+      const partnerId = '♣5';
       game.pyramid[6][0] = { ...heartsHero, id: existingId };
-      const partnerId = game.pyramid[6][1].id;
       game.pyramid[6][1] = { ...partnerFive, id: partnerId };
-      game.drawPile = game.drawPile.filter((c) => c.id !== '♠3');
+      game.drawPile = game.drawPile.filter((c) => c.id !== '♠3' && c.id !== '♥8' && c.id !== '♣5');
+      game.pyramid = game.pyramid.map((row, r) =>
+        row.map((c, col) => (r === 6 && (col === 0 || col === 1) ? c : c.id === '♠3' || c.id === '♥8' || c.id === '♣5' ? { ...c, id: `dummy_${c.id}` } : c))
+      );
       game.discardPile = [{ ...extraWaste }];
 
       game = playCard(game, partnerId);

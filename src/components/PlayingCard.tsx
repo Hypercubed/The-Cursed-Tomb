@@ -1,4 +1,5 @@
 import React from 'react';
+import { CardFaceIllustration } from './CardFaceIllustration';
 
 interface PlayingCardProps {
   rank: number;
@@ -60,10 +61,10 @@ function SuitIcon({ suit, className = 'w-4 h-4' }: { suit: string; className?: s
 
 function getUpperLeftTooltip(suit: string, blessed: boolean, rewardStage: number): string {
   if (blessed) {
-    if (suit === '♥') return 'Blessed Fallen Hero [O]: Hearts Stock Reshuffle power (shuffles all Waste pile cards back into Stock draw pile when cleared)';
-    if (suit === '♦') return 'Blessed Fallen Hero [O]: Diamonds Vault power (can store 1 Waste card in Vault)';
-    if (suit === '♠') return 'Blessed Fallen Hero [O]: Spades Tunnel power (moves 1 exposed pyramid card to Waste pile when cleared)';
-    if (suit === '♣') return 'Blessed Fallen Hero [O]: Clubs Universal Wildcard power (pairs with ANY exposed card to total 13)';
+    if (suit === '♥') return 'Blessed Fallen Hero [O] (∩+↑ Archway): Hearts Stock Reshuffle power (shuffles Waste back into Stock when cleared)';
+    if (suit === '♦') return 'Blessed Fallen Hero [O] (□ Vault Box): Diamonds Vault power (can store 1 Waste card in Vault)';
+    if (suit === '♠') return 'Blessed Fallen Hero [O] (⊃ Tunnel Capsule): Spades Tunnel power (moves 1 exposed pyramid card to Waste when cleared)';
+    if (suit === '♣') return 'Blessed Fallen Hero [O] (∞ Infinity): Clubs Universal Wildcard power (pairs with ANY exposed card to total 13)';
     return 'Blessed Fallen Hero [O]: Unlocks Suit Blessing power when cleared';
   }
   if (rewardStage === 1) return 'Fortifying Anchor [—]: 1st stroke towards permanent Anchor immunity';
@@ -71,7 +72,7 @@ function getUpperLeftTooltip(suit: string, blessed: boolean, rewardStage: number
   return '';
 }
 
-function getUpperRightTooltip(suit: string, attritionStage: number, rank: number, functionalValue?: number): string {
+function getUpperRightTooltip(suit: string, attritionStage: number, rank: number, functionalValue?: number, blessed?: boolean): string {
   const isRed = isRedSuit(suit);
   const fVal = functionalValue ?? rank;
   const rLabel = rankLabel(rank);
@@ -83,9 +84,12 @@ function getUpperRightTooltip(suit: string, attritionStage: number, rank: number
       : `Black Scar (|${rLabel}\\|): Functional value shifted (-1). Effective value: ${rankLabel(fVal)}`;
   }
   if (attritionStage === 4) {
+    if (blessed) {
+      return `Stage 4 Attrition (|X|): Card is Blessed. Curse trap skipped (Blessed card: Curse trap skipped).`;
+    }
     return isRed
-      ? `Red Curse (|X|): Red Curse active (+1 value shift & locks next lower row cards face-down)`
-      : `Black Curse (|X|): Black Curse active (-1 value shift & shuffles paired partner into Stock pile)`;
+      ? `Red Curse (|X|) (▼ Downward Triangle): Red Curse active (+1 value shift & locks next lower row cards face-down)`
+      : `Black Curse (|X|) (⏍ Weight): Black Curse active (-1 value shift & shuffles paired partner into Stock pile)`;
   }
   if (attritionStage === 5) return 'Entombed (💀): Permanently destroyed card';
   return '';
@@ -372,7 +376,7 @@ export function PlayingCard({
   const funcValLabel = functionalValue !== undefined && functionalValue !== rank ? rankLabel(functionalValue) : null;
 
   const leftTooltip = getUpperLeftTooltip(suit, blessed, rewardStage);
-  const rightTooltip = getUpperRightTooltip(suit, attritionStage, rank, functionalValue);
+  const rightTooltip = getUpperRightTooltip(suit, attritionStage, rank, functionalValue, blessed);
 
   const cardTitle = [
     `${rankLabel(rank)}${suit}`,
@@ -458,7 +462,11 @@ export function PlayingCard({
 
       {/* Centre row: SVG Icon */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none z-10">
-        <SuitIcon suit={suit} className="w-3.5 h-3.5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 xl:w-8 xl:h-8 opacity-90" />
+        {blessed || attritionStage === 4 ? (
+          <CardFaceIllustration suit={suit} blessed={blessed} attritionStage={attritionStage} />
+        ) : (
+          <SuitIcon suit={suit} className="w-3.5 h-3.5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 xl:w-8 xl:h-8 opacity-90" />
+        )}
       </div>
     </button>
   );

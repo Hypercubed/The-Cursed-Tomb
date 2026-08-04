@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, GameStatus, GameMode, getFunctionalValue, RoundLifecycleEffects, FinalClearDetails } from '../game';
+import { Card, GameStatus, GameMode, getFunctionalValue, RoundLifecycleEffects, FinalClearDetails, CampaignState } from '../game';
 import { PlayingCard } from './PlayingCard';
 
 interface RoundSummaryModalProps {
@@ -9,8 +9,10 @@ interface RoundSummaryModalProps {
   mode?: GameMode;
   roundNumber?: number;
   effects: RoundLifecycleEffects | null;
+  campaign?: CampaignState | null;
   onNextRound?: () => void;
   onOpenVault?: () => void;
+  onRetireCampaign?: () => void;
 }
 
 export function RoundSummaryModal({
@@ -20,8 +22,10 @@ export function RoundSummaryModal({
   mode = 'cursed-tomb',
   roundNumber = 1,
   effects,
+  campaign,
   onNextRound,
   onOpenVault,
+  onRetireCampaign,
 }: RoundSummaryModalProps): React.ReactElement | null {
   const primaryBtnRef = React.useRef<HTMLButtonElement>(null);
   const closeBtnRef = React.useRef<HTMLButtonElement>(null);
@@ -75,6 +79,11 @@ export function RoundSummaryModal({
     }
   };
 
+  const activeCount = campaign ? campaign.masterDeck.filter((c) => c.attritionStage < 5).length : 52;
+  const deckHealthPct = Math.round((activeCount / 52) * 100);
+  const showVolatilityWarning = Boolean(campaign?.volatilityWarning);
+  const achievements = campaign?.achievements;
+
   return (
     <div
       className="fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in"
@@ -115,6 +124,54 @@ export function RoundSummaryModal({
 
         {/* Modal Body */}
         <div className="p-6 flex-1 overflow-y-auto flex flex-col gap-5 text-sm">
+          {/* Advisory Volatility Warning Banner */}
+          {showVolatilityWarning && (
+            <div className="bg-amber-950/70 border-2 border-amber-600 rounded-lg p-3 flex items-center gap-3 text-amber-200 text-xs shadow-md">
+              <span className="text-2xl animate-pulse">⚠️</span>
+              <div>
+                <strong className="block text-amber-300 font-display tracking-wide uppercase">High Volatility Warning</strong>
+                <span>All 4 cards of a printed rank have been entombed to the Graveyard! Deck vulnerability is high.</span>
+              </div>
+            </div>
+          )}
+
+          {/* Campaign Endurance & Achievements Header */}
+          {campaign && (
+            <div className="bg-[#120e0a] border border-[#2d2319] rounded-lg p-3.5 flex flex-col gap-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-amber-300 font-display uppercase tracking-wider">
+                  📜 Campaign Survival Metrics
+                </span>
+                <span className="text-xs font-bold text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/50">
+                  Deck Health: {deckHealthPct}% ({activeCount}/52)
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                <div className="bg-[#18130e] p-2 rounded border border-[#251e16] flex flex-col">
+                  <span className="text-[11px] text-game-muted">Survived</span>
+                  <span className="font-bold text-game-text text-sm font-display">{achievements?.roundsSurvived ?? (roundNumber - 1)} rnds</span>
+                </div>
+                <div className="bg-[#18130e] p-2 rounded border border-[#251e16] flex flex-col">
+                  <span className="text-[11px] text-game-muted">Pyramids</span>
+                  <span className="font-bold text-emerald-400 text-sm font-display">{achievements?.pyramidsCleared ?? 0}</span>
+                </div>
+                <div className="bg-[#18130e] p-2 rounded border border-[#251e16] flex flex-col">
+                  <span className="text-[11px] text-game-muted">Perfect Wins</span>
+                  <span className="font-bold text-amber-300 text-sm font-display">{achievements?.perfectWins ?? 0}</span>
+                </div>
+              </div>
+              {achievements?.unlockedBadges && achievements.unlockedBadges.length > 0 && (
+                <div className="flex items-center gap-1.5 flex-wrap pt-1.5 border-t border-[#251e16]">
+                  <span className="text-[11px] text-game-muted">Badges:</span>
+                  {achievements.unlockedBadges.map((badge) => (
+                    <span key={badge} className="text-[11px] font-semibold text-amber-200 bg-amber-950/80 px-2 py-0.5 rounded border border-amber-700/60 flex items-center gap-1">
+                      <span>👑</span> {badge}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
           {/* Final Clear Transaction Details for Victory */}
           {isVictory && effects.clearDetails && (
             <div className="bg-[#120e0a] border border-[#2d2319] rounded-lg p-4 flex flex-col gap-3">
@@ -362,15 +419,26 @@ export function RoundSummaryModal({
 
         {/* Modal Footer */}
         <div className="px-6 py-4 border-t border-[#2d2319] bg-[#120e0a] flex items-center justify-between gap-3">
-          {onOpenVault && (
-            <button
-              type="button"
-              onClick={onOpenVault}
-              className="appearance-none bg-[#18130e] border border-[#3d3124] text-amber-300 rounded-lg text-xs cursor-pointer font-[inherit] px-3.5 py-2 hover:border-amber-700 transition-colors font-medium flex items-center gap-1.5"
-            >
-              <span>📜</span> View Deck Matrix
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {onOpenVault && (
+              <button
+                type="button"
+                onClick={onOpenVault}
+                className="appearance-none bg-[#18130e] border border-[#3d3124] text-amber-300 rounded-lg text-xs cursor-pointer font-[inherit] px-3.5 py-2 hover:border-amber-700 transition-colors font-medium flex items-center gap-1.5"
+              >
+                <span>📜</span> View Deck Matrix
+              </button>
+            )}
+            {onRetireCampaign && (
+              <button
+                type="button"
+                onClick={onRetireCampaign}
+                className="appearance-none bg-red-950/60 border border-red-800/80 text-red-300 rounded-lg text-xs cursor-pointer font-[inherit] px-3.5 py-2 hover:bg-red-900/80 transition-colors font-medium flex items-center gap-1.5"
+              >
+                <span>⚱️</span> Retire Campaign
+              </button>
+            )}
+          </div>
 
           <div className="flex items-center gap-3 ml-auto">
             {onNextRound && (

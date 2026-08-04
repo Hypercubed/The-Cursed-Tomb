@@ -181,6 +181,21 @@ function App() {
     setStrategy,
   } = useAutoplay(game, setGame, handleStart);
 
+  const handleRetireCampaign = useCallback(() => {
+    if (!campaign) return;
+    const retiredCampaign: CampaignState = {
+      ...campaign,
+      status: 'defeat',
+      defeatReason: 'starvation',
+    };
+    setCampaign(retiredCampaign);
+    defaultPersistenceManager.saveCampaignState(retiredCampaign);
+    stopAutoplay();
+    setIsRoundSummaryModalOpen(false);
+    setCampaignEndMode('defeat');
+    setIsCampaignEndModalOpen(true);
+  }, [campaign, stopAutoplay]);
+
   // Sync settings when modified
   useEffect(() => {
     defaultPersistenceManager.saveSettings(selectedRedraw);
@@ -224,10 +239,6 @@ function App() {
         if (nextCampaignState.status === 'defeat') {
           stopAutoplay();
           setCampaignEndMode('defeat');
-          setIsCampaignEndModalOpen(true);
-        } else if (game.status === 'complete-victory') {
-          stopAutoplay();
-          setCampaignEndMode('victory');
           setIsCampaignEndModalOpen(true);
         } else {
           setIsRoundSummaryModalOpen(true);
@@ -590,11 +601,13 @@ function App() {
         mode={game.mode}
         roundNumber={campaign?.roundNumber ?? 1}
         effects={roundEffects}
+        campaign={campaign}
         onNextRound={campaign && campaign.status === 'active' ? handleNextCampaignRound : undefined}
         onOpenVault={() => {
           setIsRoundSummaryModalOpen(false);
           setIsMatchedCardsModalOpen(true);
         }}
+        onRetireCampaign={campaign && campaign.status === 'active' ? handleRetireCampaign : undefined}
       />
 
       <CampaignEndModal

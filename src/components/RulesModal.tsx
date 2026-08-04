@@ -311,12 +311,16 @@ export function RulesModal({ isOpen, onClose, initialTab = 'core-rules' }: Rules
                     Pair exposed cards adding to Functional Value <strong>13</strong>. Functional values wrap circularly: a -1 shift on a Black Ace wraps to 13 (clears solo as King), and a +1 shift on a Red King wraps to 1 (pairs with Queen).
                   </div>
                   <div className="bg-[#18130e] p-3 rounded border border-[#251e16]">
-                    <strong className="text-red-300 block mb-1">2. Red Curses [ |X| ] (The Trap)</strong>
+                    <strong className="text-red-300 block mb-1">2. Red Curses [ |X| ] (The Trap) — ▼ Downward Triangle</strong>
                     When dealing the pyramid layout, overlapping cards dealt in the next row beneath a Red Curse must be dealt face-down.
                   </div>
                   <div className="bg-[#18130e] p-3 rounded border border-[#251e16]">
-                    <strong className="text-amber-300 block mb-1">3. Black Curses [ |X| ] (The Recycled Weight)</strong>
+                    <strong className="text-amber-300 block mb-1">3. Black Curses [ |X| ] (The Recycled Weight) — ⏍ Weight</strong>
                     When paired with a matching partner card, the Black Cursed card moves to Foundation, but its partner card is shuffled back into the Stock pile.
+                  </div>
+                  <div className="bg-[#18130e] p-3 rounded border border-[#251e16]">
+                    <strong className="text-blue-300 block mb-1">4. Blessing & Curse Mutual Exclusivity</strong>
+                    Cards possess a single visual identity: either a Blessing drawing OR a Curse drawing, never both. Blessed cards taking Stage 4 Attrition retain their Blessing drawing and skip Curse trap mechanics. Cursed cards cleared as Fallen Heroes skip Blessing awards.
                   </div>
                 </div>
               </section>
@@ -362,23 +366,23 @@ export function RulesModal({ isOpen, onClose, initialTab = 'core-rules' }: Rules
                 </h3>
                 <div className="mt-3 space-y-2 text-xs">
                   <p className="m-0 text-game-muted">
-                    When you completely clear all 28 pyramid cards, the final two matching cards award legacy suit blessings and anchor immunities:
+                    When you completely clear all 28 pyramid cards, the final two matching cards award legacy suit blessings (with hand-drawn center face illustrations) and anchor immunities:
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
                     <div className="bg-[#18130e] p-2.5 rounded border border-[#251e16]">
-                      <strong className="text-red-400 font-display block mb-0.5">♥ Hearts (Stock Reshuffle)</strong>
+                      <strong className="text-red-400 font-display block mb-0.5">♥ Hearts (Stock Reshuffle) — ∩ + ↑ Tomb Archway</strong>
                       Clearing this card immediately shuffles all cards in the Waste pile back into the Stock draw pile without consuming a redeal.
                     </div>
                     <div className="bg-[#18130e] p-2.5 rounded border border-[#251e16]">
-                      <strong className="text-cyan-300 font-display block mb-0.5">♦ Diamonds (The Vault)</strong>
+                      <strong className="text-cyan-300 font-display block mb-0.5">♦ Diamonds (The Vault) — □ Vault Safe Box</strong>
                       Exposed Diamond cards can be moved into the Vault slot for free without consuming a turn.
                     </div>
                     <div className="bg-[#18130e] p-2.5 rounded border border-[#251e16]">
-                      <strong className="text-indigo-300 font-display block mb-0.5">♠ Spades (The Tunnel)</strong>
+                      <strong className="text-indigo-300 font-display block mb-0.5">♠ Spades (The Tunnel) — ⊃ Tunnel Capsule</strong>
                       Clearing this card allows you to select 1 exposed pyramid card and move it directly to the Waste pile.
                     </div>
                     <div className="bg-[#18130e] p-2.5 rounded border border-[#251e16]">
-                      <strong className="text-emerald-300 font-display block mb-0.5">♣ Clubs (Universal Wildcard)</strong>
+                      <strong className="text-emerald-300 font-display block mb-0.5">♣ Clubs (Universal Wildcard) — ∞ Infinity Symbol</strong>
                       Can pair legally with ANY exposed card regardless of value sum.
                     </div>
                   </div>
