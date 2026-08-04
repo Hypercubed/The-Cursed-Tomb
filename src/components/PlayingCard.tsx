@@ -460,12 +460,13 @@ export function PlayingCard({
         <AnchorBadge rewardStage={rewardStage} />
       </div>
 
-      {/* Centre row: SVG Icon */}
+      {/* Centre row: Suit pip always shown; illustration overlaid on top when applicable */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none z-10">
-        {blessed || attritionStage === 4 ? (
-          <CardFaceIllustration suit={suit} blessed={blessed} attritionStage={attritionStage} />
-        ) : (
-          <SuitIcon suit={suit} className="w-3.5 h-3.5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 xl:w-8 xl:h-8 opacity-90" />
+        <SuitIcon suit={suit} className="w-3.5 h-3.5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 xl:w-8 xl:h-8 opacity-90" />
+        {(blessed || attritionStage === 4) && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <CardFaceIllustration suit={suit} blessed={blessed} attritionStage={attritionStage} />
+          </div>
         )}
       </div>
     </button>
