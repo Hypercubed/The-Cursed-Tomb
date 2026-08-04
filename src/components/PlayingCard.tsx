@@ -386,7 +386,7 @@ export function PlayingCard({
   const classes = [
     'w-12 h-[64px] sm:w-[72px] sm:h-[96px] lg:w-[88px] lg:h-[116px] xl:w-[96px] xl:h-[128px] 2xl:w-[108px] 2xl:h-[144px]',
     'rounded-lg sm:rounded-xl border p-1 sm:p-2 lg:p-2.5',
-    'grid grid-rows-[auto_1fr_auto] overflow-hidden',
+    'relative flex flex-col justify-between overflow-hidden text-left',
     faceDown ? 'bg-[#1a1510] border-[#3a2d1d]' : 'card-paper-texture disabled:bg-game-card-bg',
     'before:absolute before:inset-[2px] sm:before:inset-[3px] before:border before:border-amber-900/20 before:rounded-[6px] sm:before:rounded-[8px] before:pointer-events-none',
     animatingCollapse ? '' : 'card-tabletop-tilt',
@@ -443,7 +443,7 @@ export function PlayingCard({
       <InkBleedFilterDef />
 
       {/* Top row: Top-left corner index & Top-right immunity badge */}
-      <div className="flex justify-between items-start">
+      <div className="flex justify-between items-start w-full relative z-10">
         <CornerIndex
           rank={rank}
           suit={suit}
@@ -457,23 +457,8 @@ export function PlayingCard({
       </div>
 
       {/* Centre row: SVG Icon */}
-      <div className="flex items-center justify-center select-none z-10">
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none z-10">
         <SuitIcon suit={suit} className="w-3.5 h-3.5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 xl:w-8 xl:h-8 opacity-90" />
-      </div>
-
-      {/* Bottom row: Bottom-left immunity badge & Bottom-right corner index (rotated 180°) */}
-      <div className="flex justify-between items-end">
-        <AnchorBadge rewardStage={rewardStage} className="rotate-180" />
-        <CornerIndex
-          rank={rank}
-          suit={suit}
-          attritionStage={attritionStage}
-          blessed={blessed}
-          functionalValue={functionalValue}
-          leftTooltip={leftTooltip}
-          rightTooltip={rightTooltip}
-          className="rotate-180 ml-auto"
-        />
       </div>
     </button>
   );

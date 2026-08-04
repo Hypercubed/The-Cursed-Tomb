@@ -5,18 +5,18 @@
 Specification for the `PlayingCard` component responsible for rendering individual playing cards with correct layout, colouring, dual-badge suit iconography, and interaction states.
 ## Requirements
 ### Requirement: Cards display rank and suit in top-left and bottom-right corners
-Each card SHALL render the rank label and standard suit character in the top-left corner. The bottom-right corner SHALL display the identical rank label, suit character, scar, curse, anchor, blessing, and modified functional value indicators rotated 180 degrees (mirrored), preserving full rotational symmetry across both corner indices.
+Each card SHALL render the rank label and standard suit character exclusively in the top-left corner index area. Lower/bottom corner indices (bottom-right rank/suit pip and bottom-left immunity badge) SHALL NOT be rendered in digital card views.
 
 #### Scenario: Card shows rank and suit in top-left corner
 - **WHEN** a card is rendered
 - **THEN** the rank label (A, 2–10, J, Q, K) and standard suit symbol (♥, ♦, ♠, ♣) SHALL appear in the top-left corner of the card face
 
-#### Scenario: Card shows mirrored rank and suit in bottom-right corner
+#### Scenario: Lower corner indices are omitted
 - **WHEN** a card is rendered
-- **THEN** the rank label, suit symbol, scars/curses, anchors/blessings, and modified functional value SHALL appear in the bottom-right corner, rotated 180 degrees
+- **THEN** no rank, suit, scar, curse, blessing, or anchor elements SHALL appear in the bottom-right or bottom-left corners of the card face
 
 ### Requirement: Card scars and curses overlay rank number pip
-Scars and curses SHALL be rendered directly over and beside the rank number pip in both top-left and bottom-right corner indices. Attrition stages 1–2 SHALL render light slash marks across the rank number. Attrition stage 3 (Scarred) SHALL render a heavy diagonal slash across the rank number with the effective modified functional value written immediately to the right. Red and Black Curses (stage 4) SHALL render the slashed rank number, curse symbol, and modified value inline.
+Scars and curses SHALL be rendered directly over and beside the rank number pip in the top-left corner index. Attrition stages 1–2 SHALL render light slash marks across the rank number. Attrition stage 3 (Scarred) SHALL render a heavy diagonal slash across the rank number with the effective modified functional value written immediately to the right. Red and Black Curses (stage 4) SHALL render the slashed rank number, curse symbol, and modified value inline.
 
 #### Scenario: Light scars overlay rank number
 - **WHEN** a card has attrition stage 1 or 2
@@ -28,10 +28,10 @@ Scars and curses SHALL be rendered directly over and beside the rank number pip 
 
 #### Scenario: Curse renders inline curse symbol and modified value
 - **WHEN** a card reaches attrition stage 4 (Red or Black Curse)
-- **THEN** the slashed rank number, curse indicator (⚡), and modified functional value SHALL be rendered in the rank area of both corner indices
+- **THEN** the slashed rank number, curse indicator (⚡), and modified functional value SHALL be rendered in the rank area of the top-left corner index
 
 ### Requirement: Card anchors and blessings overlay suit pip
-Anchors and blessings SHALL be rendered directly on or surrounding the suit pip symbol in both top-left and bottom-right corner indices. Fortifying anchors (reward stage 1) and Anchors (reward stage 2) SHALL render bold line/cross strokes inside the suit symbol. Blessed Hero status SHALL render a circular ring/halo enclosing the suit symbol.
+Anchors and blessings SHALL be rendered directly on or surrounding the suit pip symbol in the top-left corner index. Fortifying anchors (reward stage 1) and Anchors (reward stage 2) SHALL render bold line/cross strokes inside the suit symbol. Blessed Hero status SHALL render a circular ring/halo enclosing the suit symbol.
 
 #### Scenario: Anchor renders bold inside strokes on suit symbol
 - **WHEN** a card has reward stage 1 (Fortifying) or reward stage 2 (Anchored)
@@ -39,7 +39,7 @@ Anchors and blessings SHALL be rendered directly on or surrounding the suit pip 
 
 #### Scenario: Blessing renders circular halo around suit symbol
 - **WHEN** a card is a Blessed Hero
-- **THEN** a circle/halo SHALL enclose the suit symbol in both corner indices
+- **THEN** a circle/halo SHALL enclose the suit symbol in the top-left corner index
 
 ### Requirement: Attrition Scar Tooltips and Legends
 Tooltips and modal labels SHALL interpolate the card's actual rank label (e.g. `|7`, `|7|`, `|7\|`) instead of literal placeholder `'N'`. Generic header legends (such as in Matched Cards Tomb Vault) SHALL display `|#\| Scarred` instead of literal `|N\| Scarred`.
@@ -65,11 +65,11 @@ The Round Summary modal SHALL display accurate descriptions for cards receiving 
 - **THEN** the modal SHALL display its active functional value shift (+1 for Red, -1 for Black) and effective modified rank
 
 ### Requirement: Card face has a structured interior layout
-The card interior SHALL use a CSS grid or flex layout with three zones: top-left corner, centre space, and bottom-right corner. The centre zone MAY display a large suit symbol for visual richness.
+The card interior SHALL use a CSS grid or flex layout with top-left index corner area, top-right anchor badge area, and central suit graphics area. Lower corner areas SHALL NOT render index pips.
 
-#### Scenario: Card face has three layout zones
+#### Scenario: Card face has structured layout zones
 - **WHEN** any card is rendered
-- **THEN** the card SHALL have a distinct top-left area, a centre area, and a bottom-right area that together fill the card's height
+- **THEN** the card SHALL render top-left index area and central space without rendering bottom corner indices
 
 ### Requirement: Red suits use red colouring for all card text
 Cards with hearts (♥) or diamonds (♦) SHALL render all card text (rank, suit symbols) in the red theme colour. Cards with spades (♠) or clubs (♣) SHALL use the default dark card text colour. This requirement supersedes the existing red-suit requirement in `pyramid-solitaire-game` for the new card component.
@@ -156,15 +156,15 @@ The `PlayingCard` component SHALL support optional animation state props (`anima
 - **THEN** the root element SHALL include the `animate-card-dissolve` class
 
 ### Requirement: Immunity and Anchor marks render in top-right and bottom-left corners
-Each playing card SHALL render Fortifying (`—`) and Anchored (`+`) immunity marks in the top-right corner of the card face (and bottom-left corner rotated 180 degrees) rather than over the suit pip.
+Each playing card SHALL render Fortifying (`—`) and Anchored (`+`) immunity marks in the top-right corner of the card face. Bottom-left immunity marks SHALL NOT be rendered.
 
 #### Scenario: Fortifying card renders single line badge in top-right corner
 - **WHEN** a card has `rewardStage = 1` (Fortifying)
-- **THEN** a crisp blue horizontal stroke (`—`) SHALL appear in the top-right corner of the card face (and bottom-left corner rotated 180°)
+- **THEN** a crisp blue horizontal stroke (`—`) SHALL appear in the top-right corner of the card face
 
 #### Scenario: Anchored card renders cross badge in top-right corner
 - **WHEN** a card has `rewardStage = 2` (Anchored)
-- **THEN** a crisp blue cross stroke (`+`) SHALL appear in the top-right corner of the card face (and bottom-left corner rotated 180°)
+- **THEN** a crisp blue cross stroke (`+`) SHALL appear in the top-right corner of the card face
 
 #### Scenario: Suit pip renders only suit symbol and Fallen Hero blessing ring
 - **WHEN** a card is rendered with or without an anchor reward stage
