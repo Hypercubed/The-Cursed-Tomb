@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- The Cursed Tomb favicon: hand-inked gold Ankh on a dark tomb tile -->
+  <rect width="64" height="64" fill="#18130e"/>
+  <g fill="none" stroke="#fbbf24" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Loop (slightly asymmetric for a hand-drawn feel) -->
+    <path d="M32 7.5 C21.5 7.5 17.5 14.5 17.5 21 C17.5 27.5 24 30.5 32 30.5 C40 30.5 46.5 27.5 46.5 21 C46.5 14.5 42.5 7.5 32 7.5 Z"/>
+    <!-- Stem -->
+    <path d="M32 30.5 L32 56.5"/>
+    <!-- Crossbar (slight tilt for hand-inked character) -->
+    <path d="M15.5 39 L48.5 37.5"/>
+  </g>
+</svg>
