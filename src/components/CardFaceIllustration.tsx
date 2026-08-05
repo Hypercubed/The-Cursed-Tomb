@@ -8,6 +8,8 @@ interface CardFaceIllustrationProps {
   attritionStage?: number;
   className?: string;
   seed?: string | number;
+  randomizeTransform?: boolean;
+  strokeWidth?: number;
 }
 
 const isRedSuit = (suit: string): boolean => suit === '♥' || suit === '♦';
@@ -19,6 +21,8 @@ export function CardFaceIllustration({
   attritionStage = 0,
   className = 'w-[34px] h-[34px] sm:w-[52px] sm:h-[52px] lg:w-[64px] lg:h-[64px] xl:w-[72px] xl:h-[72px] 2xl:w-[82px] 2xl:h-[82px]',
   seed,
+  randomizeTransform = true,
+  strokeWidth = 4.5,
 }: CardFaceIllustrationProps): React.ReactElement | null {
   // Enforce single-identity rendering:
   // If blessed (regardless of attrition stage), show suit blessing.
@@ -31,12 +35,14 @@ export function CardFaceIllustration({
     return null;
   }
 
-  const { rotateDeg, scale, translateX, translateY } = getHandDrawnTransform(suit, rank, 'illustration', seed);
+  const { rotateDeg, scale, translateX, translateY } = randomizeTransform
+    ? getHandDrawnTransform(suit, rank, 'illustration', seed)
+    : { rotateDeg: 0, scale: 1, translateX: 0, translateY: 0 };
 
   // Common SVG stroke attributes for hand-drawn organic blue ink styling (Blessings)
   const blessingStrokeProps = {
     stroke: '#1d4ed8',
-    strokeWidth: '4.5',
+    strokeWidth,
     vectorEffect: 'non-scaling-stroke' as const,
     strokeLinecap: 'round' as const,
     strokeLinejoin: 'round' as const,
@@ -48,7 +54,7 @@ export function CardFaceIllustration({
   // Common SVG stroke attributes for hand-drawn organic scarlet red gel ink styling (Curses)
   const curseStrokeProps = {
     stroke: '#dc2626',
-    strokeWidth: '4.5',
+    strokeWidth,
     vectorEffect: 'non-scaling-stroke' as const,
     strokeLinecap: 'round' as const,
     strokeLinejoin: 'round' as const,

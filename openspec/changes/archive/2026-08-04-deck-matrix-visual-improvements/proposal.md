@@ -4,10 +4,10 @@ In the Deck Codex (Deck Status Matrix in `MatchedCardsModal.tsx`), the visual in
 
 ## What Changes
 
-- **Decouple Matrix Removal State from Card Status**: Ensure removed cards always display a distinct gold/amber removed outline border (`border-game-accent`) regardless of whether the card is Blessed, Cursed, Scarred, or normal.
+- **Decouple Matrix Lifecycle State from Card Status**: Ensure active, removed, and entombed cards use distinct lifecycle backgrounds and outlines regardless of whether a card is Blessed, Cursed, Scarred, or normal. Active cards use the gold outline; removed and entombed cards use the neutral outline.
 - **Correct Cursed Card Ink & Colors**: Update Cursed cards (Stage 4 Attrition) in the matrix grid and modal header legend to render with scarlet red gel ink styling (`bg-red-950/40`, `border-red-600/80`, `text-red-200`, `ring-red-500/60`), matching `CardFaceIllustration.tsx`.
 - **Integrate Blessed & Cursed SVG Illustrations**: Render suit-specific Blessed Hero illustrations (∩ Archway for Hearts, □ Vault Box for Diamonds, Tunnel Shovel for Spades, ⊕ Sun Cross for Clubs) and Cursed icons (▼ Downward Triangle for Red suits, ⏍ Trapezoid Weight for Black suits) inside matrix cells.
-- **Update Matrix Header Legend**: Update the header legend to accurately display Blessed Hero in blue ink with SVG icons, Cursed in scarlet red ink with SVG icons, and Removed with an explicit gold outline indicator.
+- **Update Matrix Header Legend**: Update the header legend to show the active, removed, and entombed lifecycle surfaces/outlines alongside the Blessed and Cursed SVG icons.
 
 ## Capabilities
 

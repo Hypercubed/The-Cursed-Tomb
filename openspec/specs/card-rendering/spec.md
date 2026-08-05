@@ -42,15 +42,15 @@ Corner suit pips SHALL render strictly the standard suit symbol character (♥, 
 - **THEN** bold stroke lines (`—` or `+`) SHALL be rendered in the top-right anchor badge zone, leaving the corner suit pip clean
 
 ### Requirement: Attrition Scar Tooltips and Legends
-Tooltips and modal labels SHALL interpolate the card's actual rank label (e.g. `|7`, `|7|`, `|7\|`) instead of literal placeholder `'N'`. Generic header legends (such as in Matched Cards Tomb Vault) SHALL display `|#\| Scarred` instead of literal `|N\| Scarred`.
+Tooltips and modal labels SHALL interpolate the card's actual rank label (e.g. `|7`, `|7|`, `|7\|`) instead of literal placeholder `'N'`. Generic header legends (such as in the Deck Codex) SHALL display a visual `N` rank mark with blue vertical strokes on both sides and a diagonal slash, followed by `Scarred`.
 
 #### Scenario: Tooltips interpolate card rank label
 - **GIVEN** a card with Attrition Stage 1, 2, or 3
 - **THEN** tooltips and modal labels SHALL interpolate the card's actual rank label (e.g. `|7`, `|7|`, `|7\|`) instead of literal placeholder `'N'`
 
-#### Scenario: Generic header legend displays hash symbol
-- **GIVEN** a generic header legend (such as in Matched Cards Tomb Vault)
-- **THEN** the legend SHALL display `|#\| Scarred` instead of literal `|N\| Scarred`
+#### Scenario: Generic header legend displays a marked N
+- **GIVEN** a generic header legend (such as in the Deck Codex)
+- **THEN** the legend SHALL display an `N` with blue vertical marks on both sides and a diagonal slash, followed by `Scarred`, to indicate a scarred card of any rank
 
 ### Requirement: Attrition Stage modal display
 The Round Summary modal SHALL display accurate descriptions for cards receiving attrition marks, explicitly indicating that Stage 1 (Vulnerable) and Stage 2 (Doubtful) cards have no functional value shift, while Stage 3 cards display their active +1 or -1 functional value shift.

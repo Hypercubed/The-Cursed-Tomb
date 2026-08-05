@@ -1,6 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { PairStat, Suit, Rank, CursedCard, GameMode, getFunctionalValue, CampaignAchievements } from '../game';
 import { StoredCampaignStats } from '../storage/persistence';
+import { CardFaceIllustration } from './CardFaceIllustration';
+import { InkBleedFilterDef } from './PlayingCard';
 
 interface MatchedCardsModalProps {
   isOpen: boolean;
@@ -83,6 +85,7 @@ export function MatchedCardsModal({
         className="bg-[#18130e] border-2 border-[#3d3124] rounded-xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-[0_10px_30px_rgba(0,0,0,0.8)] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
+        <InkBleedFilterDef />
         {/* Modal Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#2d2319] bg-[#120e0a]">
           <div className="flex items-center gap-3">
@@ -189,13 +192,22 @@ export function MatchedCardsModal({
               <span>Deck Status Matrix (4 × 13)</span>
               <span className="text-[11px] font-normal normal-case opacity-90 flex items-center gap-2.5 flex-wrap">
                 <span className="flex items-center gap-1">
-                  <span className="inline-block w-2.5 h-2.5 rounded-sm bg-game-accent/20 border border-game-accent"></span> Removed
+                  <span className="inline-block w-2.5 h-2.5 rounded-sm bg-[#18130e] border border-[#251e16]"></span> Removed
                 </span>
                 <span className="flex items-center gap-1">
-                  <span className="inline-block w-2.5 h-2.5 rounded-sm bg-[#18130e] border border-[#251e16]"></span> Active
+                  <span className="inline-block w-2.5 h-2.5 rounded-sm bg-[#2a2016] border border-game-accent"></span> Active
                 </span>
-                <span className="flex items-center gap-1 text-blue-400 font-medium">
-                  <span className="font-mono font-bold">(◯)</span> Blessed Hero
+                <span className="flex items-center gap-1">
+                  <span className="inline-block w-2.5 h-2.5 rounded-sm bg-stone-950 border border-[#251e16]"></span> Entombed
+                </span>
+                <span className="flex items-center gap-1 text-blue-400 font-medium" aria-label="Blessed Hero legend">
+                  <span className="inline-flex items-center gap-0.5" aria-label="Blessed suit illustrations">
+                    <span title="Hearts Archway"><CardFaceIllustration suit="♥" blessed className="w-4 h-4" randomizeTransform={false} strokeWidth={2} /></span>
+                    <span title="Diamonds Vault Box"><CardFaceIllustration suit="♦" blessed className="w-4 h-4" randomizeTransform={false} strokeWidth={2} /></span>
+                    <span title="Spades Tunnel Shovel"><CardFaceIllustration suit="♠" blessed className="w-4 h-4" randomizeTransform={false} strokeWidth={2} /></span>
+                    <span title="Clubs Sun Cross"><CardFaceIllustration suit="♣" blessed className="w-4 h-4" randomizeTransform={false} strokeWidth={2} /></span>
+                  </span>
+                  Blessed Hero
                 </span>
                 <span className="flex items-center gap-1 text-blue-400 font-medium">
                   <span className="font-mono font-bold">—</span> Fortifying
@@ -203,11 +215,32 @@ export function MatchedCardsModal({
                 <span className="flex items-center gap-1 text-blue-400 font-medium">
                   <span className="font-mono font-bold">+</span> Anchored
                 </span>
-                <span className="flex items-center gap-1 text-blue-400 font-medium">
-                  <span className="font-mono font-bold">|X|</span> Cursed
+                <span className="flex items-center gap-1 text-red-400 font-medium" aria-label="Cursed legend">
+                  <span className="inline-flex items-center gap-0.5" aria-label="Cursed suit illustrations">
+                    <span title="Red Curse Downward Triangle"><CardFaceIllustration suit="♥" attritionStage={4} className="w-4 h-4" randomizeTransform={false} strokeWidth={2} /></span>
+                    <span title="Black Curse Trapezoid Weight"><CardFaceIllustration suit="♠" attritionStage={4} className="w-4 h-4" randomizeTransform={false} strokeWidth={2} /></span>
+                  </span>
+                  Cursed
                 </span>
-                <span className="flex items-center gap-1 text-blue-400 font-medium">
-                  <span className="font-mono font-bold">|#\|</span> Scarred
+                <span className="flex items-center gap-1 text-blue-400 font-medium" aria-label="Scarred legend">
+                  <span
+                    role="img"
+                    aria-label="Scarred rank N with side marks and diagonal slash"
+                    className="relative inline-block leading-none font-mono font-bold px-0.5"
+                  >
+                    <span>N</span>
+                    <svg
+                      aria-hidden="true"
+                      className="absolute -inset-x-0.5 -inset-y-0.5 w-[calc(100%+4px)] h-[calc(100%+4px)] pointer-events-none overflow-visible z-20"
+                      viewBox="0 0 100 100"
+                      preserveAspectRatio="none"
+                    >
+                      <line x1="8" y1="5" x2="8" y2="95" stroke="#2563eb" strokeWidth="20" strokeLinecap="round" />
+                      <line x1="92" y1="5" x2="92" y2="95" stroke="#2563eb" strokeWidth="20" strokeLinecap="round" />
+                      <line x1="8" y1="5" x2="92" y2="95" stroke="#2563eb" strokeWidth="20" strokeLinecap="round" />
+                    </svg>
+                  </span>
+                  Scarred
                 </span>
                 <span className="flex items-center gap-1 text-red-400 font-medium">
                   <span>💀</span> Entombed
@@ -244,8 +277,7 @@ export function MatchedCardsModal({
                       const isBlessed = Boolean(cursedCard?.blessed);
                       const rewardStage = cursedCard?.rewardStage ?? 0;
                       const attritionStage = cursedCard?.attritionStage ?? 0;
-                      const isCursed = attritionStage === 4;
-                      const isScarred = attritionStage > 0 && attritionStage < 4;
+                      const isCursed = !isBlessed && attritionStage === 4;
                       const isEntombed = attritionStage === 5;
 
                       const statusParts: string[] = [];
@@ -267,22 +299,21 @@ export function MatchedCardsModal({
                       }
                       if (isEntombed) statusParts.push('Entombed 💀');
                       if (fVal !== rank) statusParts.push(`Functional Value: ${fValLabel}`);
-                      statusParts.push(isRemoved ? 'Removed' : 'Active');
+                      statusParts.push(isEntombed ? 'Entombed' : isRemoved ? 'Removed' : 'Active');
 
                       const tooltipText = `${suit}${rLabel} (${statusParts.join(', ')})`;
 
-                      let cardStyleClasses = 'bg-[#18130e] border-[#251e16] text-game-muted/60';
-                      if (isEntombed) {
-                        cardStyleClasses = 'bg-stone-950 border-red-950 text-red-700/60 opacity-60';
-                      } else if (isBlessed) {
-                        cardStyleClasses = 'bg-blue-950/40 border-blue-500/80 text-blue-200 ring-1 ring-blue-400/60 shadow-[0_0_8px_rgba(37,99,235,0.25)]';
-                      } else if (isCursed) {
-                        cardStyleClasses = 'bg-blue-950/40 border-blue-600/80 text-blue-200 ring-1 ring-blue-500/60 shadow-[0_0_8px_rgba(37,99,235,0.25)]';
-                      } else if (isScarred) {
-                        cardStyleClasses = 'bg-blue-950/30 border-blue-600/70 text-blue-200';
-                      } else if (isRemoved) {
-                        cardStyleClasses = 'bg-[#2a2016] border-game-accent text-game-accent shadow-[0_0_6px_rgba(212,175,55,0.2)]';
-                      }
+                      // Lifecycle owns the cell surface and outline. Status identities are shown by icons/overlays.
+                      const lifecycleBackgroundClasses = isEntombed
+                        ? 'bg-stone-950 text-game-muted/60 opacity-60'
+                        : isRemoved
+                          ? 'bg-[#18130e] text-game-muted/60'
+                          : 'bg-[#2a2016] text-game-muted/60';
+                      const borderStatusClasses = isRemoved || isEntombed
+                        ? 'border-[#251e16]'
+                        : 'border-game-accent shadow-[0_0_6px_rgba(212,175,55,0.25)]';
+
+                      const cardStyleClasses = `${lifecycleBackgroundClasses} ${borderStatusClasses}`;
 
                       return (
                         <div
@@ -345,18 +376,22 @@ export function MatchedCardsModal({
                             )}
                           </div>
 
-                          {/* Suit Row with Blessing ring */}
+                          {/* Suit Row with compact suit-specific status illustration */}
                           <div className="relative inline-flex items-center justify-center text-[9px] leading-none">
                             <span className={`relative flex items-center justify-center ${isRedSuit(suit) ? 'text-game-red' : 'text-game-text'}`}>
                               <span>{symbol}</span>
-                              {isBlessed && (
-                                <svg
-                                  aria-hidden="true"
-                                  className="absolute -inset-[40%] w-[180%] h-[180%] pointer-events-none overflow-visible z-10"
-                                  viewBox="0 0 100 100"
-                                >
-                                  <circle cx="50" cy="50" r="46" stroke="#2563eb" strokeWidth="18" fill="none" />
-                                </svg>
+                              {(isBlessed || isCursed) && (
+                                <span className="absolute inset-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center z-10">
+                                  <CardFaceIllustration
+                                    suit={suit}
+                                    rank={rank}
+                                    blessed={isBlessed}
+                                    attritionStage={attritionStage}
+                                    className="w-5 h-5"
+                                    randomizeTransform={false}
+                                    strokeWidth={2}
+                                  />
+                                </span>
                               )}
                             </span>
                           </div>

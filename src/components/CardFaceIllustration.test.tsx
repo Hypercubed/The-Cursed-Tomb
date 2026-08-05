@@ -58,6 +58,24 @@ describe('CardFaceIllustration Component', () => {
     expect(paths.length).toBeGreaterThan(0);
   });
 
+  it('uses the full-card stroke width by default', () => {
+    const { container } = render(<CardFaceIllustration suit="♥" blessed />);
+    expect(container.querySelector('path')?.getAttribute('stroke-width')).toBe('4.5');
+  });
+
+  it('keeps randomized transforms enabled by default for full-card artwork', () => {
+    const { container } = render(<CardFaceIllustration suit="♥" blessed />);
+    expect(container.querySelector('g')?.getAttribute('transform')).not.toBe('translate(0, 0) rotate(0 50 50) scale(1)');
+  });
+
+  it('can render a fixed identity transform for compact matrix icons', () => {
+    const { container } = render(
+      <CardFaceIllustration suit="♥" blessed randomizeTransform={false} strokeWidth={2} />
+    );
+    expect(container.querySelector('g')?.getAttribute('transform')).toBe('translate(0, 0) rotate(0 50 50) scale(1)');
+    expect(container.querySelector('path')?.getAttribute('stroke-width')).toBe('2');
+  });
+
   it('returns null for unmutated cards (neither blessed nor stage 4 cursed)', () => {
     const { container } = render(<CardFaceIllustration suit="♥" blessed={false} attritionStage={0} />);
     expect(container.firstChild).toBeNull();
