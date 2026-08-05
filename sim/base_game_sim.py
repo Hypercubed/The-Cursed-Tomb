@@ -34,8 +34,8 @@ BASE_FLAGS = RuleFlags(
 REDRAW_OPTIONS = [
     ("0 redraws (Survivalist)", 0),
     ("1 redraw  (Archaeologist)", 1),
-    ("2 redraws (Explorer)", 2),
-    ("Infinite  (Novice)", 9999),
+    ("3 redraws (Explorer)", 3),
+    ("5 redraws (Novice)", 5),
 ]
 
 def create_solver(solver_name: str):

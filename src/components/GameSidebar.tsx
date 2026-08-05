@@ -3,8 +3,8 @@ import { GameState } from '../game';
 const redrawOptions = [
   { label: 'Survivalist (Hard) — 0 Redeals', value: 0 },
   { label: 'Archaeologist (Normal) — 1 Redeal', value: 1 },
-  { label: 'Explorer (Easy) — 2 Redeals', value: 2 },
-  { label: 'Novice (Sandbox) — Unlimited', value: null },
+  { label: 'Explorer (Easy) — 3 Redeals', value: 3 },
+  { label: 'Novice (Sandbox) — 5 Redeals', value: 5 },
 ] as const;
 
 interface GameSidebarProps {
@@ -25,6 +25,7 @@ interface GameSidebarProps {
   };
   campaignStats?: {
     pyramidsExplored: number;
+    pyramidsConquered?: number;
     pyramidsCollapsed: number;
     isVictory: boolean;
     totalAttempts: number;
@@ -37,8 +38,8 @@ const buttonClass =
   'appearance-none bg-transparent border border-game-border rounded-lg text-game-text text-sm cursor-pointer font-[inherit] px-4 py-2 hover:border-game-accent disabled:opacity-50 disabled:cursor-not-allowed transition-[border-color] duration-[120ms]';
 
 const getDifficultyLabel = (value: number | null) => {
-  if (value === null) return 'Novice (Sandbox)';
-  if (value === 2) return 'Explorer (Easy)';
+  if (value === 5 || value === null) return 'Novice (Sandbox)';
+  if (value === 3 || value === 2) return 'Explorer (Easy)';
   if (value === 1) return 'Archaeologist (Normal)';
   if (value === 0) return 'Survivalist (Hard)';
   return `${value} Redeal(s)`;
@@ -108,7 +109,7 @@ export function GameSidebar({
               type="button"
               className={buttonClass}
               onClick={onStart}
-              disabled={gameStatus === 'in-progress' || (campaignStats?.isVictory ?? false)}
+              disabled={gameStatus === 'in-progress'}
             >
               Explore Pyramid
             </button>
@@ -143,14 +144,16 @@ export function GameSidebar({
           <div className="border-t border-[#2d2319] pt-2.5 mt-1">
             <dt className="text-game-accent font-semibold font-display tracking-wider uppercase text-xs mb-1.5 flex items-center justify-between">
               <span>Active Campaign</span>
-              <span className={campaignStats?.isVictory ? 'text-emerald-400 font-bold font-mono' : 'text-amber-400 font-medium'}>
-                {campaignStats?.isVictory ? '👑 Victory!' : '🟢 Active'}
-              </span>
+              <span className="text-amber-400 font-medium">🟢 Active</span>
             </dt>
             <dd className="text-game-text font-medium ml-0 flex flex-col gap-1.5 text-xs">
               <div className="flex justify-between items-center bg-[#120e0a] px-2.5 py-1.5 rounded border border-[#251e16]">
                 <span className="text-game-muted">🔍 Pyramids Explored</span>
                 <span className="font-mono font-semibold text-amber-400">{campaignStats?.pyramidsExplored ?? 0}</span>
+              </div>
+              <div className="flex justify-between items-center bg-[#120e0a] px-2.5 py-1.5 rounded border border-[#251e16]">
+                <span className="text-game-muted">👑 Pyramids Conquered</span>
+                <span className="font-mono font-semibold text-emerald-400">{campaignStats?.pyramidsConquered ?? 0}</span>
               </div>
               <div className="flex justify-between items-center bg-[#120e0a] px-2.5 py-1.5 rounded border border-[#251e16]">
                 <span className="text-game-muted">🏺 Pyramids Collapsed</span>
@@ -170,7 +173,7 @@ export function GameSidebar({
               className="w-full appearance-none bg-[#231b13] border border-[#3d3124] hover:border-game-accent text-game-accent rounded-lg text-sm font-semibold font-display tracking-wide py-2 px-3 cursor-pointer flex items-center justify-center gap-2 transition-colors shadow-sm"
               onClick={onOpenMatchedCardsModal}
             >
-              <span>📜</span> View Deck Codex
+              <span>📊</span> Expedition Deck & Stats
             </button>
           )}
           {onOpenRulesModal && (

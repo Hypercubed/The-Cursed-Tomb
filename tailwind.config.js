@@ -15,11 +15,11 @@ export default {
         'game-accent': '#d97706',
         'game-accent-light': '#fbbf24',
         'game-accent-dark': '#78350f',
-        'game-red': '#dc2626',
+        'game-red': '#991b1b',
         'game-card-bg': '#f5f0e6',
         'game-muted': '#a39686',
         'game-text': '#eae6df',
-        'game-card-text': '#1c1710',
+        'game-card-text': '#1c1917',
       },
       fontFamily: {
         display: ['Cinzel', 'Georgia', 'serif'],

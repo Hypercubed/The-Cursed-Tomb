@@ -48,9 +48,6 @@ export function useAutoplay(
 
   // Executes moves continuously until terminal state is reached asynchronously with yielding
   const stepToConclusion = useCallback(async () => {
-    if (gameRef.current.status === 'complete-victory') {
-      return false;
-    }
     if (gameRef.current.status !== 'in-progress') {
       startNewGame();
       return true;
@@ -103,10 +100,6 @@ export function useAutoplay(
       return true;
     }
 
-    if (gameRef.current.status === 'complete-victory') {
-      return false;
-    }
-
     if (gameRef.current.status !== 'in-progress') {
       startNewGame();
       return true;
@@ -126,14 +119,6 @@ export function useAutoplay(
     return moveMade;
   }, [speedMs, stepToConclusion, setGame, startNewGame]);
 
-  // Stop autoplay automatically if campaign victory is reached
-  useEffect(() => {
-    if (game.status === 'complete-victory') {
-      setIsPlaying(false);
-      cancelRef.current = true;
-    }
-  }, [game.status]);
-
   // Continuous Autoplay interval loop
   useEffect(() => {
     if (!isPlaying) {
@@ -143,12 +128,6 @@ export function useAutoplay(
     const delay = Math.max(speedMs, 50);
 
     const intervalId = setInterval(() => {
-      if (gameRef.current.status === 'complete-victory') {
-        setIsPlaying(false);
-        cancelRef.current = true;
-        return;
-      }
-
       if (gameRef.current.status !== 'in-progress') {
         startNewGame();
         return;
@@ -177,9 +156,6 @@ export function useAutoplay(
         cancelRef.current = true;
       } else {
         cancelRef.current = false;
-        if (gameRef.current.status === 'complete-victory') {
-          return false;
-        }
         if (gameRef.current.status !== 'in-progress') {
           startNewGame();
         }

@@ -31,15 +31,15 @@ Scars and curses SHALL be rendered directly over and beside the rank number pip 
 - **THEN** the slashed rank number, curse indicator (⚡), and modified functional value SHALL be rendered in the rank area of the top-left corner index
 
 ### Requirement: Card anchors and blessings overlay suit pip
-Anchors and blessings SHALL be rendered directly on or surrounding the suit pip symbol in the top-left corner index. Fortifying anchors (reward stage 1) and Anchors (reward stage 2) SHALL render bold line/cross strokes inside the suit symbol. Blessed Hero status SHALL render a circular ring/halo enclosing the suit symbol.
+Corner suit pips SHALL render strictly the standard suit symbol character (♥, ♦, ♠, ♣) without circle halos or corner overlays. Immunity anchors SHALL render in the top-right corner, and Fallen Hero blessings SHALL render as suit-specific center face illustrations (`CardFaceIllustration`).
 
-#### Scenario: Anchor renders bold inside strokes on suit symbol
-- **WHEN** a card has reward stage 1 (Fortifying) or reward stage 2 (Anchored)
-- **THEN** bold stroke lines (`—` or `+`) SHALL be drawn inside/across the suit symbol
-
-#### Scenario: Blessing renders circular halo around suit symbol
+#### Scenario: Suit pip renders without circle halo
 - **WHEN** a card is a Blessed Hero
-- **THEN** a circle/halo SHALL enclose the suit symbol in the top-left corner index
+- **THEN** the suit pip in the top-left corner index SHALL render strictly the standard suit icon without any circle or halo overlay
+
+#### Scenario: Anchor renders in top-right corner badge
+- **WHEN** a card has reward stage 1 (Fortifying) or reward stage 2 (Anchored)
+- **THEN** bold stroke lines (`—` or `+`) SHALL be rendered in the top-right anchor badge zone, leaving the corner suit pip clean
 
 ### Requirement: Attrition Scar Tooltips and Legends
 Tooltips and modal labels SHALL interpolate the card's actual rank label (e.g. `|7`, `|7|`, `|7\|`) instead of literal placeholder `'N'`. Generic header legends (such as in Matched Cards Tomb Vault) SHALL display `|#\| Scarred` instead of literal `|N\| Scarred`.
@@ -105,11 +105,11 @@ Cards that are blocked (covered by other pyramid cards) SHALL render with a tran
 - **THEN** the card SHALL be invisible (visibility: hidden or opacity 0) so sibling cards can fill the row
 
 ### Requirement: Cards style as light parchment stone slates
-Cards SHALL render with a light parchment color background (`#f5f0e6`) and a crisp dark border. The card face text SHALL use high-contrast dark obsidian charcoal (`#1c1710`) for black suits and vibrant crimson (`#dc2626`) for red suits.
+Cards SHALL render with a light parchment color background (`#f5f0e6`) and a crisp dark border. The card face text and printed suit pips SHALL use high-contrast dark carbon charcoal (`#1c1917`) for black suits (Spades, Clubs) and authentic deep Bicycle crimson (`#991b1b`) for red suits (Hearts, Diamonds).
 
 #### Scenario: Card displays as light parchment slate
 - **WHEN** any card is rendered
-- **THEN** the card background SHALL be warm parchment `#f5f0e6` with dark high-contrast rank and suit text
+- **THEN** the card background SHALL be warm parchment `#f5f0e6` with carbon charcoal (`#1c1917`) text for black suits and deep Bicycle crimson (`#991b1b`) text for red suits
 
 ### Requirement: Card suits use standard suit symbols with dual-badge system
 The corner indices of cards SHALL display standard suit indicators (♥, ♦, ♠, ♣) for instant suit recognition, and the central card zone SHALL render large standard suit SVG symbols (Heart for Hearts, Diamond for Diamonds, Spade for Spades, and Club for Clubs).
@@ -166,24 +166,24 @@ Each playing card SHALL render Fortifying (`—`) and Anchored (`+`) immunity ma
 - **WHEN** a card has `rewardStage = 2` (Anchored)
 - **THEN** a crisp blue cross stroke (`+`) SHALL appear in the top-right corner of the card face
 
-#### Scenario: Suit pip renders only suit symbol and Fallen Hero blessing ring
-- **WHEN** a card is rendered with or without an anchor reward stage
-- **THEN** the suit pip in the corner index SHALL render strictly the suit icon and (if blessed) the Fallen Hero circle halo (`[O]`), without anchor stroke overlays inside the suit symbol
+#### Scenario: Suit pip renders only standard suit symbol
+- **WHEN** a card is rendered with or without an anchor reward stage or blessing
+- **THEN** the suit pip in the corner index SHALL render strictly the suit symbol, without circle halos or stroke overlays
 
 ### Requirement: Ink marks render as organic hand-drawn stroke paths
-Scars, curses, blessings, and top-right anchor immunity marks on playing cards SHALL be rendered using organic SVG `<path>` elements with natural line wobble, stroke taper, overshoots, and un-closed hand-drawn loops instead of rigid geometric `<line>` or `<circle>` primitives.
+Scars, curses, blessings, and top-right anchor immunity marks on playing cards SHALL be rendered using organic SVG `<path>` elements with natural line wobble, stroke taper, overshoots, and hand-drawn loops. Positive modifications (Anchors, Fortifying badges, Blessed Hero rings, and Suit Blessing illustrations) SHALL be rendered in vivid Cobalt Blue Pen Ink (`#1d4ed8`). Negative modifications (Attrition scars 1–4, Curse marks/traps, and modified functional rank values) SHALL be rendered in wet Scarlet Red Gel Pen Ink (`#dc2626` / `#e11d48`).
 
-#### Scenario: Attrition scars and curses render as organic pen strokes
-- **WHEN** a card has Attrition Stage 1 to 4 marked
-- **THEN** the scar vertical lines, diagonal backslashes, and curse forward slashes SHALL render using organic SVG path definitions with slight stroke wobble and overshoots
+#### Scenario: Attrition scars and curses render as organic scarlet pen strokes
+- **WHEN** a card has Attrition Stage 1 to 4 marked or an active Curse
+- **THEN** the scar vertical lines, diagonal backslashes, curse forward slashes, curse illustrations, and handwritten functional value numbers SHALL render in organic wet Scarlet Red Gel Pen Ink (`#dc2626` / `#e11d48`) with scarlet drop-shadow halos
 
-#### Scenario: Suit blessings render as hand-drawn organic halos
+#### Scenario: Suit blessings render as organic blue hand-drawn halos
 - **WHEN** a card is Blessed
-- **THEN** the blessing ring around the suit pip SHALL render as an organic hand-drawn loop path rather than a perfect geometric circle
+- **THEN** the blessing ring around the suit pip and the central face Blessing illustration SHALL render in organic Cobalt Blue Pen Ink (`#1d4ed8`) with blue drop-shadow halos
 
-#### Scenario: Top-right anchor immunity badges render as organic hand-drawn strokes
+#### Scenario: Top-right anchor immunity badges render as organic blue hand-drawn strokes
 - **WHEN** a card has a Fortifying (`—`) or Anchored (`+`) immunity badge in the top-right corner zone
-- **THEN** the anchor strokes SHALL render using organic SVG path definitions with slight stroke wobble and natural pen caps
+- **THEN** the anchor strokes SHALL render in organic Cobalt Blue Pen Ink (`#1d4ed8`) with blue drop-shadow halos
 
 ### Requirement: SVG ink bleed filters apply paper-soaking texture to pen marks
 Ink marks (scars, curses, top-right anchor badges, blessings) and handwritten modified rank values SHALL have an inline SVG noise filter (`feTurbulence` / `feDisplacementMap`) applied to simulate marker ink bleeding into paper cardstock edges.
@@ -191,4 +191,30 @@ Ink marks (scars, curses, top-right anchor badges, blessings) and handwritten mo
 #### Scenario: Pen marks display ink bleed micro-texture
 - **WHEN** any pen ink mark (including top-right anchor badges) or handwritten rank value is rendered on a card
 - **THEN** it SHALL apply an ink-bleed filter giving the line edges subtle paper-soaking roughness
+
+### Requirement: Negative modification overlays use distinct scarlet ink filter and drop shadow
+Negative card modification overlays (scars, curses, shifted rank values) SHALL use a dedicated red ink-bleed drop shadow filter (`drop-shadow-[0_0_2px_rgba(220,38,38,0.45)]`) to maintain high contrast and distinct handwritten pen appearance over both red (Hearts/Diamonds) and black (Spades/Clubs) printed card faces.
+
+#### Scenario: Red scar overlay on Heart or Diamond card
+- **WHEN** an Attrition Stage 1–4 scar or functional value shift is rendered on a Heart or Diamond card
+- **THEN** the overlay SHALL use wet Scarlet Red Gel Pen Ink with a scarlet ink-bleed drop shadow, making the hand-drawn mark distinctly brighter and wetter than the underlying deep Bicycle crimson printed suit and rank text
+
+### Requirement: Single-identity center card face drawings
+The web UI SHALL render blessing and curse illustrations directly on the center face of mutated cards using SVG components with organic stroke styling matching existing ink marks. The card face SHALL enforce single-identity rendering, displaying either a Blessing drawing OR a Curse drawing, but never both. Blessing illustrations SHALL be geometrically aligned with underlying center suit pips.
+
+#### Scenario: Card face rendering for Blessed cards
+- **WHEN** a Blessed card is rendered (at any Attrition Stage 0–4)
+- **THEN** the center face of the card SHALL render the suit-specific Blessing illustration:
+  - Hearts: Clean tomb archway (`∩`) framing the heart pip without interior arrow
+  - Diamonds: Vault box (`□`) framing the diamond pip
+  - Spades: Downward-pointing shovel blade at card bottom with handle shaft extending upwards towards the spade tip
+  - Clubs: Circled Sun Cross (`⊕`) centered over the club leaves
+- **THEN** the card face SHALL NOT render any Curse illustration
+
+#### Scenario: Card face rendering for Cursed cards
+- **WHEN** a Cursed card (Stage 4 with active Curse effect) is rendered
+- **THEN** the center face of the card SHALL render the corresponding Curse illustration:
+  - Red Curse: Downward-pointing triangle (`▼`)
+  - Black Curse: Unicode trapezoid weight (`⏍`, trapezoid body with handle loop)
+- **THEN** the card face SHALL NOT render any Blessing illustration
 

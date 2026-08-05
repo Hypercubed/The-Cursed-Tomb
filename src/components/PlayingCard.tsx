@@ -1,5 +1,6 @@
 import React from 'react';
 import { CardFaceIllustration } from './CardFaceIllustration';
+import { getHandDrawnTransform } from '../utils/handDrawnTransforms';
 
 interface PlayingCardProps {
   rank: number;
@@ -18,6 +19,7 @@ interface PlayingCardProps {
   animatingCollapse?: boolean;
   style?: React.CSSProperties;
   onClick?: () => void;
+  seed?: string | number;
 }
 
 const rankLabel = (rank: number): string => {
@@ -61,11 +63,11 @@ function SuitIcon({ suit, className = 'w-4 h-4' }: { suit: string; className?: s
 
 function getUpperLeftTooltip(suit: string, blessed: boolean, rewardStage: number): string {
   if (blessed) {
-    if (suit === '♥') return 'Blessed Fallen Hero [O] (∩+↑ Archway): Hearts Stock Reshuffle power (shuffles Waste back into Stock when cleared)';
-    if (suit === '♦') return 'Blessed Fallen Hero [O] (□ Vault Box): Diamonds Vault power (can store 1 Waste card in Vault)';
-    if (suit === '♠') return 'Blessed Fallen Hero [O] (⊃ Tunnel Capsule): Spades Tunnel power (moves 1 exposed pyramid card to Waste when cleared)';
-    if (suit === '♣') return 'Blessed Fallen Hero [O] (∞ Infinity): Clubs Universal Wildcard power (pairs with ANY exposed card to total 13)';
-    return 'Blessed Fallen Hero [O]: Unlocks Suit Blessing power when cleared';
+    if (suit === '♥') return 'Blessed Fallen Hero (∩ Archway): Hearts Stock Reshuffle power (shuffles Waste back into Stock when cleared)';
+    if (suit === '♦') return 'Blessed Fallen Hero (□ Vault Box): Diamonds Vault power (can store 1 Waste card in Vault)';
+    if (suit === '♠') return 'Blessed Fallen Hero (Tunnel Shovel): Spades Tunnel power (moves 1 exposed pyramid card to Waste when cleared)';
+    if (suit === '♣') return 'Blessed Fallen Hero (⊕ Sun Cross): Clubs Universal Wildcard power (pairs with ANY exposed card to total 13)';
+    return 'Blessed Fallen Hero: Unlocks Suit Blessing power when cleared';
   }
   if (rewardStage === 1) return 'Fortifying Anchor [—]: 1st stroke towards permanent Anchor immunity';
   if (rewardStage === 2) return 'Anchored Card [+]: Permanently immune to failure track degradation';
@@ -108,17 +110,34 @@ export function InkBleedFilterDef() {
   );
 }
 
-function SlashedRank({ label, stage, funcValLabel }: { label: string; stage: number; funcValLabel: string | null }) {
+function SlashedRank({
+  label,
+  stage,
+  funcValLabel,
+  suit = '♥',
+  rank = 1,
+  seed,
+}: {
+  label: string;
+  stage: number;
+  funcValLabel: string | null;
+  suit?: string;
+  rank?: number;
+  seed?: string | number;
+}) {
   if (stage === 5) {
     return <span title="Entombed (💀)">💀</span>;
   }
+
+  const scarTransform = getHandDrawnTransform(suit, rank, 'scar', seed);
+  const modValTransform = getHandDrawnTransform(suit, rank, 'modifiedValue', seed);
 
   return (
     <span className="relative inline-block leading-none select-none">
       {/* Base rank number - stays in exact fixed position */}
       <span>{label}</span>
 
-      {/* Unified Blue Organic SVG Scar Overlay for Stages 1-4 */}
+      {/* Organic Scarlet Red Gel Pen SVG Scar Overlay for Stages 1-4 */}
       {stage >= 1 && (
         <svg
           aria-hidden="true"
@@ -126,69 +145,74 @@ function SlashedRank({ label, stage, funcValLabel }: { label: string; stage: num
           viewBox="-15 -5 130 110"
           preserveAspectRatio="none"
         >
-          {/* Stage 1: Left vertical line with organic stroke wobble */}
-          <path
-            d="M 14 5 Q 6 50 12 95"
-            stroke="#1d4ed8"
-            strokeWidth="18"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            filter="url(#ink-bleed)"
-            className="drop-shadow-[0_0_2px_rgba(37,99,235,0.4)]"
-          />
-
-          {/* Stage 2: Right vertical line with organic stroke wobble */}
-          {stage >= 2 && (
+          <g
+            transform={`translate(${scarTransform.translateX}, ${scarTransform.translateY}) rotate(${scarTransform.rotateDeg} 50 50) scale(${scarTransform.scale})`}
+            style={{ transformOrigin: '50px 50px' }}
+          >
+            {/* Stage 1: Left vertical line with organic stroke wobble */}
             <path
-              d="M 86 5 Q 94 50 88 95"
-              stroke="#1d4ed8"
+              d="M 14 5 Q 6 50 12 95"
+              stroke="#dc2626"
               strokeWidth="18"
               strokeLinecap="round"
               strokeLinejoin="round"
               filter="url(#ink-bleed)"
-              className="drop-shadow-[0_0_2px_rgba(37,99,235,0.4)]"
+              className="drop-shadow-[0_0_2px_rgba(220,38,38,0.45)]"
             />
-          )}
 
-          {/* Stage 3: Backslash \ with organic curve */}
-          {stage >= 3 && (
-            <path
-              d="M 12 4 C 36 32 64 65 88 96"
-              stroke="#1d4ed8"
-              strokeWidth="18"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              filter="url(#ink-bleed)"
-              className="drop-shadow-[0_0_2px_rgba(37,99,235,0.4)]"
-            />
-          )}
+            {/* Stage 2: Right vertical line with organic stroke wobble */}
+            {stage >= 2 && (
+              <path
+                d="M 86 5 Q 94 50 88 95"
+                stroke="#dc2626"
+                strokeWidth="18"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                filter="url(#ink-bleed)"
+                className="drop-shadow-[0_0_2px_rgba(220,38,38,0.45)]"
+              />
+            )}
 
-          {/* Stage 4: Forward slash / forming '|X|' */}
-          {stage >= 4 && (
-            <path
-              d="M 10 96 C 34 66 66 34 90 4"
-              stroke="#1d4ed8"
-              strokeWidth="18"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              filter="url(#ink-bleed)"
-              className="drop-shadow-[0_0_2px_rgba(37,99,235,0.4)]"
-            />
-          )}
+            {/* Stage 3: Backslash \ with organic curve */}
+            {stage >= 3 && (
+              <path
+                d="M 12 4 C 36 32 64 65 88 96"
+                stroke="#dc2626"
+                strokeWidth="18"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                filter="url(#ink-bleed)"
+                className="drop-shadow-[0_0_2px_rgba(220,38,38,0.45)]"
+              />
+            )}
+
+            {/* Stage 4: Forward slash / forming '|X|' */}
+            {stage >= 4 && (
+              <path
+                d="M 10 96 C 34 66 66 34 90 4"
+                stroke="#dc2626"
+                strokeWidth="18"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                filter="url(#ink-bleed)"
+                className="drop-shadow-[0_0_2px_rgba(220,38,38,0.45)]"
+              />
+            )}
+          </g>
         </svg>
       )}
 
-      {/* Modified value written in blue ink to the right of the scar box */}
+      {/* Modified value written in scarlet red gel ink to the right of the scar box */}
       {stage >= 3 && funcValLabel && (
         <span
           className="absolute left-full ml-1 sm:ml-1.5 top-[-6px] sm:top-[-8px] lg:top-[-9px] text-[0.95rem] sm:text-base lg:text-lg xl:text-xl font-black leading-none whitespace-nowrap"
           style={{
             fontFamily: '"Caveat", "Architects Daughter", "Comic Sans MS", cursive, sans-serif',
-            color: '#1e3a8a',
-            WebkitTextStroke: '0.6px #1d4ed8',
-            textShadow: '0 0 1px #1d4ed8, 0 0 2px rgba(29,78,216,0.8)',
+            color: '#be123c',
+            WebkitTextStroke: '0.6px #dc2626',
+            textShadow: '0 0 1px #dc2626, 0 0 2px rgba(220,38,38,0.8)',
             fontWeight: 900,
-            transform: 'rotate(-4deg)',
+            transform: `rotate(${modValTransform.rotateDeg}deg) scale(${modValTransform.scale}) translate(${modValTransform.translateX}px, ${modValTransform.translateY}px)`,
             filter: 'url(#ink-bleed)',
           }}
           title={`Modified Effective Value: ${funcValLabel}`}
@@ -202,11 +226,9 @@ function SlashedRank({ label, stage, funcValLabel }: { label: string; stage: num
 
 function SuitPip({
   suit,
-  blessed,
   leftTooltip,
 }: {
   suit: string;
-  blessed: boolean;
   leftTooltip: string;
 }) {
   return (
@@ -216,26 +238,6 @@ function SuitPip({
     >
       <span className="text-[0.65rem] sm:text-xs font-normal leading-none relative flex items-center justify-center">
         <span>{suit}</span>
-
-        {/* Blessed Hero Mark: Hand-Drawn Organic Blue Circle Ring */}
-        {blessed && (
-          <svg
-            aria-hidden="true"
-            className="absolute -inset-[40%] w-[180%] h-[180%] pointer-events-none overflow-visible z-10"
-            viewBox="0 0 100 100"
-          >
-            <path
-              d="M 50 6 C 20 4, 3 30, 4 64 C 5 92, 34 98, 68 96 C 96 92, 98 62, 95 34 C 92 8, 60 5, 42 7"
-              stroke="#1d4ed8"
-              strokeWidth="16"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              filter="url(#ink-bleed)"
-              className="drop-shadow-[0_0_3px_rgba(37,99,235,0.6)]"
-            />
-          </svg>
-        )}
       </span>
     </div>
   );
@@ -243,10 +245,16 @@ function SuitPip({
 
 function AnchorBadge({
   rewardStage,
+  suit = '♥',
+  rank = 1,
   className = '',
+  seed,
 }: {
   rewardStage: number;
+  suit?: string;
+  rank?: number;
   className?: string;
+  seed?: string | number;
 }) {
   if (rewardStage <= 0) return null;
 
@@ -254,6 +262,8 @@ function AnchorBadge({
   const badgeTitle = isFortifying
     ? 'Fortifying Anchor [—]: 1st stroke towards permanent Anchor immunity'
     : 'Anchored Card [+]: Permanently immune to failure track degradation';
+
+  const anchorTransform = getHandDrawnTransform(suit, rank, 'anchor', seed);
 
   return (
     <div
@@ -269,15 +279,20 @@ function AnchorBadge({
             className="w-3.5 h-3.5 sm:w-4 sm:h-4 pointer-events-none overflow-visible"
             viewBox="0 0 100 100"
           >
-            <path
-              d="M 8 51 Q 50 47 92 53"
-              stroke="#1d4ed8"
-              strokeWidth="18"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              filter="url(#ink-bleed)"
-              className="drop-shadow-[0_0_2px_rgba(37,99,235,0.4)]"
-            />
+            <g
+              transform={`translate(${anchorTransform.translateX}, ${anchorTransform.translateY}) rotate(${anchorTransform.rotateDeg} 50 50) scale(${anchorTransform.scale})`}
+              style={{ transformOrigin: '50px 50px' }}
+            >
+              <path
+                d="M 8 51 Q 50 47 92 53"
+                stroke="#1d4ed8"
+                strokeWidth="18"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                filter="url(#ink-bleed)"
+                className="drop-shadow-[0_0_2px_rgba(37,99,235,0.4)]"
+              />
+            </g>
           </svg>
         )}
 
@@ -288,24 +303,29 @@ function AnchorBadge({
             className="w-3.5 h-3.5 sm:w-4 sm:h-4 pointer-events-none overflow-visible"
             viewBox="0 0 100 100"
           >
-            <path
-              d="M 8 51 Q 50 47 92 53"
-              stroke="#1d4ed8"
-              strokeWidth="18"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              filter="url(#ink-bleed)"
-              className="drop-shadow-[0_0_2px_rgba(37,99,235,0.4)]"
-            />
-            <path
-              d="M 49 8 Q 52 50 47 92"
-              stroke="#1d4ed8"
-              strokeWidth="18"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              filter="url(#ink-bleed)"
-              className="drop-shadow-[0_0_2px_rgba(37,99,235,0.4)]"
-            />
+            <g
+              transform={`translate(${anchorTransform.translateX}, ${anchorTransform.translateY}) rotate(${anchorTransform.rotateDeg} 50 50) scale(${anchorTransform.scale})`}
+              style={{ transformOrigin: '50px 50px' }}
+            >
+              <path
+                d="M 8 51 Q 50 47 92 53"
+                stroke="#1d4ed8"
+                strokeWidth="18"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                filter="url(#ink-bleed)"
+                className="drop-shadow-[0_0_2px_rgba(37,99,235,0.4)]"
+              />
+              <path
+                d="M 49 8 Q 52 50 47 92"
+                stroke="#1d4ed8"
+                strokeWidth="18"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                filter="url(#ink-bleed)"
+                className="drop-shadow-[0_0_2px_rgba(37,99,235,0.4)]"
+              />
+            </g>
           </svg>
         )}
       </span>
@@ -317,22 +337,22 @@ interface CornerIndexProps {
   rank: number;
   suit: string;
   attritionStage: number;
-  blessed: boolean;
   functionalValue?: number;
   leftTooltip: string;
   rightTooltip: string;
   className?: string;
+  seed?: string | number;
 }
 
 function CornerIndex({
   rank,
   suit,
   attritionStage,
-  blessed,
   functionalValue,
   leftTooltip,
   rightTooltip,
   className = '',
+  seed,
 }: CornerIndexProps) {
   const label = rankLabel(rank);
   const red = isRedSuit(suit);
@@ -345,11 +365,11 @@ function CornerIndex({
     <div className={`flex flex-col items-start leading-none text-[0.65rem] sm:text-xs lg:text-sm font-black z-10 select-none ${className}`}>
       {/* Rank row with Scars & Curses overlay */}
       <div className="flex items-center leading-none relative" title={rightTooltip || undefined}>
-        <SlashedRank label={label} stage={attritionStage} funcValLabel={funcValLabel} />
+        <SlashedRank label={label} stage={attritionStage} funcValLabel={funcValLabel} suit={suit} rank={rank} seed={seed} />
       </div>
 
-      {/* Suit row with Blessings overlay */}
-      <SuitPip suit={suit} blessed={blessed} leftTooltip={leftTooltip} />
+      {/* Suit row */}
+      <SuitPip suit={suit} leftTooltip={leftTooltip} />
     </div>
   );
 }
@@ -371,6 +391,7 @@ export function PlayingCard({
   animatingCollapse = false,
   style,
   onClick,
+  seed,
 }: PlayingCardProps): React.ReactElement {
   const red = isRedSuit(suit);
   const funcValLabel = functionalValue !== undefined && functionalValue !== rank ? rankLabel(functionalValue) : null;
@@ -452,12 +473,12 @@ export function PlayingCard({
           rank={rank}
           suit={suit}
           attritionStage={attritionStage}
-          blessed={blessed}
           functionalValue={functionalValue}
           leftTooltip={leftTooltip}
           rightTooltip={rightTooltip}
+          seed={seed}
         />
-        <AnchorBadge rewardStage={rewardStage} />
+        <AnchorBadge rewardStage={rewardStage} suit={suit} rank={rank} seed={seed} />
       </div>
 
       {/* Centre row: Suit pip always shown; illustration overlaid on top when applicable */}
@@ -465,7 +486,7 @@ export function PlayingCard({
         <SuitIcon suit={suit} className="w-3.5 h-3.5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 xl:w-8 xl:h-8 opacity-90" />
         {(blessed || attritionStage === 4) && (
           <div className="absolute inset-0 flex items-center justify-center">
-            <CardFaceIllustration suit={suit} blessed={blessed} attritionStage={attritionStage} />
+            <CardFaceIllustration suit={suit} rank={rank} blessed={blessed} attritionStage={attritionStage} seed={seed} />
           </div>
         )}
       </div>

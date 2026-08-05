@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
-import { PairStat, Suit, Rank, CursedCard, GameMode, getFunctionalValue } from '../game';
+import { PairStat, Suit, Rank, CursedCard, GameMode, getFunctionalValue, CampaignAchievements } from '../game';
+import { StoredCampaignStats } from '../storage/persistence';
 
 interface MatchedCardsModalProps {
   isOpen: boolean;
@@ -8,6 +9,8 @@ interface MatchedCardsModalProps {
   pairStats: PairStat[];
   masterDeck?: CursedCard[];
   mode?: GameMode;
+  campaignStats?: StoredCampaignStats;
+  achievements?: CampaignAchievements;
 }
 
 const suits: Array<{ suit: Suit; label: string; symbol: string }> = [
@@ -36,6 +39,8 @@ export function MatchedCardsModal({
   pairStats,
   masterDeck,
   mode = 'standard',
+  campaignStats,
+  achievements,
 }: MatchedCardsModalProps) {
   const closeBtnRef = useRef<HTMLButtonElement>(null);
 
@@ -81,14 +86,14 @@ export function MatchedCardsModal({
         {/* Modal Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#2d2319] bg-[#120e0a]">
           <div className="flex items-center gap-3">
-            <span className="text-2xl text-game-accent">📜</span>
+            <span className="text-2xl text-game-accent">📊</span>
             <div>
               <h2 id="modal-title" className="text-lg font-semibold text-game-text font-display tracking-wider uppercase m-0">
-                Deck Codex
+                Expedition Deck & Stats
               </h2>
               <p className="text-xs text-game-muted m-0 mt-0.5">
                 {mode === 'cursed-tomb'
-                  ? 'Master campaign deck state, active mutations & remaining pair odds'
+                  ? 'Expedition run progress, achievements, master deck state & strategic pair odds'
                   : 'Deck matrix overview & remaining strategic pair odds'}
               </p>
             </div>
@@ -107,9 +112,10 @@ export function MatchedCardsModal({
             )}
             <button
               type="button"
+              ref={closeBtnRef}
               onClick={onClose}
               className="text-game-muted hover:text-game-text bg-transparent border-none text-xl font-bold cursor-pointer p-1 transition-colors"
-              aria-label="Close modal"
+              aria-label="Close Expedition Deck & Stats modal"
             >
               ✕
             </button>
@@ -118,6 +124,65 @@ export function MatchedCardsModal({
 
         {/* Modal Body */}
         <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6">
+          {/* Expedition Run Metrics & Achievements Section */}
+          {mode === 'cursed-tomb' && (campaignStats || achievements) && (
+            <div className="bg-[#120e0a] border border-[#2d2319] rounded-lg p-4 shadow-[inset_0_0_8px_rgba(0,0,0,0.5)]">
+              <h3 className="text-xs font-semibold text-game-muted font-display tracking-wider uppercase mt-0 mb-3 flex items-center justify-between">
+                <span>🏛️ Expedition Metrics & Accomplishments</span>
+                <span className="text-amber-400 text-[11px] font-mono">🟢 Active Campaign</span>
+              </h3>
+
+              {/* Metric Stat Cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-4">
+                <div className="bg-[#18130e] border border-[#251e16] rounded-md p-2.5 flex flex-col items-center justify-center text-center">
+                  <span className="text-[11px] text-game-muted font-medium mb-1">🔍 Explored</span>
+                  <span className="font-mono font-bold text-amber-400 text-base">{campaignStats?.pyramidsExplored ?? 0}</span>
+                </div>
+                <div className="bg-[#18130e] border border-[#251e16] rounded-md p-2.5 flex flex-col items-center justify-center text-center">
+                  <span className="text-[11px] text-game-muted font-medium mb-1">👑 Conquered</span>
+                  <span className="font-mono font-bold text-emerald-400 text-base">{campaignStats?.pyramidsConquered ?? achievements?.pyramidsCleared ?? 0}</span>
+                </div>
+                <div className="bg-[#18130e] border border-[#251e16] rounded-md p-2.5 flex flex-col items-center justify-center text-center">
+                  <span className="text-[11px] text-game-muted font-medium mb-1">🏺 Collapsed</span>
+                  <span className="font-mono font-bold text-red-400 text-base">{campaignStats?.pyramidsCollapsed ?? 0}</span>
+                </div>
+                <div className="bg-[#18130e] border border-[#251e16] rounded-md p-2.5 flex flex-col items-center justify-center text-center">
+                  <span className="text-[11px] text-game-muted font-medium mb-1">🂡 Total Attempts</span>
+                  <span className="font-mono font-bold text-game-accent text-base">{campaignStats?.totalAttempts ?? 0}</span>
+                </div>
+                <div className="bg-[#18130e] border border-[#251e16] rounded-md p-2.5 flex flex-col items-center justify-center text-center col-span-2 sm:col-span-1">
+                  <span className="text-[11px] text-game-muted font-medium mb-1">🟢 Deck Health</span>
+                  <span className="font-mono font-bold text-emerald-300 text-base">
+                    {masterDeck ? `${Math.max(0, 52 - entombedCount)}/52 (${Math.round(((52 - entombedCount) / 52) * 100)}%)` : '100%'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Achievements & Badges */}
+              <div className="border-t border-[#251e16] pt-3 flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <span className="font-semibold text-game-accent font-display uppercase tracking-wide flex items-center gap-1.5">
+                    <span>🏆</span> Badges & Accomplishments:
+                  </span>
+                  <span className="px-2.5 py-1 bg-[#18130e] border border-amber-900/40 rounded text-amber-300 font-mono text-[11px]">
+                    🌟 Perfect Wins: <strong className="text-amber-200">{achievements?.perfectWins ?? 0}</strong>
+                  </span>
+                  <span className="px-2.5 py-1 bg-[#18130e] border border-blue-900/40 rounded text-blue-300 font-mono text-[11px]">
+                    ⚓ Rank-Anchor: <strong className={achievements?.rankAnchorUnlocked ? 'text-emerald-400' : 'text-game-muted'}>
+                      {achievements?.rankAnchorUnlocked ? 'Unlocked ✓' : 'Locked'}
+                    </strong>
+                  </span>
+                  {achievements?.unlockedBadges && achievements.unlockedBadges.length > 0 && (
+                    achievements.unlockedBadges.map((badge) => (
+                      <span key={badge} className="px-2 py-0.5 bg-emerald-950/60 border border-emerald-700/50 rounded-full text-emerald-300 text-[11px] font-medium flex items-center gap-1">
+                        <span>🏅</span> {badge}
+                      </span>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
           {/* Section 1: 4x13 Card Grid */}
           <div className="bg-[#120e0a] border border-[#2d2319] rounded-lg p-4 shadow-[inset_0_0_8px_rgba(0,0,0,0.5)]">
             <h3 className="text-xs font-semibold text-game-muted font-display tracking-wider uppercase mt-0 mb-3 flex items-center justify-between flex-wrap gap-2">
@@ -361,7 +426,7 @@ export function MatchedCardsModal({
             onClick={onClose}
             className="appearance-none bg-transparent border border-game-border rounded-lg text-game-text text-sm cursor-pointer font-[inherit] px-5 py-1.5 hover:border-game-accent focus:ring-2 focus:ring-amber-500 focus:outline-none transition-colors"
           >
-            Close Deck Codex
+            Close Expedition Deck & Stats
           </button>
         </div>
       </div>

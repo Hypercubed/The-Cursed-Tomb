@@ -137,6 +137,7 @@ describe('Storage Persistence', () => {
       expect(defaultCampaign).toEqual({
         version: 1,
         pyramidsExplored: 0,
+        pyramidsConquered: 0,
         pyramidsCollapsed: 0,
         isVictory: false,
         totalAttempts: 0,
@@ -145,6 +146,7 @@ describe('Storage Persistence', () => {
       manager.recordOutcome('partial-victory');
       let campaign = manager.getCampaignStats();
       expect(campaign.pyramidsExplored).toBe(1);
+      expect(campaign.pyramidsConquered).toBe(0);
       expect(campaign.totalAttempts).toBe(1);
 
       manager.recordOutcome('pyramid-collapse');
@@ -154,7 +156,9 @@ describe('Storage Persistence', () => {
 
       manager.recordOutcome('complete-victory');
       campaign = manager.getCampaignStats();
-      expect(campaign.isVictory).toBe(true);
+      expect(campaign.pyramidsExplored).toBe(2);
+      expect(campaign.pyramidsConquered).toBe(1);
+      expect(campaign.isVictory).toBe(false);
       expect(campaign.totalAttempts).toBe(3);
 
       const resetCampaign = manager.resetCampaignStats();

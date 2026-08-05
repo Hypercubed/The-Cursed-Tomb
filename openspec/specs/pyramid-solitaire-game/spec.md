@@ -46,6 +46,10 @@ The game SHALL detect a pyramid collapse state for games configured with infinit
 - **WHEN** the draw pile still has cards remaining
 - **THEN** the game status SHALL NOT be set to `pyramid-collapse` regardless of current visible-card move availability
 
+#### Scenario: Novice difficulty game uses finite redraw limit of 5
+- **WHEN** a new game is started with the Novice difficulty setting
+- **THEN** `redrawsRemaining` SHALL be initialized to `5` (not `null`)
+
 ### Requirement: Exposed Stock card pairing before discarding
 The top card of the draw pile (`drawPile[0]`) SHALL be exposed and eligible for selection and pairing with any exposed pyramid card, the top card of the discard pile (`discardPile[0]`), or cleared singly if its functional value is 13, prior to being moved into the discard pile.
 

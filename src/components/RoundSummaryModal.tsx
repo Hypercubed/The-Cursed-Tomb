@@ -211,8 +211,8 @@ export function RoundSummaryModal({
                       <span>
                         <strong>Higher Card ({effects.clearDetails.heroCard?.suit}{effects.clearDetails.heroCard?.rank}):</strong>{' '}
                         {effects.clearDetails.heroAlreadyBlessed
-                          ? 'Already a Blessed Fallen Hero [O] from a previous round.'
-                          : 'Granted Fallen Hero Blessing [O]! Unlocked suit blessing for subsequent rounds.'}
+                          ? 'Already a Blessed Fallen Hero from a previous round.'
+                          : 'Granted Fallen Hero Blessing! Unlocked suit blessing for subsequent rounds.'}
                       </span>
                     </div>
 
@@ -243,7 +243,7 @@ export function RoundSummaryModal({
               {effects.blessed.length > 0 && (
                 <div className="bg-emerald-950/30 border border-emerald-700/60 rounded-lg p-4 flex flex-col gap-3">
                   <h3 className="text-xs font-semibold text-emerald-300 font-display uppercase tracking-wider m-0 flex items-center gap-2">
-                    <span>👑</span> New Blessed Hero Cards ([O])
+                    <span>👑</span> New Blessed Hero Cards
                   </h3>
                   <div className="flex flex-col gap-2.5">
                     {effects.blessed.map((card) => (

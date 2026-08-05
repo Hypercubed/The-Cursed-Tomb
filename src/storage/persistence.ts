@@ -29,6 +29,7 @@ export interface StoredStats {
 
 export interface CampaignStats {
   pyramidsExplored: number;
+  pyramidsConquered?: number;
   pyramidsCollapsed: number;
   isVictory: boolean;
   totalAttempts: number;
@@ -61,6 +62,7 @@ export const DEFAULT_STATS: StoredStats = {
 export const DEFAULT_CAMPAIGN_STATS: StoredCampaignStats = {
   version: 1,
   pyramidsExplored: 0,
+  pyramidsConquered: 0,
   pyramidsCollapsed: 0,
   isVictory: false,
   totalAttempts: 0,
@@ -291,7 +293,8 @@ export class PersistenceManager {
       };
       updatedCampaign = {
         ...currentCampaign,
-        isVictory: true,
+        pyramidsExplored: currentCampaign.pyramidsExplored + 1,
+        pyramidsConquered: (currentCampaign.pyramidsConquered ?? 0) + 1,
         totalAttempts: currentCampaign.totalAttempts + 1,
       };
     } else if (status === 'partial-victory') {

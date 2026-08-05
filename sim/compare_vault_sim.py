@@ -210,8 +210,8 @@ def run_experiment(num_campaigns=1000, seed=42, n_workers=None):
     difficulties = [
         ('Survivalist', 0),
         ('Archaeologist', 1),
-        ('Explorer', 2),
-        ('Novice (Infinite)', 999)
+        ('Explorer', 3),
+        ('Novice', 5)
     ]
 
     print(f"=== Running Vault Rule Comparison ({num_campaigns} campaigns per setting, seed={seed}, workers={n_workers}) ===\n")

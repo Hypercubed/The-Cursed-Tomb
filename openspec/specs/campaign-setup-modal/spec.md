@@ -24,7 +24,7 @@ The Campaign Setup Modal SHALL allow the user to select one of four global campa
 
 #### Scenario: Starting campaign initializes game with selected difficulty
 - **WHEN** the player clicks "Start Campaign" in the setup modal
-- **THEN** the modal SHALL close AND a new game SHALL be started with the selected difficulty's redeal limit (Novice: unlimited, Explorer: 2, Archaeologist: 1, Survivalist: 0)
+- **THEN** the modal SHALL close AND a new game SHALL be started with the selected difficulty's redeal limit (Novice: 5, Explorer: 3, Archaeologist: 1, Survivalist: 0)
 
 ### Requirement: Rules overview displayed in setup modal
 The Campaign Setup Modal SHALL present a clear overview of the core game rules, objectives, and pairing mechanics, and provide a direct trigger to open the full Expedition Rules & Compendium modal.

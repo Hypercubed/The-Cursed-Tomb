@@ -636,8 +636,8 @@ def run_campaign(rng, max_redeals, flags, max_rounds, deadlock_limit=None, solve
 
 
 DIFFICULTIES = {
-    "novice": 9999,          # unlimited redeals
-    "explorer": 2,           # 3 total passes
+    "novice": 5,             # 6 total passes
+    "explorer": 3,           # 4 total passes
     "archaeologist": 1,      # 2 total passes
     "survivalist": 0,        # 1 single pass
 }

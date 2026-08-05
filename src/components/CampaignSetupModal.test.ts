@@ -14,8 +14,8 @@ describe('CampaignSetupModal difficulty options', () => {
     const archaeologist = DIFFICULTY_OPTIONS.find((opt) => opt.id === 'archaeologist');
     const survivalist = DIFFICULTY_OPTIONS.find((opt) => opt.id === 'survivalist');
 
-    expect(novice?.value).toBeNull();
-    expect(explorer?.value).toBe(2);
+    expect(novice?.value).toBe(5);
+    expect(explorer?.value).toBe(3);
     expect(archaeologist?.value).toBe(1);
     expect(survivalist?.value).toBe(0);
   });

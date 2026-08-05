@@ -1,6 +1,6 @@
 # The Cursed Tomb (Official Ruleset v0.0.10)
 
-A persistent, mutating tactical card game played with a standard 52-card deck and a permanent fine-tip marker. 
+A persistent, mutating tactical card game played with a standard 52-card deck and fine-tip felt markers (red and blue). 
 
 ---
 
@@ -32,14 +32,22 @@ The campaign ends in instant defeat if the tomb collapses. The tomb collapses th
 ## ── 3. PREPARATION & DIFFICULTY ──
 Before beginning the campaign, select your global difficulty setting. This dictates how many times you are allowed to cycle through the Waste Pile per game:
 
-*   **Novice (Tutorial / Sandbox Mode):** Unlimited Redeals allowed. This mode provides a relaxed environment to learn the mutation behaviors, turning the game into a pure puzzle-solver rather than a high-stakes legacy run.
-*   **Explorer (Easy):** 2 Redeals allowed (3 total passes through the Stock deck).
+*   **Novice (Tutorial / Sandbox Mode):** 5 Redeals allowed (6 total passes through the Stock deck). This mode provides a relaxed environment to learn the mutation behaviors.
+*   **Explorer (Easy):** 3 Redeals allowed (4 total passes through the Stock deck).
 *   **Archaeologist (Normal):** 1 Redeal allowed (2 total passes through the Stock deck).
 *   **Survivalist (Hard):** 0 Redeals allowed (1 single pass through the Stock deck).
 
+### Marker & Pen Selection
+To preserve deck secrecy, ink marks must be drawn using **fine-tip felt markers** (e.g., Ultra-Fine Sharpie, Staedtler pigment liners, or fine felt-tip permanent markers) rather than ballpoint pens. Ballpoint pens press into stiff cardstock and leave indented impression marks readable on the card backs, inadvertently marking cards. Felt-tip markers flow smoothly across glossy card coatings with zero pressure, keeping card backs pristine and uniform.
+
+### Ink Colors & Visual Polarity
+Ink colors differentiate positive card modifications from negative card degradation at a glance:
+*   **🔴 Red Ink (Negative Modifications):** Use red ink for all Attrition marks (Stage 1 & 2 slashes), Scars (Stage 3 rank slash & functional shift numbers), Curses (Stage 4 `X` and trap icons), and Entombed defacement (`X`).
+*   **🔵 Blue Ink (Positive Modifications):** Use blue ink for all defensive Immunity marks (Stage 1 Fortifying `—` and Stage 2 Anchored `+`), Fallen Hero suit circles `(♥)`, and center-face Blessing illustrations.
+
 ### Spatial Layout & Ink Zones
 Ink modifications must be strictly confined to distinct visual zones:
-*   **Upper-Left Corner Index:** Reserved exclusively for Rank modification marks, Scars, and Curses (`|`, `||`, `N`, `|X|`) drawn over the rank number pip, and Fallen Hero Suit Blessings (`[ (♦) ]`) drawn as a circle directly enclosing the printed suit pip.
+*   **Upper-Left Corner Index:** Reserved exclusively for Rank modification marks, Scars, and Curses (`|`, `||`, `N`, `|X|`) drawn over the rank number pip. Corner suit pips remain clean; Fallen Hero Suit Blessings are drawn directly on the center card face as suit-specific illustrations (`∩`, `□`, Shovel, `⊕`).
 *   **Upper-Right Corner Margin (and Bottom-Left in 180° rotation):** Reserved exclusively for defensive Immunity Anchor marks (`—` for Fortifying, `+` for Anchored).
 
 ---
@@ -79,17 +87,17 @@ When a game freezes and no legal moves remain, you lose the round. Identify all 
 ## ── 6. THE SURVIVAL REWARDS (SUIT PIP MARKS) ──
 If you completely clear all 28 cards from the pyramid layout but have leftover cards remaining in the Stock or Waste piles, you achieve a **Pyramid Clear**. Unlocked suit blessings carry over permanently and trigger across all subsequent rounds of the campaign.
 
-**Card-Specific Legacy Unlocks:** A suit blessing `[ (♦) ]` applies strictly to the individual physical card it is drawn upon. While multiple separate cards in your deck can acquire the same suit blessing over the course of the campaign (creating multiple distinct Hero cards), each instance triggers independently when that specific card is cleared.
+**Card-Specific Legacy Unlocks:** A suit blessing applies strictly to the individual physical card it is drawn upon. While multiple separate cards in your deck can acquire the same suit blessing over the course of the campaign (creating multiple distinct Hero cards), each instance triggers independently when that specific card is cleared.
 
 Isolate the **final visual transaction** used to remove the last card(s) from the board:
 
 ### A. The Final Pair Clear
 Compare the final two cards' active Functional Values:
-*   **The Higher-Value Card becomes the Fallen Hero:** Draw a circle completely enclosing its printed suit symbol `[ (♦) ]` in both corner indices to permanently unlock its blessing for all future games. *(If already circled or if the card is Stage 4 Cursed, skip this effect).* In addition to the circled suit pip, you may draw a recommended center-face illustration for quick visual identification:
-    *   ♥ **Hearts (Stock Reshuffle):** Recommended icon: Tomb Archway with Upward Arrow (`∩` + `↑`) representing resurrection from the graveyard. When cleared, immediately shuffle all cards currently in the face-up Waste pile back into the face-down Stock draw pile without consuming a redeal.
-    *   ♦ **Diamonds (The Vault):** Recommended icon: Vault Safe Box (`□` with center keyhole circle `o`). When exposed on the Waste pile OR on the Pyramid layout, you may instantly place this card face-up into a separate area on the side of the table (the Diamond Vault slot). **This action is completely free and does not interrupt your turn.**
-    *   ♠ **Spades (The Tunnel):** Recommended icon: Tunnel Capsule (`[ ⊃ ]`). When cleared, select any one exposed card in the pyramid layout and move it directly onto the top of the face-up Waste pile.
-    *   ♣ **Clubs (Universal Wildcard):** Recommended icon: Infinity Symbol (`∞`). When pairing, this card can legally pair with **ANY exposed card** regardless of that partner card's functional value (treating the combined sum as 13).
+*   **The Higher-Value Card becomes the Fallen Hero:** Draw its suit-specific blessing illustration directly on the center face of the card to permanently unlock its blessing for all future games. *(If already blessed or if the card is Stage 4 Cursed, skip this effect).* The center-face illustration provides instant visual identification:
+    *   ♥ **Hearts (Stock Reshuffle):** Center face icon: Tomb Archway (`∩`) representing resurrection from the tomb. When cleared, immediately shuffle all cards currently in the face-up Waste pile back into the face-down Stock draw pile without consuming a redeal.
+    *   ♦ **Diamonds (The Vault):** Center face icon: Vault Box (`□`). When exposed on the Waste pile OR on the Pyramid layout, you may instantly place this card face-up into a separate area on the side of the table (the Diamond Vault slot). **This action is completely free and does not interrupt your turn.**
+    *   ♠ **Spades (The Tunnel):** Center face icon: Tunnel Shovel (blade pointing down at bottom, handle extending up). When cleared, select any one exposed card in the pyramid layout and move it directly onto the top of the face-up Waste pile.
+    *   ♣ **Clubs (Universal Wildcard):** Center face icon: Circled Sun Cross (`⊕`). When pairing, this card can legally pair with **ANY exposed card** regardless of that partner card's functional value (treating the combined sum as 13).
 *   **The Lower-Value Card builds the Anchor:** Progress its defensive immunity track by one stroke in the upper-right corner margin (and bottom-left corner rotated 180°):
     *   *First Stroke `[ — ]` (Fortifying):* Draw a single bold dark horizontal line in the upper-right corner margin. No mechanical effect yet.
     *   *Second Stroke `[ + ]` (Anchored):* Cross it vertically with a bold dark stroke (`+`) in the upper-right corner margin. The card is now permanently immune to rank loss marks.
@@ -104,15 +112,15 @@ Mutated physical cards retain clear visual separation between corner index marks
 
 ```
 +───────────────────────────+
-| |7̸| 8  (♥)           [+]  |   <- Upper-Left: Slashed Rank, Functional Val, Encircled Suit
+| |7̸| 8                [+]  |   <- Upper-Left: Slashed Rank, Functional Val
 |  ♥                        |   <- Upper-Right: Anchor Badge [+]
 |                           |
 |           ╭───╮           |   <- Center Face: Blessing or Curse illustration
 |           │ ∩ │           |      drawn on the card face
-|           │ ↑ │           |      (Archway, Vault Box, Capsule, Infinity, ▼, ⏍)
+|           │   │           |      (Archway, Vault Box, Shovel, Sun Cross, ▼, ⏍)
 |           ╰───╯           |
 |                        ♥  |
-|  [+]          |7̸| 8  (♥)  |   <- 180° Symmetrical Bottom Index
+|  [+]             |7̸| 8    |   <- 180° Symmetrical Bottom Index
 +───────────────────────────+
 ```
 

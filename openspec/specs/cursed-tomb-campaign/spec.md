@@ -35,7 +35,7 @@ The game SHALL calculate card pairing values dynamically, applying a +1 value sh
 - **THEN** its Functional Value SHALL wrap to 1 AND it SHALL be pairable with a Queen (functional value 12)
 
 ### Requirement: Attrition Phase on game freeze
-When a round freezes (pyramid collapse), the campaign SHALL identify Bottlenecks (exposed cards at lowest remaining base tiers of the frozen pyramid) and increment their Attrition Stage by exactly one stroke unless they possess a completed Anchor (`[+]`) or active temporary immunity. End-of-round attrition SHALL be applied strictly once per failed round.
+When a round freezes (pyramid collapse), the campaign SHALL identify Bottlenecks (exposed cards at lowest remaining base tiers of the frozen pyramid) and increment their Attrition Stage by exactly one stroke unless they possess a completed Anchor (`[+]`) or active temporary immunity. End-of-round attrition SHALL be applied strictly once per failed round. If a Blessed card advances to Attrition Stage 4, its rank SHALL receive the Stage 4 rank marking (slash over rank), but the Curse trap mechanics (Red face-down deal or Black pyramid-only pairing lock) and Curse drawing SHALL be skipped.
 
 #### Scenario: Bottleneck card gains an attrition mark
 - **WHEN** a round freezes AND an exposed pyramid card is not Anchored
@@ -50,8 +50,15 @@ When a round freezes (pyramid collapse), the campaign SHALL identify Bottlenecks
 - **WHEN** a round freezes AND a bottleneck card has a completed Anchor (`[+]`)
 - **THEN** its Attrition Stage SHALL NOT be modified
 
+#### Scenario: Blessed card taking Stage 4 Attrition skips Curse trap
+- **WHEN** a card with a Blessing (`blessed === true`) at Stage 3 Scarred receives an attrition mark
+- **THEN** its Attrition Stage SHALL increase to Stage 4 AND receive the Stage 4 rank marking (slash over rank)
+- **THEN** the system SHALL skip the Curse trap effect (Red face-down deal or Black pyramid-only restriction)
+- **THEN** the system SHALL skip the Curse icon drawing, retaining the Blessing power and Blessing icon on the card face
+- **AND** a subsequent attrition mark SHALL advance the card to Stage 5 (Entombed)
+
 ### Requirement: Survival Reward Phase and Anchor Accumulation
-When a round achieves a Pyramid Clear, the campaign SHALL evaluate the final visual transaction (Pair Clear or Solo King Clear) to assign rewards. Cards SHALL accumulate Anchor progress up until they are Entombed (Attrition Stage 5).
+When a round achieves a Pyramid Clear, the campaign SHALL evaluate the final visual transaction (Pair Clear or Solo King Clear) to assign rewards. Cards SHALL accumulate Anchor progress up until they are Entombed (Attrition Stage 5). If the higher-value Hero card is Stage 4 Cursed, the Blessing award SHALL be skipped.
 
 #### Scenario: Final pair clear grants Hero and Anchor
 - **WHEN** a pair clears the final pyramid cards
@@ -60,6 +67,11 @@ When a round achieves a Pyramid Clear, the campaign SHALL evaluate the final vis
 #### Scenario: Solo King clear grants Anchor stroke
 - **WHEN** a standalone King clears the final pyramid card
 - **THEN** it SHALL increment its Reward Stage (`[—]` or `[+]`) provided its Attrition Stage is less than 5 AND no Fallen Hero blessing SHALL be awarded
+
+#### Scenario: Cursed card cleared as Fallen Hero skips Blessing award
+- **WHEN** a round ends in victory AND the higher-value Hero card of the final cleared pair is Cursed (Stage 4 with active Curse effect)
+- **THEN** the system SHALL skip the Blessing award (`blessed` remains `false`)
+- **THEN** the card SHALL remain Cursed with its active Curse trap effect and Curse icon
 
 ### Requirement: Trap mechanics enforcement (Red and Black Curses)
 The game SHALL enforce structural traps for Stage 4 Cursed cards.

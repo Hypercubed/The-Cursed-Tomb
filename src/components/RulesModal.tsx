@@ -286,10 +286,10 @@ export function RulesModal({ isOpen, onClose, initialTab = 'core-rules' }: Rules
                 </h3>
                 <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                   <div className="bg-[#18130e] p-2.5 rounded border border-[#251e16]">
-                    <strong className="text-emerald-400">Novice (Sandbox):</strong> Unlimited Redeals. Relaxed learning mode.
+                    <strong className="text-emerald-400">Novice (Sandbox):</strong> 5 Redeals (6 Passes). Relaxed learning mode.
                   </div>
                   <div className="bg-[#18130e] p-2.5 rounded border border-[#251e16]">
-                    <strong className="text-blue-400">Explorer (Easy):</strong> 2 Redeals allowed (3 total passes through Stock).
+                    <strong className="text-blue-400">Explorer (Easy):</strong> 3 Redeals allowed (4 total passes through Stock).
                   </div>
                   <div className="bg-[#18130e] p-2.5 rounded border border-[#251e16]">
                     <strong className="text-amber-400">Archaeologist (Normal):</strong> 1 Redeal allowed (2 total passes through Stock).
@@ -370,19 +370,19 @@ export function RulesModal({ isOpen, onClose, initialTab = 'core-rules' }: Rules
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
                     <div className="bg-[#18130e] p-2.5 rounded border border-[#251e16]">
-                      <strong className="text-red-400 font-display block mb-0.5">♥ Hearts (Stock Reshuffle) — ∩ + ↑ Tomb Archway</strong>
+                      <strong className="text-red-400 font-display block mb-0.5">♥ Hearts (Stock Reshuffle) — ∩ Tomb Archway</strong>
                       Clearing this card immediately shuffles all cards in the Waste pile back into the Stock draw pile without consuming a redeal.
                     </div>
                     <div className="bg-[#18130e] p-2.5 rounded border border-[#251e16]">
-                      <strong className="text-cyan-300 font-display block mb-0.5">♦ Diamonds (The Vault) — □ Vault Safe Box</strong>
+                      <strong className="text-cyan-300 font-display block mb-0.5">♦ Diamonds (The Vault) — □ Vault Box</strong>
                       Exposed Diamond cards can be moved into the Vault slot for free without consuming a turn.
                     </div>
                     <div className="bg-[#18130e] p-2.5 rounded border border-[#251e16]">
-                      <strong className="text-indigo-300 font-display block mb-0.5">♠ Spades (The Tunnel) — ⊃ Tunnel Capsule</strong>
+                      <strong className="text-indigo-300 font-display block mb-0.5">♠ Spades (The Tunnel) — Tunnel Shovel</strong>
                       Clearing this card allows you to select 1 exposed pyramid card and move it directly to the Waste pile.
                     </div>
                     <div className="bg-[#18130e] p-2.5 rounded border border-[#251e16]">
-                      <strong className="text-emerald-300 font-display block mb-0.5">♣ Clubs (Universal Wildcard) — ∞ Infinity Symbol</strong>
+                      <strong className="text-emerald-300 font-display block mb-0.5">♣ Clubs (Universal Wildcard) — ⊕ Sun Cross</strong>
                       Can pair legally with ANY exposed card regardless of value sum.
                     </div>
                   </div>
@@ -515,11 +515,17 @@ export function RulesModal({ isOpen, onClose, initialTab = 'core-rules' }: Rules
               </div>
 
               {/* Zone Descriptions */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                 <div className="bg-[#18130e] p-3 rounded border border-[#251e16] space-y-1.5">
                   <strong className="text-amber-300 block font-display">Top-Left Index Zone</strong>
                   <p className="m-0 text-game-muted leading-relaxed">
-                    Reserved for Attrition Marks, Scars, Curses, and Suit Blessings. Notice how vertical lines frame the rank digit and the Scar backslash stroke <RealRankMark rank="7" stage={3} funcVal="8" color="blue" /> directly overlaps the rank number itself, with the modified functional value written to the right.
+                    Reserved for Attrition Marks, Scars, and Curses over the rank number pip. Notice how vertical lines frame the rank digit and the Scar backslash stroke <RealRankMark rank="7" stage={3} funcVal="8" color="blue" /> directly overlaps the rank number itself, with the modified functional value written to the right.
+                  </p>
+                </div>
+                <div className="bg-[#18130e] p-3 rounded border border-[#251e16] space-y-1.5">
+                  <strong className="text-amber-300 block font-display">Center Card Face Zone</strong>
+                  <p className="m-0 text-game-muted leading-relaxed">
+                    Reserved for hand-drawn center face illustrations: suit blessings (<strong className="text-blue-300 font-mono">∩</strong>, <strong className="text-blue-300 font-mono">□</strong>, shovel, <strong className="text-blue-300 font-mono">⊕</strong>) or stage 4 curses (<strong className="text-red-400 font-mono">▼</strong>, <strong className="text-red-400 font-mono">⏍</strong>).
                   </p>
                 </div>
                 <div className="bg-[#18130e] p-3 rounded border border-[#251e16] space-y-1.5">

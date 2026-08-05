@@ -18,11 +18,12 @@ export const DIFFICULTY_OPTIONS: DifficultyOption[] = [
   {
     id: 'novice',
     label: 'Novice',
-    value: null,
+    value: 5,
     tag: 'Sandbox',
-    redealsText: 'Unlimited Redeals',
-    description: 'Unlimited stock pile passes. Ideal for casual exploration & learning.',
+    redealsText: '5 Redeals (6 Passes)',
+    description: '5 stock redeals per attempt. Ideal for casual exploration & learning.',
     icon: '📜',
+    // Note: winRate / standardWinRate / campaignWinRate need re-simulation for 5 redeals
     winRate: '25.2%',
     standardWinRate: '25.2%',
     campaignWinRate: '10.5%',
@@ -30,11 +31,12 @@ export const DIFFICULTY_OPTIONS: DifficultyOption[] = [
   {
     id: 'explorer',
     label: 'Explorer',
-    value: 2,
+    value: 3,
     tag: 'Easy',
-    redealsText: '2 Redeals (3 Passes)',
-    description: '2 stock redeals per attempt. Balanced entry-level campaign mode.',
+    redealsText: '3 Redeals (4 Passes)',
+    description: '3 stock redeals per attempt. Balanced entry-level campaign mode.',
     icon: '🧭',
+    // Note: winRate / standardWinRate / campaignWinRate need re-simulation for 3 redeals
     winRate: '21.2%',
     standardWinRate: '21.2%',
     campaignWinRate: '7.8%',

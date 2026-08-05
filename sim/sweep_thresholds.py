@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
 Difficulty sweep: test campaign outcomes across all 4 difficulty levels:
-  - novice (unlimited redeals)
-  - explorer (2 redeals / 3 passes)
+  - novice (5 redeals / 6 passes)
+  - explorer (3 redeals / 4 passes)
   - archaeologist (1 redeal / 2 passes)
   - survivalist (0 redeals / 1 pass)
 

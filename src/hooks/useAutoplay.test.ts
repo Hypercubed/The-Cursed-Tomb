@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { GameState, startGame, initializeGame, createDeck } from '../game';
+import { GameState, startGame, initializeGame, createDeck, createCampaign, advanceCampaignRound } from '../game';
 import { findNextMove } from '../solver';
 
 describe('useAutoplay', () => {
@@ -35,7 +35,7 @@ describe('useAutoplay', () => {
     expect(onStartNewGame).toHaveBeenCalledTimes(1);
   });
 
-  it('does not auto-start a new game when status is complete-victory', () => {
+  it('auto-starts a new game when status is complete-victory', () => {
     let game: GameState = {
       deck: [],
       pyramid: [],
@@ -49,9 +49,6 @@ describe('useAutoplay', () => {
     const onStartNewGame = vi.fn();
 
     const stepOneMock = () => {
-      if (game.status === 'complete-victory') {
-        return false;
-      }
       if (game.status !== 'in-progress') {
         onStartNewGame();
         return true;
@@ -60,8 +57,8 @@ describe('useAutoplay', () => {
     };
 
     const res = stepOneMock();
-    expect(res).toBe(false);
-    expect(onStartNewGame).not.toHaveBeenCalled();
+    expect(res).toBe(true);
+    expect(onStartNewGame).toHaveBeenCalledTimes(1);
   });
 
   it('supports instant stepToConclusion loop until terminal state', () => {
@@ -164,6 +161,15 @@ describe('useAutoplay', () => {
       const blessedCards = allCards.filter((c) => c.blessed);
       // The blessed card from the masterDeck should appear in the new round
       expect(blessedCards.length).toBeGreaterThan(0);
+    });
+
+    it('advances campaign round number when starting new game in active campaign mode', () => {
+      const campaign = createCampaign('cursed-tomb', 1);
+      expect(campaign.roundNumber).toBe(1);
+
+      const nextCampaign = advanceCampaignRound(campaign);
+      expect(nextCampaign.roundNumber).toBe(2);
+      expect(nextCampaign.currentRound.status).toBe('in-progress');
     });
   });
 });

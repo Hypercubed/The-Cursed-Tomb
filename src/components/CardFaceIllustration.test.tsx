@@ -5,7 +5,7 @@ import { CardFaceIllustration } from './CardFaceIllustration';
 import PlayingCard from './PlayingCard';
 
 describe('CardFaceIllustration Component', () => {
-  it('renders Hearts blessing illustration (Tomb Archway with Upward Arrow)', () => {
+  it('renders Hearts blessing illustration (Tomb Archway)', () => {
     const { container } = render(<CardFaceIllustration suit="♥" blessed={true} />);
     const svg = container.querySelector('svg');
     expect(svg).not.toBeNull();
@@ -14,21 +14,21 @@ describe('CardFaceIllustration Component', () => {
     expect(paths.length).toBeGreaterThan(0);
   });
 
-  it('renders Diamonds blessing illustration (Vault Safe Box)', () => {
+  it('renders Diamonds blessing illustration (Vault Box)', () => {
     const { container } = render(<CardFaceIllustration suit="♦" blessed={true} />);
     const rect = container.querySelector('rect');
     const circle = container.querySelector('circle');
     expect(rect).not.toBeNull();
-    expect(circle).not.toBeNull();
+    expect(circle).toBeNull();
   });
 
-  it('renders Spades blessing illustration (Tunnel Capsule)', () => {
+  it('renders Spades blessing illustration (Flipped Tunnel Shovel)', () => {
     const { container } = render(<CardFaceIllustration suit="♠" blessed={true} />);
     const path = container.querySelector('path');
     expect(path).not.toBeNull();
   });
 
-  it('renders Clubs blessing illustration (Infinity Symbol)', () => {
+  it('renders Clubs blessing illustration (Circled Sun Cross ⊕)', () => {
     const { container } = render(<CardFaceIllustration suit="♣" blessed={true} />);
     const path = container.querySelector('path');
     expect(path).not.toBeNull();

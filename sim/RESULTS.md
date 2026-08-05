@@ -21,15 +21,15 @@ Each game is one round of pyramid solitaire. A **Win (Pyramid Clear)** means all
 | :---------------- | :-----: | :----------------------: | :---------------------------: | :-----------: |
 | 0 redraws         |    0    |          1.17%           |             0.28%             |    98.83%     |
 | 1 redraw          |    1    |          14.91%          |             3.58%             |    85.09%     |
-| 2 redraws         |    2    |          31.07%          |             6.34%             |    68.93%     |
-| Infinite          |    ∞    |          34.57%          |             6.81%             |    65.43%     |
+| 3 redraws         |    3    |          34.37%          |             6.79%             |    65.63%     |
+| 5 redraws         |    5    |          34.57%          |             6.81%             |    65.43%     |
 
 ### Observations
 
 - **0 redraws remains very difficult.** A single pass through the 24-card stock exposes enough cards to clear the pyramid in 1.17% of games, and achieves Total Victory in 0.28%.
-- **Total Victory (clearing all 52 cards) is significantly more achievable.** Under in-flight stock pairing rules, Total Victory reaches **6.81%** with infinite redraws (up from 0.12%), because exposed Stock cards can be matched directly with Waste or Pyramid cards before entering the Waste pile.
-- **Each redraw provides substantial value.** Going from 0→1 redraws increases pyramid clear rate from 1.17% → 14.91% (a 12.7× improvement); 1→2 redraws more than doubles pyramid clear rate again to 31.07%.
-- **Infinite redraws plateaus around ~35%.** Most of the practical benefit from redraws is captured within two cycles (31.07% vs 34.57%).
+- **Total Victory (clearing all 52 cards) is significantly more achievable.** Under in-flight stock pairing rules, Total Victory reaches **6.81%** with 5 redraws (up from 0.12%), because exposed Stock cards can be matched directly with Waste or Pyramid cards before entering the Waste pile.
+- **Each redraw provides substantial value.** Going from 0→1 redraws increases pyramid clear rate from 1.17% → 14.91% (a 12.7× improvement); 1→3 redraws more than doubles pyramid clear rate to 34.37%.
+- **5 redraws plateaus near the theoretical max (~34.6%).** Going from 3→5 redraws only yields a minimal bump from 34.37% to 34.57%, showing that 3–5 redraws captures virtually all playable board states.
 
 ---
 
@@ -43,12 +43,12 @@ Since the base game has no attrition mechanics, **the tomb never collapses** —
 
 **Sample size:** 1,000 campaigns per setting, max 500 rounds each
 
-| Difficulty        | Redraws | Win Rate (500 rds) | Avg Rounds to Win | Median Rounds |
-| :---------------- | :-----: | :----------------: | :---------------: | :-----------: |
-| Survivalist       |    0    |       75.7%        |       246.3       |      219      |
-| Archaeologist     |    1    |       100.0%       |       27.5        |      19       |
-| Explorer          |    2    |       100.0%       |       15.3        |      10       |
-| Novice (Infinite) |    ∞    |       100.0%       |       14.5        |      10       |
+| Difficulty    | Redraws | Win Rate (500 rds) | Avg Rounds to Win | Median Rounds |
+| :------------ | :-----: | :----------------: | :---------------: | :-----------: |
+| Survivalist   |    0    |       69.6%        |       197.1       |      176      |
+| Archaeologist |    1    |       100.0%       |       30.3        |      21       |
+| Explorer      |    3    |       100.0%       |       15.0        |      10       |
+| Novice        |    5    |       100.0%       |       15.0        |      10       |
 
 ---
 
@@ -58,14 +58,14 @@ Since the base game has no attrition mechanics, **the tomb never collapses** —
 
 This section simulates campaigns with **all Cursed Tomb rules active**: scars, curses, blessings, and attrition tracking, including the strict Blessing/Curse mutual exclusivity rule. Unlike Part 2, campaigns can end in **Collapse** (starvation when fewer than 28 active cards remain) or **Victory** (when a Perfect Win clears all 52 cards).
 
-**Sample size:** 500–1,000 campaigns per difficulty, max 500 rounds each
+**Sample size:** 1,000 campaigns per difficulty, max 500 rounds each
 
 | Difficulty    | Redraws | Victory Rate (Resolved) | Collapse Rate (Resolved) | Avg Rounds to Win | Avg Rounds to Collapse | Overall Avg Resolve |
 | :------------ | :-----: | :---------------------: | :----------------------: | :---------------: | :--------------------: | :-----------------: |
-| Survivalist   |    0    |          3.00%          |          97.00%          |     7.3 ± 4.2     |      113.2 ± 10.8      |    110.0 ± 21.0     |
-| Archaeologist |    1    |         46.55%          |          53.45%          |    9.3 ± 10.0     |      205.3 ± 74.2      |    114.1 ± 112.1    |
-| Explorer      |    2    |         72.02%          |          27.98%          |     7.8 ± 8.8     |     287.0 ± 105.3      |    85.9 ± 137.5     |
-| Novice        |    ∞    |         76.53%          |          23.47%          |    8.3 ± 10.7     |     302.4 ± 106.2      |    77.3 ± 135.2     |
+| Survivalist   |    0    |          2.70%          |          97.30%          |     5.9 ± 3.3     |      114.1 ± 15.9      |    111.1 ± 23.5     |
+| Archaeologist |    1    |         45.71%          |          54.29%          |    9.6 ± 10.9     |      205.2 ± 73.0      |    115.8 ± 111.5    |
+| Explorer      |    3    |         77.45%          |          22.55%          |    8.9 ± 17.2     |      296.2 ± 98.1      |    73.7 ± 129.7     |
+| Novice        |    5    |         77.55%          |          22.45%          |    8.8 ± 17.2     |      298.0 ± 99.2      |    73.8 ± 130.4     |
 
 ### Endless Campaign Endurance Metrics (Volatile Collapse Enabled)
 
@@ -73,25 +73,25 @@ This section simulates campaigns with **all Cursed Tomb rules active**: scars, c
 
 | Difficulty    | Redraws | Mean Rounds Survived | Pyramids Cleared / Camp. | Perfect Wins / Camp. | Starvation Rate | Volatile Collapse Rate |
 | :------------ | :-----: | :------------------: | :----------------------: | :------------------: | :-------------: | :--------------------: |
-| Survivalist   |    0    |     108.5 ± 17.1     |           0.2            |         0.0          |      24.8%      |         75.2%          |
-| Archaeologist |    1    |     209.8 ± 63.2     |           17.2           |         0.6          |      15.3%      |         60.3%          |
-| Explorer      |    2    |     270.9 ± 46.6     |           62.8           |         0.9          |      4.4%       |         20.2%          |
-| Novice        |    ∞    |     273.9 ± 44.3     |           67.5           |         0.9          |      3.3%       |         16.8%          |
+| Survivalist   |    0    |     105.7 ± 23.6     |           0.2            |         0.0          |      24.2%      |         73.1%          |
+| Archaeologist |    1    |     117.8 ± 105.6    |           8.2            |         0.4          |      9.0%       |         37.4%          |
+| Explorer      |    3    |     121.6 ± 133.8    |           27.1           |         0.6          |      1.8%       |          8.1%          |
+| Novice        |    5    |     121.8 ± 134.0    |           27.4           |         0.6          |      1.7%       |          8.0%          |
 
 ---
 
 ## Part 4 — Solver Comparison (Greedy vs. Heuristic vs. BeamSearch vs. DFS)
 
-> **Command to reproduce:** `python3 test_solvers.py --games 50 --redraws 2`
+> **Command to reproduce:** `python3 test_solvers.py --games 50 --redraws 3`
 
-Comparative benchmark across identical deck seeds (Difficulty: Explorer / 2 redraws):
+Comparative benchmark across identical deck seeds (Difficulty: Explorer / 3 redraws):
 
 | Solver Policy | Single-Game Win Rate | Execution Time (50 games) | Strategy Description |
 | :--- | :---: | :---: | :--- |
-| **Greedy** | **42.0%** | **0.03s** | 1-step max exposed card count |
-| **Heuristic** *(Default)* | **42.0%** | **0.03s** | Multi-factor evaluation (depth, red curse priority, waste preservation) |
-| **BeamSearch (D=3, B=4)** | **46.0%** | **0.49s** | 3-step lookahead beam search over cloned game states |
-| **DFS (Max 3k nodes)** | **56.0%** | **1.07s** | Exact solvability search with recursive backtracking & memoization |
+| **Greedy** | **48.0%** | **0.03s** | 1-step max exposed card count |
+| **Heuristic** *(Default)* | **48.0%** | **0.03s** | Multi-factor evaluation (depth, red curse priority, waste preservation) |
+| **BeamSearch (D=3, B=4)** | **52.0%** | **0.50s** | 3-step lookahead beam search over cloned game states |
+| **DFS (Max 3k nodes)** | **60.0%** | **1.06s** | Exact solvability search with recursive backtracking & memoization |
 
 ---
 

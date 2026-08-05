@@ -101,32 +101,33 @@ function App() {
   const [roundEffects, setRoundEffects] = useState<RoundLifecycleEffects | null>(null);
 
   const handleStart = useCallback(() => {
-    setGame((currentState) => {
-      if (currentState.status === 'in-progress' && !hasRecordedOutcome) {
-        const { stats: updated, campaign: updatedCampaign } = defaultPersistenceManager.recordOutcome('pyramid-collapse');
-        setStats(updated);
-        setCampaignStats(updatedCampaign);
+    if (game.status === 'in-progress' && !hasRecordedOutcome) {
+      const { stats: updated, campaign: updatedCampaign } = defaultPersistenceManager.recordOutcome('pyramid-collapse');
+      setStats(updated);
+      setCampaignStats(updatedCampaign);
+    }
+
+    if (campaign && campaign.status === 'active') {
+      const nextCampaign = advanceCampaignRound(campaign);
+      setCampaign(nextCampaign);
+      setGame(nextCampaign.currentRound);
+      defaultPersistenceManager.saveCampaignState(nextCampaign);
+      if (nextCampaign.status === 'defeat') {
+        setIsRoundSummaryModalOpen(false);
+        setCampaignEndMode('defeat');
+        setIsCampaignEndModalOpen(true);
       }
-      // When a campaign is active, preserve card markings by initializing from the
-      // campaign's master deck and graveyard rather than a fresh default deck.
-      if (campaign && campaign.status === 'active') {
-        return {
-          ...initializeGame(
-            selectedRedraw,
-            selectedMode,
-            campaign.masterDeck,
-            campaign.graveyard
-          ),
-          status: 'in-progress' as const,
-        };
-      }
-      return startGame(selectedRedraw, selectedMode);
-    });
+    } else {
+      setGame(startGame(selectedRedraw, selectedMode));
+    }
+
     setHasRecordedOutcome(false);
     setRoundEffects(null);
     setIsRoundSummaryModalOpen(false);
-    setIsCampaignEndModalOpen(false);
-  }, [campaign, hasRecordedOutcome, selectedRedraw, selectedMode]);
+    if (!campaign || campaign.status !== 'defeat') {
+      setIsCampaignEndModalOpen(false);
+    }
+  }, [campaign, game.status, hasRecordedOutcome, selectedRedraw, selectedMode]);
 
   const handleStartCampaign = useCallback(
     (difficulty: number | null, mode: GameMode = 'cursed-tomb', volatile: boolean = false) => {
@@ -586,6 +587,8 @@ function App() {
         pairStats={pairStats}
         masterDeck={campaign?.masterDeck}
         mode={game.mode}
+        campaignStats={campaignStats}
+        achievements={campaign?.achievements}
       />
 
       <ResetConfirmationModal
