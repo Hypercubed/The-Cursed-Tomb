@@ -130,6 +130,38 @@ export function GameSidebar({
               </dd>
             </div>
           )}
+
+          {/* Standard Solitaire Career Stats */}
+          {gameMode === 'standard' && (
+            <div className="border-t border-[#2d2319] pt-2.5 mt-1">
+              <dt className="text-game-accent font-semibold font-display tracking-wider uppercase text-xs mb-1.5 flex items-center justify-between">
+                <span>Standard Career</span>
+                <span className="text-amber-400 font-medium font-mono text-[11px]">{totalGames > 0 ? `${Math.round((totalVictories / totalGames) * 100)}% Clear` : '0% Clear'}</span>
+              </dt>
+              <dd className="text-game-text font-medium ml-0 flex flex-col gap-1.5 text-xs">
+                <div className="flex justify-between items-center bg-[#120e0a] px-2.5 py-1.5 rounded border border-[#251e16]">
+                  <span className="text-game-muted">🂡 Total Games</span>
+                  <span className="font-mono font-semibold text-game-accent">{totalGames}</span>
+                </div>
+                <div className="flex justify-between items-center bg-[#120e0a] px-2.5 py-1.5 rounded border border-[#251e16]">
+                  <span className="text-game-muted">👑 Victories</span>
+                  <span className="font-mono font-semibold text-emerald-400">
+                    {totalVictories} <span className="text-[10px] text-game-muted font-normal">({complete} complete)</span>
+                  </span>
+                </div>
+                <div className="flex justify-between items-center bg-[#120e0a] px-2.5 py-1.5 rounded border border-[#251e16]">
+                  <span className="text-game-muted">🏺 Pyramids Collapsed</span>
+                  <span className="font-mono font-semibold text-red-400">{collapses}</span>
+                </div>
+                <div className="flex justify-between items-center bg-[#120e0a] px-2.5 py-1.5 rounded border border-[#251e16]">
+                  <span className="text-game-muted">🔥 Win Streak</span>
+                  <span className="font-mono font-semibold text-amber-300">
+                    {stats?.currentStreak ?? 0} <span className="text-[10px] text-game-muted font-normal">(Best: {stats?.bestStreak ?? 0})</span>
+                  </span>
+                </div>
+              </dd>
+            </div>
+          )}
         </dl>
         <div className="mt-4 flex flex-col gap-2">
           {onOpenMatchedCardsModal && (

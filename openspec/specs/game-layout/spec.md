@@ -55,19 +55,19 @@ Setup controls (redraw cycles, win condition, start/reset buttons) SHALL be hous
 - **THEN** the redraw, win-condition controls, and start/reset buttons SHALL remain visible in the sidebar without requiring a scroll
 
 ### Requirement: Game status panel is always visible in the sidebar
-The sidebar SHALL display a Progress & Stats panel below the setup controls containing match progress (cards removed). When running in Cursed Tomb mode, it SHALL display active Campaign statistics (Pyramids Explored, Pyramids Conquered, Pyramids Collapsed, Total Attempts). When running in Standard Solitaire mode, it SHALL hide campaign progress statistics or display standard solitaire stats (Complete Victories, Partial Victories, Collapses/Losses, Win %, Streaks).
+The sidebar SHALL display a Progress & Stats panel below the setup controls containing match progress (cards removed). When running in Cursed Tomb mode (`cursed-tomb`), it SHALL display active Campaign statistics (Pyramids Explored, Pyramids Conquered, Pyramids Collapsed, Total Attempts). When running in Standard Solitaire mode (`standard`), it SHALL display standard solitaire career statistics (Total Games Played, Clear/Win Rate %, Complete Victories, Partial Victories, Pyramids Collapsed, Current Streak, and Best Streak).
 
 #### Scenario: Status updates while game is in progress
-- **WHEN** the player removes a pair or completes a game
-- **THEN** the sidebar panel SHALL immediately reflect the updated cards removed count, active campaign/standard progress, and lifetime statistics
+- **WHEN** cards are removed or the game mode changes
+- **THEN** the status sidebar updates the progress metrics and displays the mode-specific stats (Campaign statistics in Cursed Tomb mode, or Standard Solitaire career statistics in Standard mode)
+
+#### Scenario: Displaying Standard Solitaire stats in standard mode
+- **WHEN** the game mode is `standard` and career stats are available
+- **THEN** the status sidebar displays a dedicated "Standard Solitaire Stats" section presenting Total Games, Win Rate %, Complete Victories, Partial Victories, Collapses, Current Streak, and Best Streak
 
 #### Scenario: Sidebar displays active campaign and lifetime statistics
 - **WHEN** the sidebar status panel renders in Cursed Tomb mode
 - **THEN** it SHALL display the active Campaign progress (Pyramids Explored, Pyramids Collapsed, Total Attempts) alongside the player's lifetime record
-
-#### Scenario: Sidebar hides campaign statistics in Standard Solitaire mode
-- **WHEN** the sidebar status panel renders in Standard Solitaire mode
-- **THEN** it SHALL NOT render active campaign progression metrics (Pyramids Explored, Conquered, Collapsed)
 
 ### Requirement: Reset Confirmation Dialog Interface
 The application SHALL present a themed modal dialog when New Campaign is clicked to confirm starting a new campaign and resetting active campaign statistics.

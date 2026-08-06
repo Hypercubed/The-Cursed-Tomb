@@ -1,5 +1,6 @@
 import React from 'react';
 import { Card, GameStatus, GameMode, getFunctionalValue, RoundLifecycleEffects, FinalClearDetails, CampaignState } from '../game';
+import { StoredStats } from '../storage/persistence';
 import { PlayingCard } from './PlayingCard';
 
 interface RoundSummaryModalProps {
@@ -7,6 +8,7 @@ interface RoundSummaryModalProps {
   onClose: () => void;
   status: GameStatus;
   mode?: GameMode;
+  stats?: StoredStats;
   roundNumber?: number;
   effects: RoundLifecycleEffects | null;
   campaign?: CampaignState | null;
@@ -20,6 +22,7 @@ export function RoundSummaryModal({
   onClose,
   status,
   mode = 'cursed-tomb',
+  stats,
   roundNumber = 1,
   effects,
   campaign,
@@ -105,10 +108,16 @@ export function RoundSummaryModal({
             <span className="text-3xl">{isVictory ? '🌟' : '🏺'}</span>
             <div>
               <h2 id="round-summary-title" className="text-lg font-semibold text-game-text font-display tracking-wider uppercase m-0">
-                {isVictory ? 'Pyramid Clear — Legacy Unlocks' : 'Pyramid Collapse — Attrition Summary'}
+                {isVictory
+                  ? mode === 'standard'
+                    ? 'Pyramid Clear — Victory!'
+                    : 'Pyramid Clear — Legacy Unlocks'
+                  : mode === 'standard'
+                    ? 'Pyramid Collapse — Game Over'
+                    : 'Pyramid Collapse — Attrition Summary'}
               </h2>
               <p className="text-xs text-game-muted m-0">
-                Round {roundNumber} End of Round Effects
+                {mode === 'standard' ? 'Standard Solitaire Round Summary' : `Round ${roundNumber} End of Round Effects`}
               </p>
             </div>
           </div>
@@ -124,6 +133,42 @@ export function RoundSummaryModal({
 
         {/* Modal Body */}
         <div className="p-6 flex-1 overflow-y-auto flex flex-col gap-5 text-sm">
+          {/* Standard Solitaire Career Metrics Header */}
+          {mode === 'standard' && stats && (
+            <div className="bg-[#120e0a] border border-[#2d2319] rounded-lg p-3.5 flex flex-col gap-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-amber-300 font-display uppercase tracking-wider">
+                  🂡 Standard Solitaire Stats
+                </span>
+                <span className="text-xs font-bold text-amber-400 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-800/50">
+                  Win Streak: {stats.currentStreak} 🔥 (Best: {stats.bestStreak})
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                <div className="bg-[#18130e] p-2 rounded border border-[#251e16] flex flex-col">
+                  <span className="text-[11px] text-game-muted">Games Played</span>
+                  <span className="font-bold text-game-text text-sm font-display">
+                    {stats.completeVictories + stats.partialVictories + stats.pyramidCollapses}
+                  </span>
+                </div>
+                <div className="bg-[#18130e] p-2 rounded border border-[#251e16] flex flex-col">
+                  <span className="text-[11px] text-game-muted">Victories</span>
+                  <span className="font-bold text-emerald-400 text-sm font-display">
+                    {stats.completeVictories + stats.partialVictories}
+                  </span>
+                </div>
+                <div className="bg-[#18130e] p-2 rounded border border-[#251e16] flex flex-col">
+                  <span className="text-[11px] text-game-muted">Win Rate</span>
+                  <span className="font-bold text-amber-300 text-sm font-display">
+                    {stats.completeVictories + stats.partialVictories + stats.pyramidCollapses > 0
+                      ? Math.round(((stats.completeVictories + stats.partialVictories) / (stats.completeVictories + stats.partialVictories + stats.pyramidCollapses)) * 100)
+                      : 0}%
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Advisory Volatility Warning Banner */}
           {showVolatilityWarning && (
             <div className="bg-amber-950/70 border-2 border-amber-600 rounded-lg p-3 flex items-center gap-3 text-amber-200 text-xs shadow-md">

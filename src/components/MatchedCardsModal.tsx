@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { PairStat, Suit, Rank, CursedCard, GameMode, getFunctionalValue, CampaignAchievements } from '../game';
-import { StoredCampaignStats } from '../storage/persistence';
+import { StoredCampaignStats, StoredStats } from '../storage/persistence';
 import { CardFaceIllustration } from './CardFaceIllustration';
 import { InkBleedFilterDef } from './PlayingCard';
 
@@ -11,6 +11,7 @@ interface MatchedCardsModalProps {
   pairStats: PairStat[];
   masterDeck?: CursedCard[];
   mode?: GameMode;
+  stats?: StoredStats;
   campaignStats?: StoredCampaignStats;
   achievements?: CampaignAchievements;
 }
@@ -41,6 +42,7 @@ export function MatchedCardsModal({
   pairStats,
   masterDeck,
   mode = 'standard',
+  stats,
   campaignStats,
   achievements,
 }: MatchedCardsModalProps) {
@@ -72,6 +74,10 @@ export function MatchedCardsModal({
   const percentage = Math.round((totalRemoved / 52) * 100);
   const entombedCount = masterDeck ? masterDeck.filter((c) => c.attritionStage === 5).length : 0;
   const remainingCount = Math.max(0, 52 - totalRemoved);
+
+  const totalVictories = stats ? stats.completeVictories + stats.partialVictories : 0;
+  const totalGames = stats ? totalVictories + stats.pyramidCollapses : 0;
+  const clearRate = totalGames > 0 ? Math.round((totalVictories / totalGames) * 100) : 0;
 
   return (
     <div
@@ -127,6 +133,40 @@ export function MatchedCardsModal({
 
         {/* Modal Body */}
         <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6">
+          {/* Standard Solitaire Career Metrics Section */}
+          {mode === 'standard' && stats && (
+            <div className="bg-[#120e0a] border border-[#2d2319] rounded-lg p-4 shadow-[inset_0_0_8px_rgba(0,0,0,0.5)]">
+              <h3 className="text-xs font-semibold text-game-muted font-display tracking-wider uppercase mt-0 mb-3 flex items-center justify-between">
+                <span>🂡 Standard Solitaire Career Metrics</span>
+                <span className="text-amber-400 text-[11px] font-mono">{clearRate}% Win Rate</span>
+              </h3>
+
+              {/* Metric Stat Cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                <div className="bg-[#18130e] border border-[#251e16] rounded-md p-2.5 flex flex-col items-center justify-center text-center">
+                  <span className="text-[11px] text-game-muted font-medium mb-1">🂡 Total Games</span>
+                  <span className="font-mono font-bold text-game-accent text-base">{totalGames}</span>
+                </div>
+                <div className="bg-[#18130e] border border-[#251e16] rounded-md p-2.5 flex flex-col items-center justify-center text-center">
+                  <span className="text-[11px] text-game-muted font-medium mb-1">👑 Victories</span>
+                  <span className="font-mono font-bold text-emerald-400 text-base">{totalVictories}</span>
+                </div>
+                <div className="bg-[#18130e] border border-[#251e16] rounded-md p-2.5 flex flex-col items-center justify-center text-center">
+                  <span className="text-[11px] text-game-muted font-medium mb-1">🏺 Collapses</span>
+                  <span className="font-mono font-bold text-red-400 text-base">{stats.pyramidCollapses}</span>
+                </div>
+                <div className="bg-[#18130e] border border-[#251e16] rounded-md p-2.5 flex flex-col items-center justify-center text-center">
+                  <span className="text-[11px] text-game-muted font-medium mb-1">🔥 Current Streak</span>
+                  <span className="font-mono font-bold text-amber-400 text-base">{stats.currentStreak}</span>
+                </div>
+                <div className="bg-[#18130e] border border-[#251e16] rounded-md p-2.5 flex flex-col items-center justify-center text-center col-span-2 sm:col-span-1">
+                  <span className="text-[11px] text-game-muted font-medium mb-1">🏆 Best Streak</span>
+                  <span className="font-mono font-bold text-amber-300 text-base">{stats.bestStreak}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Expedition Run Metrics & Achievements Section */}
           {mode === 'cursed-tomb' && (campaignStats || achievements) && (
             <div className="bg-[#120e0a] border border-[#2d2319] rounded-lg p-4 shadow-[inset_0_0_8px_rgba(0,0,0,0.5)]">

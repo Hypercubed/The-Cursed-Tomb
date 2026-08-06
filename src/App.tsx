@@ -562,6 +562,7 @@ function App() {
         pairStats={pairStats}
         masterDeck={campaign?.masterDeck}
         mode={game.mode}
+        stats={stats}
         campaignStats={campaignStats}
         achievements={campaign?.achievements}
       />
@@ -571,6 +572,7 @@ function App() {
         onClose={() => setIsRoundSummaryModalOpen(false)}
         status={game.status}
         mode={game.mode}
+        stats={stats}
         roundNumber={campaign?.roundNumber ?? 1}
         effects={roundEffects}
         campaign={campaign}
