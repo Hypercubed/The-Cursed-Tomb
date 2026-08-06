@@ -11,7 +11,7 @@ export function GameShell({ header, sidebar, children, gameStatus }: GameShellPr
   const isWon = gameStatus === 'won';
 
   return (
-    <div className={`min-h-screen p-3 sm:p-6 lg:p-8 relative ${isWon ? 'animate-victory-glow' : ''}`}>
+    <div className={`safe-area-shell min-h-screen p-3 sm:p-6 lg:p-8 relative ${isWon ? 'animate-victory-glow' : ''}`}>
       <div className="torch-overlay" />
       {/* Victory Tomb Flourish Gold Sparks */}
       {isWon && (
@@ -26,8 +26,8 @@ export function GameShell({ header, sidebar, children, gameStatus }: GameShellPr
       <div className="max-w-full 2xl:max-w-[1600px] mx-auto flex flex-col gap-4 sm:gap-6 relative z-10">
         {header && <header className="w-full">{header}</header>}
         <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] xl:grid-cols-[320px_1fr] gap-4 sm:gap-6 items-start">
-          <div>{sidebar}</div>
-          <div>{children}</div>
+          <div className="order-2 lg:order-none lg:sticky lg:top-6">{sidebar}</div>
+          <main className="order-1 lg:order-none min-w-0">{children}</main>
         </div>
       </div>
     </div>

@@ -81,14 +81,14 @@ export function MatchedCardsModal({
 
   return (
     <div
-      className="fixed inset-0 bg-black/80 z-[60] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 bg-black/80 z-[60] flex items-center justify-center p-2 sm:p-4 backdrop-blur-sm animate-fade-in"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
     >
       <div
-        className="bg-[#18130e] border-2 border-[#3d3124] rounded-xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-[0_10px_30px_rgba(0,0,0,0.8)] overflow-hidden"
+        className="bg-[#18130e] border-2 border-[#3d3124] rounded-xl max-w-4xl w-full max-h-[calc(100svh-1rem)] sm:max-h-[90vh] flex flex-col shadow-[0_10px_30px_rgba(0,0,0,0.8)] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         <InkBleedFilterDef />
@@ -132,7 +132,7 @@ export function MatchedCardsModal({
         </div>
 
         {/* Modal Body */}
-        <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-6 flex flex-col gap-4 sm:gap-6">
           {/* Standard Solitaire Career Metrics Section */}
           {mode === 'standard' && stats && (
             <div className="bg-[#120e0a] border border-[#2d2319] rounded-lg p-4 shadow-[inset_0_0_8px_rgba(0,0,0,0.5)]">
@@ -524,7 +524,7 @@ export function MatchedCardsModal({
         </div>
 
         {/* Modal Footer */}
-        <div className="px-6 py-3 border-t border-[#2d2319] bg-[#120e0a] flex justify-end">
+        <div className="safe-area-toolbar px-3 sm:px-6 py-3 border-t border-[#2d2319] bg-[#120e0a] flex justify-end">
           <button
             ref={closeBtnRef}
             type="button"

@@ -10,6 +10,11 @@
 }
 
 body {
+  margin: 0;
+  min-width: 320px;
+  touch-action: manipulation;
+  overscroll-behavior-y: none;
+  -webkit-tap-highlight-color: transparent;
   background-color: #0d0a07;
   /* Sandstone texture overlay */
   background-image: 
@@ -23,6 +28,94 @@ body {
       rgba(56, 48, 38, 0.015) 16px
     );
   background-size: 120px 120px, 120px 120px, auto;
+}
+
+/* Mobile browser interaction and safe-area primitives */
+button,
+a,
+[role='button'] {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.game-interactive-surface {
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  overscroll-behavior: contain;
+}
+
+.safe-area-shell {
+  padding-top: calc(0.75rem + env(safe-area-inset-top));
+  padding-right: calc(0.75rem + env(safe-area-inset-right));
+  padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+  padding-left: calc(0.75rem + env(safe-area-inset-left));
+}
+
+@media (min-width: 640px) {
+  .safe-area-shell {
+    padding-top: calc(1.5rem + env(safe-area-inset-top));
+    padding-right: calc(1.5rem + env(safe-area-inset-right));
+    padding-bottom: calc(1.5rem + env(safe-area-inset-bottom));
+    padding-left: calc(1.5rem + env(safe-area-inset-left));
+  }
+}
+
+@media (min-width: 1024px) {
+  .safe-area-shell {
+    padding-top: calc(2rem + env(safe-area-inset-top));
+    padding-right: calc(2rem + env(safe-area-inset-right));
+    padding-bottom: calc(2rem + env(safe-area-inset-bottom));
+    padding-left: calc(2rem + env(safe-area-inset-left));
+  }
+}
+
+.safe-area-toolbar {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+}
+
+.playing-card-responsive,
+.playing-card-slot {
+  touch-action: manipulation;
+}
+
+@media (max-width: 639px) {
+  .mobile-board-panel {
+    margin-inline: -0.75rem;
+    padding-inline: 0.25rem;
+  }
+
+  .pyramid-row {
+    gap: 0;
+  }
+
+  .playing-card-responsive,
+  .playing-card-slot {
+    width: 3rem !important;
+    height: 4rem !important;
+  }
+}
+
+@media (max-width: 379px) {
+  .mobile-board-panel {
+    margin-inline: -0.75rem;
+    padding-inline: 0.25rem;
+  }
+
+  .pyramid-row {
+    gap: 0;
+  }
+
+  .playing-card-responsive,
+  .playing-card-slot {
+    width: 2.5rem !important;
+    height: 3.5rem !important;
+  }
+}
+
+.card-tabletop-tilt.playing-card-responsive:active {
+  transform: rotate(0deg) scale(0.97) !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.45) !important;
 }
 
 /* Tactile Cardstock Paper Texture Overlay */
@@ -192,6 +285,11 @@ body {
   .animate-victory-glow,
   .animate-pyramid-collapse,
   .torch-overlay {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .playing-card-responsive:active {
     animation: none !important;
     transition: none !important;
   }

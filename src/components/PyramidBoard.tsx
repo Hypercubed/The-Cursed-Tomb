@@ -48,7 +48,7 @@ export function PyramidBoard({
   onMovePyramidToVault,
 }: PyramidBoardProps): React.ReactElement {
   return (
-    <div className={`flex flex-col items-center py-2 sm:py-4 relative ${status === 'pyramid-collapse' ? 'overflow-hidden' : 'overflow-x-auto'}`}>
+    <div className={`game-interactive-surface flex flex-col items-center py-2 sm:py-4 relative ${status === 'pyramid-collapse' ? 'overflow-hidden' : 'overflow-x-auto'}`}>
       {interactionMode === 'targeting-spades' && (
         <div className="mb-2 px-3 py-1 bg-blue-950/90 border border-blue-700 text-blue-200 text-xs font-semibold rounded-full animate-bounce">
           ♠ Spades Tunnel: Click one exposed pyramid card to move it to the Waste pile!
@@ -57,7 +57,7 @@ export function PyramidBoard({
 
       {pyramid.map((row, rowIndex) => (
         <div
-          className={`flex gap-1 sm:gap-2 justify-center pointer-events-none ${
+          className={`pyramid-row flex gap-1 sm:gap-2 justify-center pointer-events-none ${
             rowIndex > 0 ? '-mt-8 sm:-mt-12 lg:-mt-14 xl:-mt-16 2xl:-mt-[72px]' : ''
           }`}
           key={rowIndex}

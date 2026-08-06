@@ -89,14 +89,14 @@ export function RoundSummaryModal({
 
   return (
     <div
-      className="fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-2 sm:p-4 backdrop-blur-sm animate-fade-in"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-labelledby="round-summary-title"
     >
       <div
-        className="bg-[#18130e] border-2 border-[#3d3124] rounded-xl max-w-lg w-full flex flex-col max-h-[85vh] shadow-[0_10px_35px_rgba(0,0,0,0.9)] overflow-hidden"
+        className="bg-[#18130e] border-2 border-[#3d3124] rounded-xl max-w-lg w-full flex flex-col max-h-[calc(100svh-1rem)] sm:max-h-[85vh] shadow-[0_10px_35px_rgba(0,0,0,0.9)] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
@@ -132,7 +132,7 @@ export function RoundSummaryModal({
         </div>
 
         {/* Modal Body */}
-        <div className="p-6 flex-1 overflow-y-auto flex flex-col gap-5 text-sm">
+        <div className="p-3 sm:p-6 flex-1 overflow-y-auto flex flex-col gap-4 sm:gap-5 text-sm">
           {/* Standard Solitaire Career Metrics Header */}
           {mode === 'standard' && stats && (
             <div className="bg-[#120e0a] border border-[#2d2319] rounded-lg p-3.5 flex flex-col gap-2.5">
@@ -463,7 +463,7 @@ export function RoundSummaryModal({
         </div>
 
         {/* Modal Footer */}
-        <div className="px-6 py-4 border-t border-[#2d2319] bg-[#120e0a] flex items-center justify-between gap-3">
+        <div className="safe-area-toolbar px-3 sm:px-6 py-3 sm:py-4 border-t border-[#2d2319] bg-[#120e0a] flex flex-wrap items-center justify-between gap-2 sm:gap-3">
           <div className="flex items-center gap-2">
             {onOpenVault && (
               <button

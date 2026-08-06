@@ -142,14 +142,14 @@ export function RulesModal({ isOpen, onClose, initialTab = 'core-rules' }: Rules
 
   return (
     <div
-      className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-5 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-2 sm:p-5 backdrop-blur-sm animate-fade-in"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-labelledby="rules-modal-title"
     >
       <div
-        className="bg-[#18130e] border-2 border-[#3d3124] rounded-xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-[0_10px_30px_rgba(0,0,0,0.9)] overflow-hidden"
+        className="bg-[#18130e] border-2 border-[#3d3124] rounded-xl max-w-4xl w-full max-h-[calc(100svh-1rem)] sm:max-h-[90vh] flex flex-col shadow-[0_10px_30px_rgba(0,0,0,0.9)] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
@@ -212,7 +212,7 @@ export function RulesModal({ isOpen, onClose, initialTab = 'core-rules' }: Rules
         </div>
 
         {/* Modal Scrollable Content Area */}
-        <div className="p-5 overflow-y-auto flex-1 text-sm text-game-muted space-y-6">
+        <div className="p-3 sm:p-5 overflow-y-auto flex-1 text-sm text-game-muted space-y-4 sm:space-y-6">
           {/* TAB 1: CORE PHYSICAL RULESET */}
           {activeTab === 'core-rules' && (
             <div className="space-y-6 animate-fade-in">
@@ -541,7 +541,7 @@ export function RulesModal({ isOpen, onClose, initialTab = 'core-rules' }: Rules
         <InkBleedFilterDef />
 
         {/* Modal Footer */}
-        <div className="px-5 py-3 border-t border-[#2d2319] bg-[#120e0a] flex justify-end shrink-0">
+        <div className="safe-area-toolbar px-3 sm:px-5 py-3 border-t border-[#2d2319] bg-[#120e0a] flex justify-end shrink-0">
           <button
             ref={closeBtnRef}
             type="button"

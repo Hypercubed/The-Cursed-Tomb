@@ -1,6 +1,7 @@
 import React from 'react';
 import { CardFaceIllustration } from './CardFaceIllustration';
 import { getHandDrawnTransform } from '../utils/handDrawnTransforms';
+import { hapticTap } from '../utils/haptics';
 
 interface PlayingCardProps {
   rank: number;
@@ -409,7 +410,7 @@ export function PlayingCard({
     .join('\n');
 
   const classes = [
-    'w-12 h-[64px] sm:w-[72px] sm:h-[96px] lg:w-[88px] lg:h-[116px] xl:w-[96px] xl:h-[128px] 2xl:w-[108px] 2xl:h-[144px]',
+    'playing-card-responsive w-12 h-[64px] sm:w-[72px] sm:h-[96px] lg:w-[88px] lg:h-[116px] xl:w-[96px] xl:h-[128px] 2xl:w-[108px] 2xl:h-[144px]',
     'rounded-lg sm:rounded-xl border p-1 sm:p-2 lg:p-2.5',
     'relative flex flex-col justify-between overflow-hidden text-left',
     faceDown ? 'bg-[#1a1510] border-[#3a2d1d]' : 'card-paper-texture disabled:bg-game-card-bg',
@@ -442,6 +443,9 @@ export function PlayingCard({
         className={classes}
         disabled={disabled || blocked || removed}
         onClick={onClick}
+        onPointerDown={(event) => {
+          if (event.pointerType === 'touch' && !disabled && !blocked && !removed && onClick) hapticTap();
+        }}
         style={style}
         title="Red Curse Trap: Card is face-down until exposed or revealed"
       >
@@ -458,6 +462,9 @@ export function PlayingCard({
       className={classes}
       disabled={disabled || blocked || removed}
       onClick={onClick}
+      onPointerDown={(event) => {
+        if (event.pointerType === 'touch' && !disabled && !blocked && !removed && onClick) hapticTap();
+      }}
       style={style}
       aria-pressed={selected}
       title={cardTitle}

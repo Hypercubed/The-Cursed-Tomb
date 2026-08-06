@@ -43,6 +43,7 @@ import { CampaignSetupModal } from './components/CampaignSetupModal';
 import { RulesModal, RulesTab } from './components/RulesModal';
 import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal';
 import { defaultPersistenceManager, StoredStats, StoredCampaignStats } from './storage/persistence';
+import { hapticError, hapticMatch } from './utils/haptics';
 
 const initialState: GameState = {
   deck: [],
@@ -289,6 +290,7 @@ function App() {
 
     // Single King match / Functional Value 13
     if (canRemoveSingle(targetCard, game.mode)) {
+      hapticMatch();
       setAnimatingMatchIds([cardId]);
       setTimeout(() => {
         setGame((state) => playCard(state, cardId));
@@ -304,6 +306,7 @@ function App() {
 
       if (selectedCard && canPair) {
         const matchIds = [selectedCard.id, targetCard.id];
+        hapticMatch();
         setAnimatingMatchIds(matchIds);
         setTimeout(() => {
           setGame((state) => playCard(state, cardId));
@@ -312,6 +315,7 @@ function App() {
         return;
       } else {
         const errorIds = [game.selectedCardId, cardId];
+        hapticError();
         setAnimatingErrorIds(errorIds);
         setTimeout(() => {
           setGame((state) => ({ ...state, selectedCardId: null }));
@@ -358,6 +362,7 @@ function App() {
       });
     } else {
       const currentSelectedId = game.selectedCardId;
+      hapticError();
       setAnimatingErrorIds([currentSelectedId]);
       setTimeout(() => {
         setGame((state) => ({ ...state, selectedCardId: null }));
@@ -410,7 +415,7 @@ function App() {
   );
 
   const header = (
-    <div className="bg-game-panel border border-game-border rounded-2xl p-4 sm:px-6 flex items-center justify-between shadow-lg">
+    <div className="bg-game-panel border border-game-border rounded-2xl p-3 sm:p-4 sm:px-6 flex flex-col gap-3 shadow-lg safe-area-toolbar">
       <div className="flex items-center gap-3">
         <span className="text-2xl sm:text-3xl text-game-accent">𓋹</span>
         <div>
@@ -425,7 +430,7 @@ function App() {
           </p>
         </div>
       </div>
-      <div className="flex items-center gap-3">
+      <div className="hidden md:flex items-center gap-3">
         <button
           type="button"
           onClick={() => setIsShortcutsModalOpen(true)}
@@ -466,6 +471,37 @@ function App() {
           <span className="text-game-text font-semibold">{statusLabel}</span>
         </div>
       </div>
+
+      <div className="md:hidden flex items-center justify-between gap-2 border-t border-game-border/70 pt-2 text-[11px]">
+        <div className="flex min-w-0 items-center gap-2 text-game-muted">
+          <span className="truncate">{game.mode === 'standard' ? 'Standard' : 'Expedition'}</span>
+          <span className="text-game-text font-mono font-semibold whitespace-nowrap">
+            {removedCardsCount.count}/{removedCardsCount.total} cleared
+          </span>
+          <span className="text-amber-300 font-mono whitespace-nowrap">🔥 {stats.currentStreak}</span>
+        </div>
+        <div className="flex shrink-0 items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => {
+              setRulesTab('core-rules');
+              setIsRulesModalOpen(true);
+            }}
+            className="min-h-11 min-w-11 px-2 rounded-lg border border-amber-900/60 bg-[#18130e] text-amber-300 hover:border-amber-600 transition-colors"
+            aria-label="Open rules"
+          >
+            📖
+          </button>
+          <button
+            type="button"
+            onClick={handleRestart}
+            className="min-h-11 min-w-11 px-2 rounded-lg border border-amber-900/60 bg-[#18130e] text-amber-300 hover:border-amber-600 transition-colors"
+            aria-label="Start a new game"
+          >
+            ↻
+          </button>
+        </div>
+      </div>
     </div>
   );
 
@@ -491,7 +527,7 @@ function App() {
       <GameShell header={header} sidebar={sidebar} gameStatus={game.status}>
         {/* Board: only shown when game is active */}
         {game.status !== 'ready' && (
-          <div className="relative bg-game-panel border border-game-border rounded-2xl p-3 sm:p-5 lg:p-6 overflow-hidden">
+          <div className="mobile-board-panel relative bg-game-panel border border-game-border rounded-2xl p-3 sm:p-5 lg:p-6 overflow-hidden">
             {game.status === 'in-progress' && (
               <button
                 type="button"

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, GameMode } from '../game';
 import { PlayingCard } from './PlayingCard';
+import { hapticTap } from '../utils/haptics';
 
 interface DrawZoneProps {
   drawPileCount: number;
@@ -44,9 +45,10 @@ export function DrawZone({
     : canCycle
       ? 'Cycle deck'
       : 'Empty';
+  const drawButtonIcon = canDraw ? '→' : canCycle ? '↻' : '—';
 
   return (
-    <div className="flex flex-row gap-6 sm:gap-8 items-start pt-4">
+    <div className="game-interactive-surface flex flex-row gap-2 sm:gap-5 lg:gap-8 items-start pt-4 overflow-x-auto pb-1">
       {/* Draw / Stock pile slot */}
       <div className="flex flex-col items-center">
         <div className="text-xs text-game-muted uppercase tracking-wide mb-2 font-display h-6 flex items-center">Stock top</div>
@@ -67,29 +69,30 @@ export function DrawZone({
             />
           </div>
         ) : (
-          <div className="w-12 h-[64px] sm:w-[72px] sm:h-[96px] lg:w-[88px] lg:h-[116px] xl:w-[96px] xl:h-[128px] 2xl:w-[108px] 2xl:h-[144px] rounded-lg sm:rounded-xl border border-dashed border-game-border flex flex-col items-center justify-center text-game-muted text-[0.65rem] sm:text-xs bg-[#100c08] shadow-[inset_0_0_8px_rgba(0,0,0,0.8)] relative">
+          <div className="playing-card-slot w-12 h-[64px] sm:w-[72px] sm:h-[96px] lg:w-[88px] lg:h-[116px] xl:w-[96px] xl:h-[128px] 2xl:w-[108px] 2xl:h-[144px] rounded-lg sm:rounded-xl border border-dashed border-game-border flex flex-col items-center justify-center text-game-muted text-[0.65rem] sm:text-xs bg-[#100c08] shadow-[inset_0_0_8px_rgba(0,0,0,0.8)] relative">
             <div className="absolute inset-1 border border-dashed border-game-border/20 rounded-lg pointer-events-none" />
             <span>Empty</span>
           </div>
         )}
-
-        <button
-          type="button"
-          className="mt-2 w-full px-2 py-1 bg-[#201912] border border-amber-900/40 hover:border-game-accent text-amber-200 text-[0.65rem] sm:text-xs font-semibold rounded-lg shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-          disabled={!gameActive || (!canDraw && !canCycle)}
-          onClick={onDraw}
-          title={canDraw ? 'Pass exposed Stock card to Waste pile (D or Space)' : canCycle ? 'Cycle Waste pile to Stock' : 'Stock empty'}
-        >
-          <span>{drawButtonLabel}</span>
-          {(canDraw || canCycle) && (
-            <span className="text-[0.55rem] text-game-muted font-mono bg-amber-900/30 px-1 py-0.5 rounded">[Space]</span>
-          )}
-        </button>
-
         <div className="text-xs text-game-muted mt-1">
           Cycles: {redrawsRemaining === null ? '∞' : redrawsRemaining}
         </div>
       </div>
+
+      {/* Pass / cycle action between Stock and Waste */}
+      <button
+        type="button"
+        className="mt-[3.375rem] min-h-11 min-w-11 sm:mt-[3.625rem] lg:mt-[5.25rem] shrink-0 rounded-full border border-amber-900/60 bg-[#201912] text-amber-200 text-2xl leading-none shadow-sm transition-[border-color,background-color,transform] hover:border-game-accent hover:bg-[#2a2017] hover:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-game-accent-light focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+        disabled={!gameActive || (!canDraw && !canCycle)}
+        onClick={onDraw}
+        onPointerDown={(event) => {
+          if (event.pointerType === 'touch' && gameActive && (canDraw || canCycle)) hapticTap();
+        }}
+        aria-label={drawButtonLabel}
+        title={`${drawButtonLabel} (D or Space)`}
+      >
+        <span aria-hidden="true">{drawButtonIcon}</span>
+      </button>
 
       {/* Discard / Waste pile slot */}
       <div>
@@ -113,7 +116,7 @@ export function DrawZone({
             />
           </div>
         ) : (
-          <div className="w-12 h-[64px] sm:w-[72px] sm:h-[96px] lg:w-[88px] lg:h-[116px] xl:w-[96px] xl:h-[128px] 2xl:w-[108px] 2xl:h-[144px] rounded-lg sm:rounded-xl border border-dashed border-game-border flex flex-col items-center justify-center text-game-muted text-[0.65rem] sm:text-xs bg-[#100c08] shadow-[inset_0_0_8px_rgba(0,0,0,0.8)] relative">
+          <div className="playing-card-slot w-12 h-[64px] sm:w-[72px] sm:h-[96px] lg:w-[88px] lg:h-[116px] xl:w-[96px] xl:h-[128px] 2xl:w-[108px] 2xl:h-[144px] rounded-lg sm:rounded-xl border border-dashed border-game-border flex flex-col items-center justify-center text-game-muted text-[0.65rem] sm:text-xs bg-[#100c08] shadow-[inset_0_0_8px_rgba(0,0,0,0.8)] relative">
             <div className="absolute inset-1 border border-dashed border-game-border/20 rounded-lg pointer-events-none" />
             <span>Empty</span>
           </div>
@@ -147,7 +150,7 @@ export function DrawZone({
               type="button"
               onClick={onVaultSlotClick}
               disabled={!gameActive}
-              className={`w-12 h-[64px] sm:w-[72px] sm:h-[96px] lg:w-[88px] lg:h-[116px] xl:w-[96px] xl:h-[128px] 2xl:w-[108px] 2xl:h-[144px] rounded-lg sm:rounded-xl border border-dashed text-[0.6rem] sm:text-xs bg-[#120d09] shadow-[inset_0_0_8px_rgba(0,0,0,0.8)] relative flex flex-col items-center justify-center transition-all duration-200 cursor-pointer disabled:cursor-not-allowed ${
+              className={`playing-card-slot w-12 h-[64px] sm:w-[72px] sm:h-[96px] lg:w-[88px] lg:h-[116px] xl:w-[96px] xl:h-[128px] 2xl:w-[108px] 2xl:h-[144px] rounded-lg sm:rounded-xl border border-dashed text-[0.6rem] sm:text-xs bg-[#120d09] shadow-[inset_0_0_8px_rgba(0,0,0,0.8)] relative flex flex-col items-center justify-center transition-all duration-200 cursor-pointer disabled:cursor-not-allowed ${
                 isVaultTargetActive
                   ? 'border-amber-400 ring-2 ring-amber-400/80 animate-pulse text-amber-300 shadow-[0_0_12px_rgba(251,191,36,0.6)]'
                   : 'border-amber-900/40 text-amber-700/60 hover:border-amber-700/60'
