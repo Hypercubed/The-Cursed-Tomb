@@ -10,6 +10,7 @@ import {
   getCardLocation,
   getFunctionalValue,
   isBlocked,
+  isPyramidCleared,
   getRemainingPairStats,
   getRemovedCardIds,
   getRemovedCardsCount,
@@ -101,7 +102,8 @@ function App() {
 
   const handleStart = useCallback(() => {
     if (game.status === 'in-progress' && !hasRecordedOutcome) {
-      const { stats: updated, campaign: updatedCampaign } = defaultPersistenceManager.recordOutcome('pyramid-collapse');
+      const outcome = isPyramidCleared(game) ? 'partial-victory' : 'pyramid-collapse';
+      const { stats: updated, campaign: updatedCampaign } = defaultPersistenceManager.recordOutcome(outcome);
       setStats(updated);
       setCampaignStats(updatedCampaign);
     }
@@ -167,6 +169,11 @@ function App() {
     setRoundEffects(null);
     setIsRoundSummaryModalOpen(false);
   }, [campaign]);
+
+  const handleClaimPartialVictory = useCallback(() => {
+    if (game.status !== 'in-progress' || !isPyramidCleared(game)) return;
+    setGame((state) => ({ ...state, status: 'partial-victory' }));
+  }, [game.status, game]);
 
   const {
     isPlaying,
@@ -401,12 +408,14 @@ function App() {
 
   const statusLabel = useMemo(() => {
     if (game.status === 'ready') return 'Ready to start';
-    if (game.status === 'in-progress') return 'In progress';
+    if (game.status === 'in-progress') {
+      return isPyramidCleared(game) ? '✨ Pyramid Cleared!' : 'In progress';
+    }
     if (game.status === 'complete-victory') return '🌟 Complete Victory!';
     if (game.status === 'partial-victory') return '📜 Partial Victory!';
     if (game.status === 'pyramid-collapse') return '🏺 Pyramid Collapse';
     return '';
-  }, [game.status]);
+  }, [game.status, game]);
 
   const sidebar = (
     <GameSidebar
@@ -470,6 +479,15 @@ function App() {
             className="px-3 py-1.5 bg-amber-950 border border-amber-700 text-amber-300 rounded-lg text-xs font-semibold hover:bg-amber-900 transition-colors flex items-center gap-1 cursor-pointer"
           >
             <span>📜</span> Next Round ({campaign.roundNumber + 1})
+          </button>
+        )}
+        {game.status === 'in-progress' && isPyramidCleared(game) && (
+          <button
+            type="button"
+            onClick={handleClaimPartialVictory}
+            className="px-3 py-1.5 bg-emerald-950 border border-emerald-700 text-emerald-300 rounded-lg text-xs font-semibold hover:bg-emerald-900 transition-colors flex items-center gap-1 cursor-pointer animate-pulse"
+          >
+            <span>📜</span> Claim Victory & Next Round
           </button>
         )}
         <div className="px-[#0c0906] px-3 py-1.5 bg-[#18130e] border border-[#2d2319] rounded-lg text-xs sm:text-sm font-medium text-game-muted flex items-center gap-2">
@@ -542,6 +560,28 @@ function App() {
               >
                 Resign
               </button>
+            )}
+            {game.status === 'in-progress' && isPyramidCleared(game) && (
+              <div className="mb-4 bg-emerald-950/80 border border-emerald-700/80 rounded-xl p-3 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-lg animate-fade-in">
+                <div className="flex items-center gap-3 text-emerald-200 text-xs sm:text-sm">
+                  <span className="text-2xl sm:text-3xl">✨</span>
+                  <div>
+                    <strong className="block text-emerald-300 font-display uppercase tracking-wider text-sm sm:text-base">
+                      Pyramid Explored!
+                    </strong>
+                    <span className="text-emerald-200/90">
+                      You cleared the pyramid! Continue matching remaining stock cards for a Perfect Win, or move to the next round.
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleClaimPartialVictory}
+                  className="shrink-0 appearance-none bg-emerald-800 hover:bg-emerald-700 text-emerald-100 font-bold text-xs sm:text-sm px-4 py-2 rounded-lg border border-emerald-500 shadow transition-colors cursor-pointer flex items-center gap-1.5"
+                >
+                  <span>📜</span> Move to Next Round
+                </button>
+              </div>
             )}
             {/* Pyramid — the hero */}
             <PyramidBoard

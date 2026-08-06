@@ -66,9 +66,9 @@ When a round achieves a Pyramid Clear, the campaign SHALL evaluate the final vis
 
 #### Scenario: Solo King clear grants Anchor stroke
 - **WHEN** a standalone King clears the final pyramid card
-- **THEN** it SHALL increment its Reward Stage (`[—]` or `[+]`) provided its Attrition Stage is less than 5 AND no Fallen Hero blessing SHALL be awarded
+- **THEN** it SHALL increment its Reward Stage (`[—]` or `[+]`) provided its Attrition Stage is less than 5 AND no Hero's Blessing SHALL be awarded
 
-#### Scenario: Cursed card cleared as Fallen Hero skips Blessing award
+#### Scenario: Cursed card cleared as Hero skips Blessing award
 - **WHEN** a round ends in victory AND the higher-value Hero card of the final cleared pair is Cursed (Stage 4 with active Curse effect)
 - **THEN** the system SHALL skip the Blessing award (`blessed` remains `false`)
 - **THEN** the card SHALL remain Cursed with its active Curse trap effect and Curse icon

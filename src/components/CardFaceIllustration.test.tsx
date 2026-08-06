@@ -104,4 +104,22 @@ describe('PlayingCard Center Face Illustration Integration', () => {
     const suitSvg = container.querySelector('svg[viewBox="0 0 24 24"]');
     expect(suitSvg).not.toBeNull();
   });
+
+  it('renders blue X rank cross-out overlay for Sun Cross blessed Clubs card', () => {
+    const { container } = render(<PlayingCard rank={10} suit="♣" blessed={true} />);
+    // SlashedRank for Sun Cross uses viewBox="-15 -5 130 110" with blue strokes (#1d4ed8)
+    const sunCrossSvg = container.querySelector('svg[viewBox="-15 -5 130 110"]');
+    expect(sunCrossSvg).not.toBeNull();
+    const bluePaths = Array.from(sunCrossSvg?.querySelectorAll('path') || []).filter(
+      (p) => p.getAttribute('stroke') === '#1d4ed8'
+    );
+    expect(bluePaths.length).toBe(2);
+  });
+
+  it('does not render blue X rank cross-out overlay for non-Clubs blessed card', () => {
+    const { container } = render(<PlayingCard rank={10} suit="♥" blessed={true} />);
+    const sunCrossSvg = container.querySelector('svg[viewBox="-15 -5 130 110"]');
+    expect(sunCrossSvg).toBeNull();
+  });
 });
+

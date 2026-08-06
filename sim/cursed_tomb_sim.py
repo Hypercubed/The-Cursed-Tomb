@@ -67,7 +67,7 @@ class RuleFlags:
     All default True/False to match the base ruleset as written."""
     scars: bool = True              # stage-3 functional value shift (+1 red / -1 black)
     curses: bool = True             # stage-4 red trap / black pairing restriction
-    blessings: bool = True          # Fallen Hero unlocks + all 4 suit blessing effects
+    blessings: bool = True          # Hero's Blessing unlocks + all 4 suit blessing effects
     attrition: bool = True          # failure track progresses at all on freeze
     volatile_collapse: bool = True  # optional "all 4 of a rank entombed" instant collapse
     max_attrition_stage: int = 5    # stage at which a card is considered entombed (default 5)
@@ -84,7 +84,7 @@ class CardState:
     suit: str
     attrition_stage: int = 0   # 0 none,1 vulnerable,2 doubtful,3 scar,4 curse,5 entombed
     reward_stage: int = 0      # 0 none,1 fortifying,2 anchored (immune forever)
-    blessed: bool = False      # Fallen Hero blessing unlocked (uses own suit for effect)
+    blessed: bool = False      # Hero's Blessing unlocked (uses own suit for effect)
     temp_immune: bool = False  # this-round-only immunity granted by a Hearts blessing
     anchor_absorption: int = 0 # 0..4 marks absorbed by current Anchor
 
@@ -149,7 +149,7 @@ def newly_exposed_after(removed, locks, extra_removed):
 
 def pair_sum(card_a, card_b, flags):
     """Sum used for a proposed pairing, honoring the Clubs (Universal Wildcard) blessing:
-    if one side is a Clubs Fallen Hero, it can pair with ANY card (treating sum as TARGET)."""
+    if one side is a Clubs Hero card, it can pair with ANY card (treating sum as TARGET)."""
     a_is_clubs_hero = flags.blessings and card_a.blessed and card_a.suit == 'C'
     b_is_clubs_hero = flags.blessings and card_b.blessed and card_b.suit == 'C'
     if a_is_clubs_hero or b_is_clubs_hero:
@@ -752,7 +752,7 @@ def parse_args():
                    help="enable the optional Volatile Collapse variant rule")
     p.add_argument("--no-scars", action="store_true", help="disable the stage-3 scar value shift")
     p.add_argument("--no-curses", action="store_true", help="disable stage-4 red/black curse effects")
-    p.add_argument("--no-blessings", action="store_true", help="disable Fallen Hero unlocks and all suit blessing effects")
+    p.add_argument("--no-blessings", action="store_true", help="disable Hero's Blessing unlocks and all suit blessing effects")
     p.add_argument("--no-attrition", action="store_true",
                    help="disable the whole failure ink track (cards never scar/curse/entomb; "
                         "campaigns then can only end via victory or timeout)")

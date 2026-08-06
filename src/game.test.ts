@@ -21,6 +21,7 @@ import {
   advanceCampaignRound,
   initializeGame,
   isBlocked,
+  isPyramidCleared,
   movePyramidToVault,
   playCard,
   removePair,
@@ -159,10 +160,30 @@ describe('game model', () => {
     expect(currentState.selectedCardId).toBeNull();
   });
 
-  it('declares partial victory when pyramid is cleared but deck has cards remaining', () => {
+  it('allows continued play when pyramid is cleared but deck has playable cards/redeals remaining', () => {
     const state = startGame(1);
     const doneState = { ...state, pyramid: state.pyramid.map((row) => row.map((card) => ({ ...card, removed: true }))) };
-    expect(checkForWin(doneState)).toBe('partial-victory');
+    expect(isPyramidCleared(doneState)).toBe(true);
+    expect(checkForWin(doneState)).toBe('in-progress');
+  });
+
+  it('declares partial victory when pyramid is cleared and no moves/draws/redeals remain', () => {
+    const state = startGame(0);
+    const exhaustedState: GameState = {
+      ...state,
+      pyramid: state.pyramid.map((row) => row.map((card) => ({ ...card, removed: true }))),
+      drawPile: [],
+      discardPile: [{ id: 'S2', suit: '♠', rank: 2, removed: false, selected: false, attritionStage: 0, rewardStage: 0, blessed: false }],
+      redrawsRemaining: 0,
+    };
+    expect(isPyramidCleared(exhaustedState)).toBe(true);
+    expect(checkForWin(exhaustedState)).toBe('partial-victory');
+  });
+
+  it('resignGame returns partial-victory if pyramid is cleared', () => {
+    const state = startGame(1);
+    const clearedState = { ...state, pyramid: state.pyramid.map((row) => row.map((card) => ({ ...card, removed: true }))) };
+    expect(resignGame(clearedState).status).toBe('partial-victory');
   });
 
   it('declares complete victory when both pyramid and deck are cleared', () => {

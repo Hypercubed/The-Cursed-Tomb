@@ -49,11 +49,13 @@ export function PyramidBoard({
 }: PyramidBoardProps): React.ReactElement {
   return (
     <div className={`game-interactive-surface flex flex-col items-center py-2 sm:py-4 relative ${status === 'pyramid-collapse' ? 'overflow-hidden' : 'overflow-x-auto'}`}>
-      {interactionMode === 'targeting-spades' && (
-        <div className="mb-2 px-3 py-1 bg-blue-950/90 border border-blue-700 text-blue-200 text-xs font-semibold rounded-full animate-bounce">
-          ♠ Spades Tunnel: Click one exposed pyramid card to move it to the Waste pile!
-        </div>
-      )}
+      <div className="min-h-[32px] sm:min-h-[36px] mb-2 flex items-center justify-center pointer-events-none" aria-live="polite">
+        {interactionMode === 'targeting-spades' && (
+          <div className="px-3 py-1 bg-blue-950/90 border border-blue-700 text-blue-200 text-xs font-semibold rounded-full animate-bounce shadow-md pointer-events-auto">
+            ♠ Spades Tunnel: Click one exposed pyramid card to move it to the Waste pile!
+          </div>
+        )}
+      </div>
 
       {pyramid.map((row, rowIndex) => (
         <div

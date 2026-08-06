@@ -14,11 +14,13 @@ function RealRankMark({
   stage = 0,
   funcVal,
   color = 'blue',
+  isSunCross = false,
 }: {
   rank?: string;
   stage?: number;
   funcVal?: string;
   color?: 'blue' | 'red' | 'amber';
+  isSunCross?: boolean;
 }) {
   const strokeColor =
     color === 'red' ? '#ef4444' : color === 'amber' ? '#f59e0b' : '#3b82f6';
@@ -32,13 +34,32 @@ function RealRankMark({
       <span className="relative inline-block font-bold leading-none text-game-text text-sm sm:text-base px-1">
         <span>{rank}</span>
 
-        {stage > 0 && (
+        {(stage > 0 || isSunCross) && (
           <svg
             aria-hidden="true"
             className="absolute -inset-x-1.5 -inset-y-1 w-[calc(100%+12px)] h-[calc(100%+8px)] pointer-events-none overflow-visible z-10"
             viewBox="-15 -5 130 110"
             preserveAspectRatio="none"
           >
+            {isSunCross && (
+              <>
+                <path
+                  d="M 12 12 Q 50 50 88 88"
+                  stroke="#3b82f6"
+                  strokeWidth="18"
+                  strokeLinecap="round"
+                  filter="url(#ink-bleed)"
+                />
+                <path
+                  d="M 12 88 Q 50 50 88 12"
+                  stroke="#3b82f6"
+                  strokeWidth="18"
+                  strokeLinecap="round"
+                  filter="url(#ink-bleed)"
+                />
+              </>
+            )}
+
             {/* Stage 1: Left vertical line framing rank */}
             {stage >= 1 && (
               <path
@@ -320,7 +341,7 @@ export function RulesModal({ isOpen, onClose, initialTab = 'core-rules' }: Rules
                   </div>
                   <div className="bg-[#18130e] p-3 rounded border border-[#251e16]">
                     <strong className="text-blue-300 block mb-1">4. Blessing & Curse Mutual Exclusivity</strong>
-                    Cards possess a single visual identity: either a Blessing drawing OR a Curse drawing, never both. Blessed cards taking Stage 4 Attrition retain their Blessing drawing and skip Curse trap mechanics. Cursed cards cleared as Fallen Heroes skip Blessing awards.
+                    Cards possess a single visual identity: either a Blessing drawing OR a Curse drawing, never both. Blessed cards taking Stage 4 Attrition retain their Blessing drawing and skip Curse trap mechanics. Cursed cards cleared as Heroes skip Blessing awards.
                   </div>
                 </div>
               </section>
@@ -383,7 +404,7 @@ export function RulesModal({ isOpen, onClose, initialTab = 'core-rules' }: Rules
                     </div>
                     <div className="bg-[#18130e] p-2.5 rounded border border-[#251e16]">
                       <strong className="text-emerald-300 font-display block mb-0.5">♣ Clubs (Universal Wildcard) — ⊕ Sun Cross</strong>
-                      Can pair legally with ANY exposed card regardless of value sum.
+                      Cross out rank digit in blue ink (<RealRankMark rank="7" isSunCross={true} color="blue" />). Can pair legally with ANY exposed card regardless of value sum.
                     </div>
                   </div>
                 </div>
@@ -519,7 +540,7 @@ export function RulesModal({ isOpen, onClose, initialTab = 'core-rules' }: Rules
                 <div className="bg-[#18130e] p-3 rounded border border-[#251e16] space-y-1.5">
                   <strong className="text-amber-300 block font-display">Top-Left Index Zone</strong>
                   <p className="m-0 text-game-muted leading-relaxed">
-                    Reserved for Attrition Marks, Scars, and Curses over the rank number pip. Notice how vertical lines frame the rank digit and the Scar backslash stroke <RealRankMark rank="7" stage={3} funcVal="8" color="blue" /> directly overlaps the rank number itself, with the modified functional value written to the right.
+                    Reserved for Attrition Marks, Scars, Curses, and Sun Cross wildcard rank cross-outs (<RealRankMark rank="7" isSunCross={true} color="blue" />) over the rank number pip. Vertical lines frame the rank digit, Scar backslash strokes <RealRankMark rank="7" stage={3} funcVal="8" color="blue" /> overlap the rank, and Sun Cross wildcards feature a blue crossed-out rank number.
                   </p>
                 </div>
                 <div className="bg-[#18130e] p-3 rounded border border-[#251e16] space-y-1.5">

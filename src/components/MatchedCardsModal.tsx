@@ -382,13 +382,24 @@ export function MatchedCardsModal({
                             </div>
                           )}
 
-                          {/* Rank Row with Blue Slashed Scar Overlay */}
+                          {/* Rank Row with Blue Slashed Scar Overlay / Sun Cross Wildcard Cross-Out */}
                           <div className="flex items-center justify-center w-full leading-none relative">
                             {isEntombed ? (
                               <span className="text-xs">💀</span>
                             ) : (
                               <span className="relative inline-block leading-none">
                                 <span>{rLabel}</span>
+                                {isBlessed && suit === '♣' && (
+                                  <svg
+                                    aria-hidden="true"
+                                    className="absolute -inset-x-0.5 -inset-y-0.5 w-[calc(100%+4px)] h-[calc(100%+4px)] pointer-events-none overflow-visible z-20"
+                                    viewBox="0 0 100 100"
+                                    preserveAspectRatio="none"
+                                  >
+                                    <line x1="8" y1="5" x2="92" y2="95" stroke="#2563eb" strokeWidth="20" strokeLinecap="round" />
+                                    <line x1="8" y1="95" x2="92" y2="5" stroke="#2563eb" strokeWidth="20" strokeLinecap="round" />
+                                  </svg>
+                                )}
                                 {attritionStage >= 1 && (
                                   <svg
                                     aria-hidden="true"

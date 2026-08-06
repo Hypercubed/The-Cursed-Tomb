@@ -31,7 +31,7 @@ Scars and curses SHALL be rendered directly over and beside the rank number pip 
 - **THEN** the slashed rank number, curse indicator (⚡), and modified functional value SHALL be rendered in the rank area of the top-left corner index
 
 ### Requirement: Card anchors and blessings overlay suit pip
-Corner suit pips SHALL render strictly the standard suit symbol character (♥, ♦, ♠, ♣) without circle halos or corner overlays. Immunity anchors SHALL render in the top-right corner, and Fallen Hero blessings SHALL render as suit-specific center face illustrations (`CardFaceIllustration`).
+Corner suit pips SHALL render strictly the standard suit symbol character (♥, ♦, ♠, ♣) without circle halos or corner overlays. Immunity anchors SHALL render in the top-right corner, and Hero's blessings SHALL render as suit-specific center face illustrations (`CardFaceIllustration`).
 
 #### Scenario: Suit pip renders without circle halo
 - **WHEN** a card is a Blessed Hero
@@ -221,6 +221,10 @@ The web UI SHALL render blessing and curse illustrations directly on the center 
   - Spades: Downward-pointing shovel blade at card bottom with handle shaft extending upwards towards the spade tip
   - Clubs: Circled Sun Cross (`⊕`) centered over the club leaves
 - **THEN** the card face SHALL NOT render any Curse illustration
+
+#### Scenario: Corner rank rendering for Sun Cross wildcard cards
+- **WHEN** a Sun Cross blessed card (`blessed` is true and `suit` is Clubs `♣`) is rendered
+- **THEN** its corner index rank number digit SHALL be crossed out with an organic blue gel pen ink `X` (`#1d4ed8`) overlay
 
 #### Scenario: Card face rendering for Cursed cards
 - **WHEN** a Cursed card (Stage 4 with active Curse effect) is rendered

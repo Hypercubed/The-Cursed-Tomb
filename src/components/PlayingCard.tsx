@@ -64,11 +64,11 @@ function SuitIcon({ suit, className = 'w-4 h-4' }: { suit: string; className?: s
 
 function getUpperLeftTooltip(suit: string, blessed: boolean, rewardStage: number): string {
   if (blessed) {
-    if (suit === '♥') return 'Blessed Fallen Hero (∩ Archway): Hearts Stock Reshuffle power (shuffles Waste back into Stock when cleared)';
-    if (suit === '♦') return 'Blessed Fallen Hero (□ Vault Box): Diamonds Vault power (can store 1 Waste card in Vault)';
-    if (suit === '♠') return 'Blessed Fallen Hero (Tunnel Shovel): Spades Tunnel power (moves 1 exposed pyramid card to Waste when cleared)';
-    if (suit === '♣') return 'Blessed Fallen Hero (⊕ Sun Cross): Clubs Universal Wildcard power (pairs with ANY exposed card to total 13)';
-    return 'Blessed Fallen Hero: Unlocks Suit Blessing power when cleared';
+    if (suit === '♥') return 'Blessed Hero (∩ Archway): Hearts Stock Reshuffle power (shuffles Waste back into Stock when cleared)';
+    if (suit === '♦') return 'Blessed Hero (□ Vault Box): Diamonds Vault power (can store 1 Waste card in Vault)';
+    if (suit === '♠') return 'Blessed Hero (Tunnel Shovel): Spades Tunnel power (moves 1 exposed pyramid card to Waste when cleared)';
+    if (suit === '♣') return 'Blessed Hero (⊕ Sun Cross): Clubs Universal Wildcard power (pairs with ANY exposed card to total 13)';
+    return 'Blessed Hero: Unlocks Suit Blessing power when cleared';
   }
   if (rewardStage === 1) return 'Fortifying Anchor [—]: 1st stroke towards permanent Anchor immunity';
   if (rewardStage === 2) return 'Anchored Card [+]: Permanently immune to failure track degradation';
@@ -118,6 +118,7 @@ function SlashedRank({
   suit = '♥',
   rank = 1,
   seed,
+  isSunCross = false,
 }: {
   label: string;
   stage: number;
@@ -125,6 +126,7 @@ function SlashedRank({
   suit?: string;
   rank?: number;
   seed?: string | number;
+  isSunCross?: boolean;
 }) {
   if (stage === 5) {
     return <span title="Entombed (💀)">💀</span>;
@@ -132,11 +134,46 @@ function SlashedRank({
 
   const scarTransform = getHandDrawnTransform(suit, rank, 'scar', seed);
   const modValTransform = getHandDrawnTransform(suit, rank, 'modifiedValue', seed);
+  const sunCrossTransform = getHandDrawnTransform(suit, rank, 'wildcard', seed);
 
   return (
     <span className="relative inline-block leading-none select-none">
       {/* Base rank number - stays in exact fixed position */}
       <span>{label}</span>
+
+      {/* Organic Blue Ink SVG Overlay for Sun Cross Wildcard (blessed Clubs) */}
+      {isSunCross && (
+        <svg
+          aria-hidden="true"
+          className="absolute -inset-x-2 -inset-y-1 w-[calc(100%+16px)] h-[calc(100%+8px)] pointer-events-none overflow-visible z-20"
+          viewBox="-15 -5 130 110"
+          preserveAspectRatio="none"
+        >
+          <g
+            transform={`translate(${sunCrossTransform.translateX}, ${sunCrossTransform.translateY}) rotate(${sunCrossTransform.rotateDeg} 50 50) scale(${sunCrossTransform.scale})`}
+            style={{ transformOrigin: '50px 50px' }}
+          >
+            <path
+              d="M 12 12 Q 50 50 88 88"
+              stroke="#1d4ed8"
+              strokeWidth="18"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              filter="url(#ink-bleed)"
+              className="drop-shadow-[0_0_2px_rgba(37,99,235,0.45)]"
+            />
+            <path
+              d="M 12 88 Q 50 50 88 12"
+              stroke="#1d4ed8"
+              strokeWidth="18"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              filter="url(#ink-bleed)"
+              className="drop-shadow-[0_0_2px_rgba(37,99,235,0.45)]"
+            />
+          </g>
+        </svg>
+      )}
 
       {/* Organic Scarlet Red Gel Pen SVG Scar Overlay for Stages 1-4 */}
       {stage >= 1 && (
@@ -343,6 +380,7 @@ interface CornerIndexProps {
   rightTooltip: string;
   className?: string;
   seed?: string | number;
+  blessed?: boolean;
 }
 
 function CornerIndex({
@@ -354,6 +392,7 @@ function CornerIndex({
   rightTooltip,
   className = '',
   seed,
+  blessed = false,
 }: CornerIndexProps) {
   const label = rankLabel(rank);
   const red = isRedSuit(suit);
@@ -361,12 +400,21 @@ function CornerIndex({
     ? functionalValue
     : (attritionStage >= 3 ? Math.max(1, Math.min(13, rank + (red ? 1 : -1))) : rank);
   const funcValLabel = rankLabel(effectiveValue);
+  const isSunCross = blessed && suit === '♣';
 
   return (
     <div className={`flex flex-col items-start leading-none text-[0.65rem] sm:text-xs lg:text-sm font-black z-10 select-none ${className}`}>
       {/* Rank row with Scars & Curses overlay */}
       <div className="flex items-center leading-none relative" title={rightTooltip || undefined}>
-        <SlashedRank label={label} stage={attritionStage} funcValLabel={funcValLabel} suit={suit} rank={rank} seed={seed} />
+        <SlashedRank
+          label={label}
+          stage={attritionStage}
+          funcValLabel={funcValLabel}
+          suit={suit}
+          rank={rank}
+          seed={seed}
+          isSunCross={isSunCross}
+        />
       </div>
 
       {/* Suit row */}
@@ -484,6 +532,7 @@ export function PlayingCard({
           leftTooltip={leftTooltip}
           rightTooltip={rightTooltip}
           seed={seed}
+          blessed={blessed}
         />
         <AnchorBadge rewardStage={rewardStage} suit={suit} rank={rank} seed={seed} />
       </div>

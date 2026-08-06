@@ -24,7 +24,7 @@ The campaign ends in instant defeat if the tomb collapses. The tomb collapses th
 *   **The Stock:** The face-down draw pile.
 *   **The Waste:** The face-up pile where cards flipped from the Stock land.
 *   **The Foundation:** The separate, face-up destination pile where successfully paired and cleared cards are placed. **Cards in the Foundation are completely inert trophies;** they cannot be targeted, moved, or interacted with by any special rules or blessings for the remainder of the game.
-*   **The Vault (Diamond Blessing):** A separate holding area beside the table, distinct from the Foundation. When a ♦ Diamond card with the Fallen Hero blessing (circled suit symbol) is exposed on the Waste pile or the Pyramid layout, it may be **instantly and freely** placed face-up into the Vault without spending an action. A Pyramid Diamond placed in the Vault unblocks the cards beneath it as if it were cleared. The Vaulted card survives all subsequent Waste pile Redeals for the duration of the game and may be paired normally from the Vault at any future point.
+*   **The Vault (Diamond Blessing):** A separate holding area beside the table, distinct from the Foundation. When a ♦ Diamond card with the Hero's blessing (circled suit symbol) is exposed on the Waste pile or the Pyramid layout, it may be **instantly and freely** placed face-up into the Vault without spending an action. A Pyramid Diamond placed in the Vault unblocks the cards beneath it as if it were cleared. The Vaulted card survives all subsequent Waste pile Redeals for the duration of the game and may be paired normally from the Vault at any future point.
 *   **The Graveyard Box:** A separate physical container used to hold dead cards. Cards in the Graveyard Box are permanently removed from the deck pool for the remainder of the campaign.
 
 ---
@@ -43,11 +43,11 @@ To preserve deck secrecy, ink marks must be drawn using **fine-tip felt markers*
 ### Ink Colors & Visual Polarity
 Ink colors differentiate positive card modifications from negative card degradation at a glance:
 *   **🔴 Red Ink (Negative Modifications):** Use red ink for all Attrition marks (Stage 1 & 2 slashes), Scars (Stage 3 rank slash & functional shift numbers), Curses (Stage 4 `X` and trap icons), and Entombed defacement (`X`).
-*   **🔵 Blue Ink (Positive Modifications):** Use blue ink for all defensive Immunity marks (Stage 1 Fortifying `—` and Stage 2 Anchored `+`), Fallen Hero suit circles `(♥)`, and center-face Blessing illustrations.
+*   **🔵 Blue Ink (Positive Modifications):** Use blue ink for all defensive Immunity marks (Stage 1 Fortifying `—` and Stage 2 Anchored `+`), Hero suit circles `(♥)`, center-face Blessing illustrations, and Sun Cross wildcard rank crossed-out marks (`X`).
 
 ### Spatial Layout & Ink Zones
 Ink modifications must be strictly confined to distinct visual zones:
-*   **Upper-Left Corner Index:** Reserved exclusively for Rank modification marks, Scars, and Curses (`|`, `||`, `N`, `|X|`) drawn over the rank number pip. Corner suit pips remain clean; Fallen Hero Suit Blessings are drawn directly on the center card face as suit-specific illustrations (`∩`, `□`, Shovel, `⊕`).
+*   **Upper-Left Corner Index:** Reserved exclusively for Rank modification marks, Scars, Curses (`|`, `||`, `N`, `|X|`), and Sun Cross wildcard rank crossed-out marks (`X`) drawn over the rank number pip. Corner suit pips remain clean; Hero Suit Blessings are drawn directly on the center card face as suit-specific illustrations (`∩`, `□`, Shovel, `⊕`).
 *   **Upper-Right Corner Margin (and Bottom-Left in 180° rotation):** Reserved exclusively for defensive Immunity Anchor marks (`—` for Fortifying, `+` for Anchored).
 
 ---
@@ -65,7 +65,7 @@ Deal 28 cards face-up into a standard pyramid layout consisting of 7 rows. The r
 3.  **Black Curses `[ |X| ]` (The Recycled Weight):** When paired with a matching partner card, the Black Cursed card moves to the Foundation stack, but the paired partner card is shuffled back into the face-down Stock draw pile instead of moving to the Foundation stack. *(Recommended Center-Face Icon: Trapezoid Weight `⏍` representing a heavy weight).*
 4.  **Mutual Exclusivity Rule:** The recommended center-face illustration (Blessing or Curse) is drawn on the card face. A card carries EITHER a Blessing illustration OR a Curse illustration, never both.
     - If a Blessed card advances to Stage 4 Attrition, it receives the Stage 4 rank marking (`|X|` over rank digit) and can advance to Stage 5 Entombed on a subsequent attrition mark, but its **Curse trap mechanics (Red face-down deals / Black weight partner reshuffle) and Curse illustration are skipped**. The card retains its Blessing illustration.
-    - If a Stage 4 Cursed card is cleared as the higher-value Fallen Hero at round end, the **Blessing award is skipped**.
+    - If a Stage 4 Cursed card is cleared as the higher-value Hero card at round end, the **Blessing award is skipped**.
 5.  **Retrospective Anchor Rules:** An Anchor `[ + ]` drawn in the card's upper-right corner stops *future* degradation. If a card already has a Scar or Curse, those ink marks remain active; the Anchor simply blocks the card from progressing to Stage 5 (Entombed).
 6.  **180° Symmetry:** For physical deck play, all pen strokes are marked symmetrically (scars, curses, and blessings in top-left/bottom-right corners; anchors in top-right/bottom-left corners) so cards remain readable when rotated.
 
@@ -93,17 +93,17 @@ Isolate the **final visual transaction** used to remove the last card(s) from th
 
 ### A. The Final Pair Clear
 Compare the final two cards' active Functional Values:
-*   **The Higher-Value Card becomes the Fallen Hero:** Draw its suit-specific blessing illustration directly on the center face of the card to permanently unlock its blessing for all future games. *(If already blessed or if the card is Stage 4 Cursed, skip this effect).* The center-face illustration provides instant visual identification:
+*   **The Higher-Value Card becomes the Blessed Hero:** Draw its suit-specific blessing illustration directly on the center face of the card to permanently unlock its blessing for all future games. *(If already blessed or if the card is Stage 4 Cursed, skip this effect).* The center-face illustration provides instant visual identification:
     *   ♥ **Hearts (Stock Reshuffle):** Center face icon: Tomb Archway (`∩`) representing resurrection from the tomb. When cleared, immediately shuffle all cards currently in the face-up Waste pile back into the face-down Stock draw pile without consuming a redeal.
     *   ♦ **Diamonds (The Vault):** Center face icon: Vault Box (`□`). When exposed on the Waste pile OR on the Pyramid layout, you may instantly place this card face-up into a separate area on the side of the table (the Diamond Vault slot). **This action is completely free and does not interrupt your turn.**
     *   ♠ **Spades (The Tunnel):** Center face icon: Tunnel Shovel (blade pointing down at bottom, handle extending up). When cleared, select any one exposed card in the pyramid layout and move it directly onto the top of the face-up Waste pile.
-    *   ♣ **Clubs (Universal Wildcard):** Center face icon: Circled Sun Cross (`⊕`). When pairing, this card can legally pair with **ANY exposed card** regardless of that partner card's functional value (treating the combined sum as 13).
+    *   ♣ **Clubs (Universal Wildcard):** Center face icon: Circled Sun Cross (`⊕`). Cross out the rank number digit in blue ink (`X`) on the upper-left and bottom-right corner indices. When pairing, this card can legally pair with **ANY exposed card** regardless of that partner card's functional value (treating the combined sum as 13).
 *   **The Lower-Value Card builds the Anchor:** Progress its defensive immunity track by one stroke in the upper-right corner margin (and bottom-left corner rotated 180°):
     *   *First Stroke `[ — ]` (Fortifying):* Draw a single bold dark horizontal line in the upper-right corner margin. No mechanical effect yet.
     *   *Second Stroke `[ + ]` (Anchored):* Cross it vertically with a bold dark stroke (`+`) in the upper-right corner margin. The card is now permanently immune to rank loss marks.
 
 ### B. The Sibling Clear (Solo King Clear)
-If the final card clearing the board is a standalone King, it acts as both structural points. Progress its upper-right Anchor track by one stroke (`[ — ]` or `[ + ]`). No Fallen Hero blessing is awarded.
+If the final card clearing the board is a standalone King, it acts as both structural points. Progress its upper-right Anchor track by one stroke (`[ — ]` or `[ + ]`). No Hero's Blessing is awarded.
 
 *Anchor Progression & Entombment:* Cards continue to accumulate upper-right Anchor strokes (`[ — ]` and `[ + ]`) at all active attrition stages (including Scarred and Cursed cards at Stage 3 and 4) up until they are Entombed (Stage 5). Once a card reaches Stage 2 Anchored (`[ + ]`), it becomes immune to further pyramid collapse attrition. Once Entombed at Stage 5, a card is permanently removed to the Graveyard and can no longer receive Anchor marks.
 

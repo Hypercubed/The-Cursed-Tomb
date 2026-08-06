@@ -1,4 +1,4 @@
-export type InkMarkType = 'illustration' | 'scar' | 'modifiedValue' | 'anchor';
+export type InkMarkType = 'illustration' | 'scar' | 'modifiedValue' | 'anchor' | 'wildcard';
 
 export interface HandDrawnTransform {
   rotateDeg: number;
@@ -69,6 +69,14 @@ export function getHandDrawnTransform(
         scale: Number((0.95 + val1 * 0.10).toFixed(3)),
         translateX: Number((-1.0 + val2 * 2.0).toFixed(2)),
         translateY: Number((-1.0 + val3 * 2.0).toFixed(2)),
+      };
+    }
+    case 'wildcard': {
+      return {
+        rotateDeg: Number((-3.0 + val0 * 6.0).toFixed(2)),
+        scale: Number((0.95 + val1 * 0.10).toFixed(3)),
+        translateX: Number((-1.5 + val2 * 3.0).toFixed(2)),
+        translateY: Number((-1.5 + val3 * 3.0).toFixed(2)),
       };
     }
   }

@@ -234,7 +234,7 @@ export function RoundSummaryModal({
                       ? 'Card is entombed and cannot receive defensive Anchor strokes.'
                       : effects.clearDetails.anchorAlreadyMaxed
                         ? 'Card is already fully Anchored [+].'
-                        : 'Defensive Anchor stroke added! (No Fallen Hero blessing is awarded for Solo King clears).'}
+                        : 'Defensive Anchor stroke added! (No Hero\'s Blessing is awarded for Solo King clears).'}
                   </p>
                 </div>
               ) : (
@@ -256,8 +256,8 @@ export function RoundSummaryModal({
                       <span>
                         <strong>Higher Card ({effects.clearDetails.heroCard?.suit}{effects.clearDetails.heroCard?.rank}):</strong>{' '}
                         {effects.clearDetails.heroAlreadyBlessed
-                          ? 'Already a Blessed Fallen Hero from a previous round.'
-                          : 'Granted Fallen Hero Blessing! Unlocked suit blessing for subsequent rounds.'}
+                          ? 'Already a Blessed Hero from a previous round.'
+                          : 'Granted Hero\'s Blessing! Unlocked suit blessing for subsequent rounds.'}
                       </span>
                     </div>
 
@@ -301,7 +301,7 @@ export function RoundSummaryModal({
                         />
                         <div className="flex flex-col gap-0.5 text-xs">
                           <span className="font-bold text-emerald-200">
-                            {card.suit}{card.rank} — Fallen Hero Blessing
+                            {card.suit}{card.rank} — Hero's Blessing
                           </span>
                           <span className="text-[11px] text-emerald-400/90 leading-tight">
                             {getSuitBlessingDescription(card.suit)}

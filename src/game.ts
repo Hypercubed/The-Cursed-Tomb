@@ -409,6 +409,10 @@ export function cardIsVisible(card: Card, state: GameState): boolean {
   return false;
 }
 
+export function isPyramidCleared(state: GameState): boolean {
+  return getRemainingPyramidCards(state).length === 0;
+}
+
 export function getRemainingPyramidCards(state: GameState): Card[] {
   return state.pyramid.flat().filter((card) => !card.removed);
 }
@@ -422,6 +426,15 @@ export function checkForWin(state: GameState): GameStatus {
     const drawEmpty = state.drawPile.length === 0;
     if (drawEmpty && discardEmpty) {
       return 'complete-victory';
+    }
+    const canMove = canAnyMove(state);
+    const canDraw = state.drawPile.length > 0;
+    const canCycle =
+      state.discardPile.length > 0 &&
+      (state.redrawsRemaining === null || state.redrawsRemaining > 0);
+
+    if (canMove || canDraw || canCycle) {
+      return 'in-progress';
     }
     return 'partial-victory';
   }
@@ -1104,7 +1117,7 @@ export function resignGame(state: GameState): GameState {
   if (state.status !== 'in-progress') return state;
   return {
     ...state,
-    status: 'pyramid-collapse',
+    status: isPyramidCleared(state) ? 'partial-victory' : 'pyramid-collapse',
   };
 }
 

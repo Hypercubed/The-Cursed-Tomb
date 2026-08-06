@@ -13,6 +13,8 @@ import {
   checkForWin,
   resignGame,
   getRemainingPyramidCards,
+  isPyramidCleared,
+  canAnyMove,
   getActiveRankCounts,
   Rank,
   getFunctionalValue,
@@ -46,7 +48,17 @@ export function isGamePlayable(state: GameState): boolean {
   if (state.status !== 'in-progress') return false;
 
   const remainingPyramid = getRemainingPyramidCards(state);
-  if (remainingPyramid.length === 0) return true;
+  if (remainingPyramid.length === 0) {
+    if (state.drawPile.length === 0 && state.discardPile.length === 0 && !state.vaultCard) {
+      return false;
+    }
+    const canMove = canAnyMove(state);
+    const canDraw = state.drawPile.length > 0;
+    const canCycle =
+      state.discardPile.length > 0 &&
+      (state.redrawsRemaining === null || state.redrawsRemaining > 0);
+    return canMove || canDraw || canCycle;
+  }
 
   const totalDeckCount = state.drawPile.length + state.discardPile.length;
   let simState = state;
@@ -453,10 +465,10 @@ export function solveBoard(
   if (target === 'complete' && state.status === 'complete-victory') {
     return [state];
   }
-  if (target === 'partial' && (state.status === 'partial-victory' || state.status === 'complete-victory')) {
+  if (target === 'partial' && (state.status === 'partial-victory' || state.status === 'complete-victory' || isPyramidCleared(state))) {
     return [state];
   }
-  if (target === 'any' && (state.status === 'complete-victory' || state.status === 'partial-victory')) {
+  if (target === 'any' && (state.status === 'complete-victory' || state.status === 'partial-victory' || isPyramidCleared(state))) {
     return [state];
   }
   if (state.status === 'pyramid-collapse' || !isGamePlayable(state)) {
@@ -469,10 +481,10 @@ export function solveBoard(
     if (target === 'complete' && curr.status === 'complete-victory') {
       return [curr];
     }
-    if (target === 'partial' && (curr.status === 'partial-victory' || curr.status === 'complete-victory')) {
+    if (target === 'partial' && (curr.status === 'partial-victory' || curr.status === 'complete-victory' || isPyramidCleared(curr))) {
       return [curr];
     }
-    if (target === 'any' && (curr.status === 'complete-victory' || curr.status === 'partial-victory')) {
+    if (target === 'any' && (curr.status === 'complete-victory' || curr.status === 'partial-victory' || isPyramidCleared(curr))) {
       return [curr];
     }
     if (curr.status === 'pyramid-collapse') {
@@ -625,7 +637,7 @@ export function forceWin(state: GameState, complete: boolean = false): GameState
 
   return {
     ...nextState,
-    status: checkForWin(nextState),
+    status: complete ? 'complete-victory' : 'partial-victory',
   };
 }
 
