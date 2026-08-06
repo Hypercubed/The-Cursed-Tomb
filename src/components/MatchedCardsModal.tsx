@@ -92,7 +92,7 @@ export function MatchedCardsModal({
             <span className="text-2xl text-game-accent">📊</span>
             <div>
               <h2 id="modal-title" className="text-lg font-semibold text-game-text font-display tracking-wider uppercase m-0">
-                Expedition Deck & Stats
+                {mode === 'standard' ? 'Deck Matrix & Strategic Pair Odds' : 'Expedition Deck & Stats'}
               </h2>
               <p className="text-xs text-game-muted m-0 mt-0.5">
                 {mode === 'cursed-tomb'
@@ -197,54 +197,58 @@ export function MatchedCardsModal({
                 <span className="flex items-center gap-1">
                   <span className="inline-block w-2.5 h-2.5 rounded-sm bg-[#2a2016] border border-game-accent"></span> Active
                 </span>
-                <span className="flex items-center gap-1">
-                  <span className="inline-block w-2.5 h-2.5 rounded-sm bg-stone-950 border border-[#251e16]"></span> Entombed
-                </span>
-                <span className="flex items-center gap-1 text-blue-400 font-medium" aria-label="Blessed Hero legend">
-                  <span className="inline-flex items-center gap-0.5" aria-label="Blessed suit illustrations">
-                    <span title="Hearts Archway"><CardFaceIllustration suit="♥" blessed className="w-4 h-4" randomizeTransform={false} strokeWidth={2} /></span>
-                    <span title="Diamonds Vault Box"><CardFaceIllustration suit="♦" blessed className="w-4 h-4" randomizeTransform={false} strokeWidth={2} /></span>
-                    <span title="Spades Tunnel Shovel"><CardFaceIllustration suit="♠" blessed className="w-4 h-4" randomizeTransform={false} strokeWidth={2} /></span>
-                    <span title="Clubs Sun Cross"><CardFaceIllustration suit="♣" blessed className="w-4 h-4" randomizeTransform={false} strokeWidth={2} /></span>
-                  </span>
-                  Blessed Hero
-                </span>
-                <span className="flex items-center gap-1 text-blue-400 font-medium">
-                  <span className="font-mono font-bold">—</span> Fortifying
-                </span>
-                <span className="flex items-center gap-1 text-blue-400 font-medium">
-                  <span className="font-mono font-bold">+</span> Anchored
-                </span>
-                <span className="flex items-center gap-1 text-red-400 font-medium" aria-label="Cursed legend">
-                  <span className="inline-flex items-center gap-0.5" aria-label="Cursed suit illustrations">
-                    <span title="Red Curse Downward Triangle"><CardFaceIllustration suit="♥" attritionStage={4} className="w-4 h-4" randomizeTransform={false} strokeWidth={2} /></span>
-                    <span title="Black Curse Trapezoid Weight"><CardFaceIllustration suit="♠" attritionStage={4} className="w-4 h-4" randomizeTransform={false} strokeWidth={2} /></span>
-                  </span>
-                  Cursed
-                </span>
-                <span className="flex items-center gap-1 text-blue-400 font-medium" aria-label="Scarred legend">
-                  <span
-                    role="img"
-                    aria-label="Scarred rank N with side marks and diagonal slash"
-                    className="relative inline-block leading-none font-mono font-bold px-0.5"
-                  >
-                    <span>N</span>
-                    <svg
-                      aria-hidden="true"
-                      className="absolute -inset-x-0.5 -inset-y-0.5 w-[calc(100%+4px)] h-[calc(100%+4px)] pointer-events-none overflow-visible z-20"
-                      viewBox="0 0 100 100"
-                      preserveAspectRatio="none"
-                    >
-                      <line x1="8" y1="5" x2="8" y2="95" stroke="#2563eb" strokeWidth="20" strokeLinecap="round" />
-                      <line x1="92" y1="5" x2="92" y2="95" stroke="#2563eb" strokeWidth="20" strokeLinecap="round" />
-                      <line x1="8" y1="5" x2="92" y2="95" stroke="#2563eb" strokeWidth="20" strokeLinecap="round" />
-                    </svg>
-                  </span>
-                  Scarred
-                </span>
-                <span className="flex items-center gap-1 text-red-400 font-medium">
-                  <span>💀</span> Entombed
-                </span>
+                {mode === 'cursed-tomb' && (
+                  <>
+                    <span className="flex items-center gap-1">
+                      <span className="inline-block w-2.5 h-2.5 rounded-sm bg-stone-950 border border-[#251e16]"></span> Entombed
+                    </span>
+                    <span className="flex items-center gap-1 text-blue-400 font-medium" aria-label="Blessed Hero legend">
+                      <span className="inline-flex items-center gap-0.5" aria-label="Blessed suit illustrations">
+                        <span title="Hearts Archway"><CardFaceIllustration suit="♥" blessed className="w-4 h-4" randomizeTransform={false} strokeWidth={2} /></span>
+                        <span title="Diamonds Vault Box"><CardFaceIllustration suit="♦" blessed className="w-4 h-4" randomizeTransform={false} strokeWidth={2} /></span>
+                        <span title="Spades Tunnel Shovel"><CardFaceIllustration suit="♠" blessed className="w-4 h-4" randomizeTransform={false} strokeWidth={2} /></span>
+                        <span title="Clubs Sun Cross"><CardFaceIllustration suit="♣" blessed className="w-4 h-4" randomizeTransform={false} strokeWidth={2} /></span>
+                      </span>
+                      Blessed Hero
+                    </span>
+                    <span className="flex items-center gap-1 text-blue-400 font-medium">
+                      <span className="font-mono font-bold">—</span> Fortifying
+                    </span>
+                    <span className="flex items-center gap-1 text-blue-400 font-medium">
+                      <span className="font-mono font-bold">+</span> Anchored
+                    </span>
+                    <span className="flex items-center gap-1 text-red-400 font-medium" aria-label="Cursed legend">
+                      <span className="inline-flex items-center gap-0.5" aria-label="Cursed suit illustrations">
+                        <span title="Red Curse Downward Triangle"><CardFaceIllustration suit="♥" attritionStage={4} className="w-4 h-4" randomizeTransform={false} strokeWidth={2} /></span>
+                        <span title="Black Curse Trapezoid Weight"><CardFaceIllustration suit="♠" attritionStage={4} className="w-4 h-4" randomizeTransform={false} strokeWidth={2} /></span>
+                      </span>
+                      Cursed
+                    </span>
+                    <span className="flex items-center gap-1 text-blue-400 font-medium" aria-label="Scarred legend">
+                      <span
+                        role="img"
+                        aria-label="Scarred rank N with side marks and diagonal slash"
+                        className="relative inline-block leading-none font-mono font-bold px-0.5"
+                      >
+                        <span>N</span>
+                        <svg
+                          aria-hidden="true"
+                          className="absolute -inset-x-0.5 -inset-y-0.5 w-[calc(100%+4px)] h-[calc(100%+4px)] pointer-events-none overflow-visible z-20"
+                          viewBox="0 0 100 100"
+                          preserveAspectRatio="none"
+                        >
+                          <line x1="8" y1="5" x2="8" y2="95" stroke="#2563eb" strokeWidth="20" strokeLinecap="round" />
+                          <line x1="92" y1="5" x2="92" y2="95" stroke="#2563eb" strokeWidth="20" strokeLinecap="round" />
+                          <line x1="8" y1="5" x2="92" y2="95" stroke="#2563eb" strokeWidth="20" strokeLinecap="round" />
+                        </svg>
+                      </span>
+                      Scarred
+                    </span>
+                    <span className="flex items-center gap-1 text-red-400 font-medium">
+                      <span>💀</span> Entombed
+                    </span>
+                  </>
+                )}
               </span>
             </h3>
 

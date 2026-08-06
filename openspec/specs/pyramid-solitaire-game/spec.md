@@ -17,6 +17,10 @@ When a player selects two cards to pair for removal, the game SHALL read the cur
 - **WHEN** two unremoved, visible cards whose ranks sum to 13 are selected in sequence
 - **THEN** both cards SHALL be removed from the board
 
+#### Scenario: Standard Solitaire mode renders pure printed card ranks
+- **WHEN** cards are rendered in Standard Solitaire mode (`mode === 'standard'`)
+- **THEN** cards SHALL NOT render campaign scars, attrition lines, functional value shifts (+1/-1 annotations), or suit hero icons
+
 ### Requirement: End state determination based on tomb clearance
 The game logic SHALL automatically evaluate and declare end states when card actions occur without requiring an upfront win condition selection:
 - `complete-victory`: when all cards in the pyramid AND all cards in the draw pile/discard pile are removed.

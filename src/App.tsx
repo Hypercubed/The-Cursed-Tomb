@@ -423,6 +423,7 @@ function App() {
     <GameSidebar
       selectedRedraw={selectedRedraw}
       gameStatus={game.status}
+      gameMode={game.mode}
       onStart={handleStart}
       onOpenSetupModal={() => setIsCampaignSetupModalOpen(true)}
       onRestart={handleRestart}
@@ -447,7 +448,10 @@ function App() {
             The Cursed Tomb
           </h1>
           <p className="text-xs sm:text-sm text-game-muted hidden sm:block">
-            Ancient Egyptian Solitaire Campaign {campaign ? `• Round ${campaign.roundNumber}` : ''}
+            {game.mode === 'standard' 
+              ? 'Classic Pyramid Solitaire'
+              : `Ancient Egyptian Solitaire Campaign ${campaign ? `• Round ${campaign.roundNumber}` : ''}`
+            }
           </p>
         </div>
       </div>
@@ -555,6 +559,7 @@ function App() {
                 isVaultTargetActive={isVaultTargetActive}
                 animatingMatchIds={animatingMatchIds}
                 animatingErrorIds={animatingErrorIds}
+                mode={game.mode}
                 onDraw={handleDraw}
                 onCardClick={handleCardClick}
                 onVaultSlotClick={handleVaultSlotClick}

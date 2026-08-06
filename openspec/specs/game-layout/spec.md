@@ -29,7 +29,7 @@ The pyramid SHALL be rendered in a dedicated hero section that occupies the majo
 - **THEN** the cards in that row SHALL be centred horizontally within the available board width
 
 ### Requirement: Draw and discard zone is a dedicated strip
-The draw pile and discard pile SHALL be displayed in a horizontal strip below the pyramid, visually separated by a divider or gap. Each pile SHALL have a clearly labelled card slot placeholder when empty.
+The draw pile and discard pile SHALL be displayed in a horizontal strip below the pyramid, visually separated by a divider or gap. Each pile SHALL have a clearly labelled card slot placeholder when empty. When running in Standard Solitaire mode (`mode === 'standard'`), the Diamond Vault slot SHALL be hidden to provide a classic 2-slot Stock and Waste pile layout. When running in Cursed Tomb mode (`mode === 'cursed-tomb'`), the Diamond Vault slot SHALL be visible.
 
 #### Scenario: Draw zone appears below the pyramid
 - **WHEN** a game is in progress
@@ -39,6 +39,14 @@ The draw pile and discard pile SHALL be displayed in a horizontal strip below th
 - **WHEN** the draw pile or discard pile is empty
 - **THEN** the corresponding slot SHALL display a visible placeholder with a label (e.g. "Empty")
 
+#### Scenario: Vault slot is hidden in Standard Solitaire mode
+- **WHEN** the game mode is `standard`
+- **THEN** the `♦ Vault` slot SHALL NOT be rendered in the Draw zone
+
+#### Scenario: Vault slot is visible in Cursed Tomb mode
+- **WHEN** the game mode is `cursed-tomb`
+- **THEN** the `♦ Vault` slot SHALL be rendered in the Draw zone
+
 ### Requirement: Game setup panel is always visible in the sidebar
 Setup controls (redraw cycles, win condition, start/reset buttons) SHALL be housed in the left sidebar and remain visible during gameplay so the player can restart without scrolling.
 
@@ -47,15 +55,19 @@ Setup controls (redraw cycles, win condition, start/reset buttons) SHALL be hous
 - **THEN** the redraw, win-condition controls, and start/reset buttons SHALL remain visible in the sidebar without requiring a scroll
 
 ### Requirement: Game status panel is always visible in the sidebar
-The sidebar SHALL display a Progress & Stats panel below the setup controls containing match progress (cards removed), active Campaign statistics (Pyramids Explored, Pyramids Collapsed, Total Attempts, Campaign Victory status), and cumulative player statistics, omitting redundant single-game status indicators that are displayed in the header and draw zone.
+The sidebar SHALL display a Progress & Stats panel below the setup controls containing match progress (cards removed). When running in Cursed Tomb mode, it SHALL display active Campaign statistics (Pyramids Explored, Pyramids Conquered, Pyramids Collapsed, Total Attempts). When running in Standard Solitaire mode, it SHALL hide campaign progress statistics or display standard solitaire stats (Complete Victories, Partial Victories, Collapses/Losses, Win %, Streaks).
 
 #### Scenario: Status updates while game is in progress
 - **WHEN** the player removes a pair or completes a game
-- **THEN** the sidebar panel SHALL immediately reflect the updated cards removed count, active campaign progress, and lifetime statistics
+- **THEN** the sidebar panel SHALL immediately reflect the updated cards removed count, active campaign/standard progress, and lifetime statistics
 
 #### Scenario: Sidebar displays active campaign and lifetime statistics
-- **WHEN** the sidebar status panel renders
+- **WHEN** the sidebar status panel renders in Cursed Tomb mode
 - **THEN** it SHALL display the active Campaign progress (Pyramids Explored, Pyramids Collapsed, Total Attempts) alongside the player's lifetime record
+
+#### Scenario: Sidebar hides campaign statistics in Standard Solitaire mode
+- **WHEN** the sidebar status panel renders in Standard Solitaire mode
+- **THEN** it SHALL NOT render active campaign progression metrics (Pyramids Explored, Conquered, Collapsed)
 
 ### Requirement: Reset Confirmation Dialog Interface
 The application SHALL present a themed modal dialog when New Campaign is clicked to confirm starting a new campaign and resetting active campaign statistics.

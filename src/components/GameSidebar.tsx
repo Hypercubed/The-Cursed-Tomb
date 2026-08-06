@@ -1,4 +1,4 @@
-import { GameState } from '../game';
+import { GameState, GameMode } from '../game';
 
 const redrawOptions = [
   { label: 'Survivalist (Hard) — 0 Redeals', value: 0 },
@@ -11,6 +11,7 @@ interface GameSidebarProps {
   // Setup controls
   selectedRedraw: number | null;
   gameStatus: GameState['status'];
+  gameMode?: GameMode;
   onStart: () => void;
   onOpenSetupModal?: () => void;
   onRestart: () => void;
@@ -48,6 +49,7 @@ const getDifficultyLabel = (value: number | null) => {
 export function GameSidebar({
   selectedRedraw,
   gameStatus,
+  gameMode = 'cursed-tomb',
   onStart,
   onOpenSetupModal,
   onRestart,
@@ -102,7 +104,7 @@ export function GameSidebar({
               className={buttonClass}
               onClick={onOpenSetupModal}
             >
-              Campaign Setup
+              {gameMode === 'standard' ? 'Start Game' : 'Campaign Setup'}
             </button>
           ) : (
             <button
@@ -111,14 +113,14 @@ export function GameSidebar({
               onClick={onStart}
               disabled={gameStatus === 'in-progress'}
             >
-              Explore Pyramid
+              {gameMode === 'standard' ? 'Start Game' : 'Explore Pyramid'}
             </button>
           )}
 
 
           <button type="button" className={buttonClass} onClick={onRestart}>
             <span className="flex items-center justify-between gap-2">
-              <span>New Campaign</span>
+              <span>{gameMode === 'standard' ? 'New Game' : 'New Campaign'}</span>
               <span className="text-[0.65rem] text-game-muted/70 font-mono bg-amber-900/20 px-1.5 py-0.5 rounded border border-amber-900/30 whitespace-nowrap">[N]</span>
             </span>
           </button>
@@ -140,31 +142,33 @@ export function GameSidebar({
             </dd>
           </div>
 
-          {/* Active Campaign Stats */}
-          <div className="border-t border-[#2d2319] pt-2.5 mt-1">
-            <dt className="text-game-accent font-semibold font-display tracking-wider uppercase text-xs mb-1.5 flex items-center justify-between">
-              <span>Active Campaign</span>
-              <span className="text-amber-400 font-medium">🟢 Active</span>
-            </dt>
-            <dd className="text-game-text font-medium ml-0 flex flex-col gap-1.5 text-xs">
-              <div className="flex justify-between items-center bg-[#120e0a] px-2.5 py-1.5 rounded border border-[#251e16]">
-                <span className="text-game-muted">🔍 Pyramids Explored</span>
-                <span className="font-mono font-semibold text-amber-400">{campaignStats?.pyramidsExplored ?? 0}</span>
-              </div>
-              <div className="flex justify-between items-center bg-[#120e0a] px-2.5 py-1.5 rounded border border-[#251e16]">
-                <span className="text-game-muted">👑 Pyramids Conquered</span>
-                <span className="font-mono font-semibold text-emerald-400">{campaignStats?.pyramidsConquered ?? 0}</span>
-              </div>
-              <div className="flex justify-between items-center bg-[#120e0a] px-2.5 py-1.5 rounded border border-[#251e16]">
-                <span className="text-game-muted">🏺 Pyramids Collapsed</span>
-                <span className="font-mono font-semibold text-red-400">{campaignStats?.pyramidsCollapsed ?? 0}</span>
-              </div>
-              <div className="flex justify-between items-center bg-[#120e0a] px-2.5 py-1.5 rounded border border-[#251e16]">
-                <span className="text-game-muted">🂡 Total Attempts</span>
-                <span className="font-mono font-semibold text-game-accent">{campaignStats?.totalAttempts ?? 0}</span>
-              </div>
-            </dd>
-          </div>
+          {/* Active Campaign Stats - only in cursed-tomb mode */}
+          {gameMode === 'cursed-tomb' && (
+            <div className="border-t border-[#2d2319] pt-2.5 mt-1">
+              <dt className="text-game-accent font-semibold font-display tracking-wider uppercase text-xs mb-1.5 flex items-center justify-between">
+                <span>Active Campaign</span>
+                <span className="text-amber-400 font-medium">🟢 Active</span>
+              </dt>
+              <dd className="text-game-text font-medium ml-0 flex flex-col gap-1.5 text-xs">
+                <div className="flex justify-between items-center bg-[#120e0a] px-2.5 py-1.5 rounded border border-[#251e16]">
+                  <span className="text-game-muted">🔍 Pyramids Explored</span>
+                  <span className="font-mono font-semibold text-amber-400">{campaignStats?.pyramidsExplored ?? 0}</span>
+                </div>
+                <div className="flex justify-between items-center bg-[#120e0a] px-2.5 py-1.5 rounded border border-[#251e16]">
+                  <span className="text-game-muted">👑 Pyramids Conquered</span>
+                  <span className="font-mono font-semibold text-emerald-400">{campaignStats?.pyramidsConquered ?? 0}</span>
+                </div>
+                <div className="flex justify-between items-center bg-[#120e0a] px-2.5 py-1.5 rounded border border-[#251e16]">
+                  <span className="text-game-muted">🏺 Pyramids Collapsed</span>
+                  <span className="font-mono font-semibold text-red-400">{campaignStats?.pyramidsCollapsed ?? 0}</span>
+                </div>
+                <div className="flex justify-between items-center bg-[#120e0a] px-2.5 py-1.5 rounded border border-[#251e16]">
+                  <span className="text-game-muted">🂡 Total Attempts</span>
+                  <span className="font-mono font-semibold text-game-accent">{campaignStats?.totalAttempts ?? 0}</span>
+                </div>
+              </dd>
+            </div>
+          )}
         </dl>
         <div className="mt-4 flex flex-col gap-2">
           {onOpenMatchedCardsModal && (
@@ -173,7 +177,7 @@ export function GameSidebar({
               className="w-full appearance-none bg-[#231b13] border border-[#3d3124] hover:border-game-accent text-game-accent rounded-lg text-sm font-semibold font-display tracking-wide py-2 px-3 cursor-pointer flex items-center justify-center gap-2 transition-colors shadow-sm"
               onClick={onOpenMatchedCardsModal}
             >
-              <span>📊</span> Expedition Deck & Stats
+              <span>📊</span> {gameMode === 'standard' ? 'Deck Matrix & Pair Odds' : 'Expedition Deck & Stats'}
             </button>
           )}
           {onOpenRulesModal && (
@@ -182,7 +186,7 @@ export function GameSidebar({
               className="w-full appearance-none bg-[#1a140e] border border-[#2d2319] hover:border-amber-700 text-amber-300 rounded-lg text-xs font-medium py-1.5 px-3 cursor-pointer flex items-center justify-center gap-2 transition-colors shadow-sm"
               onClick={() => onOpenRulesModal()}
             >
-              <span>📖</span> Expedition Rules & Guide
+              <span>📖</span> {gameMode === 'standard' ? 'Rules & Guide' : 'Expedition Rules & Guide'}
             </button>
           )}
         </div>

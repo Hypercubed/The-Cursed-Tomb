@@ -17,7 +17,7 @@
 - **Matched cards tracking** — view previously matched cards during a game
 - **Game persistence** — settings and game state stored in `localStorage`
 - **Visual animations** — match feedback and win/loss animations
-- **Campaign mode** — play across a series of games with a running score
+- **Campaign mode** — play an expedition across multiple rounds with deck evolution
 - **Ancient tomb theme** — dark aesthetic with the Cinzel typeface and Egyptian-inspired design
 - **Python simulation** (`sim/cursed_tomb_sim.py`) — offline batch simulator for analyzing strategy win rates
 

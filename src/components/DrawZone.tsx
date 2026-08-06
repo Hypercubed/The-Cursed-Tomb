@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card } from '../game';
+import { Card, GameMode } from '../game';
 import { PlayingCard } from './PlayingCard';
 
 interface DrawZoneProps {
@@ -15,6 +15,7 @@ interface DrawZoneProps {
   isVaultTargetActive?: boolean;
   animatingMatchIds?: string[];
   animatingErrorIds?: string[];
+  mode?: GameMode;
   onDraw: () => void;
   onCardClick: (cardId: string) => void;
   onVaultSlotClick?: () => void;
@@ -33,6 +34,7 @@ export function DrawZone({
   isVaultTargetActive = false,
   animatingMatchIds = [],
   animatingErrorIds = [],
+  mode = 'cursed-tomb',
   onDraw,
   onCardClick,
   onVaultSlotClick,
@@ -118,44 +120,46 @@ export function DrawZone({
         )}
       </div>
 
-      {/* Diamond Vault Slot */}
-      <div>
-        <div className="text-xs text-amber-400/80 uppercase tracking-wide mb-2 font-display flex items-center gap-1 h-6">
-          <span>♦</span> Vault
-        </div>
-        {vaultCard ? (
-          <div>
-            <PlayingCard
-              rank={vaultCard.rank}
-              suit={vaultCard.suit}
-              attritionStage={vaultCard.attritionStage}
-              rewardStage={vaultCard.rewardStage}
-              blessed={vaultCard.blessed}
-              faceDown={vaultCard.faceDown}
-              selected={vaultCard.id === selectedCardId}
-              disabled={!gameActive}
-              animatingMatch={animatingMatchIds.includes(vaultCard.id)}
-              animatingError={animatingErrorIds.includes(vaultCard.id)}
-              onClick={() => onCardClick(vaultCard.id)}
-            />
+      {/* Diamond Vault Slot - only in cursed-tomb mode */}
+      {mode === 'cursed-tomb' && (
+        <div>
+          <div className="text-xs text-amber-400/80 uppercase tracking-wide mb-2 font-display flex items-center gap-1 h-6">
+            <span>♦</span> Vault
           </div>
-        ) : (
-          <button
-            type="button"
-            onClick={onVaultSlotClick}
-            disabled={!gameActive}
-            className={`w-12 h-[64px] sm:w-[72px] sm:h-[96px] lg:w-[88px] lg:h-[116px] xl:w-[96px] xl:h-[128px] 2xl:w-[108px] 2xl:h-[144px] rounded-lg sm:rounded-xl border border-dashed text-[0.6rem] sm:text-xs bg-[#120d09] shadow-[inset_0_0_8px_rgba(0,0,0,0.8)] relative flex flex-col items-center justify-center transition-all duration-200 cursor-pointer disabled:cursor-not-allowed ${
-              isVaultTargetActive
-                ? 'border-amber-400 ring-2 ring-amber-400/80 animate-pulse text-amber-300 shadow-[0_0_12px_rgba(251,191,36,0.6)]'
-                : 'border-amber-900/40 text-amber-700/60 hover:border-amber-700/60'
-            }`}
-            title={isVaultTargetActive ? 'Click to Vault selected Blessed Diamond card' : 'Select a Blessed Diamond card, then click here to Vault'}
-          >
-            <div className="absolute inset-1 border border-dashed border-amber-900/20 rounded-lg pointer-events-none" />
-            <span>♦ Vault</span>
-          </button>
-        )}
-      </div>
+          {vaultCard ? (
+            <div>
+              <PlayingCard
+                rank={vaultCard.rank}
+                suit={vaultCard.suit}
+                attritionStage={vaultCard.attritionStage}
+                rewardStage={vaultCard.rewardStage}
+                blessed={vaultCard.blessed}
+                faceDown={vaultCard.faceDown}
+                selected={vaultCard.id === selectedCardId}
+                disabled={!gameActive}
+                animatingMatch={animatingMatchIds.includes(vaultCard.id)}
+                animatingError={animatingErrorIds.includes(vaultCard.id)}
+                onClick={() => onCardClick(vaultCard.id)}
+              />
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={onVaultSlotClick}
+              disabled={!gameActive}
+              className={`w-12 h-[64px] sm:w-[72px] sm:h-[96px] lg:w-[88px] lg:h-[116px] xl:w-[96px] xl:h-[128px] 2xl:w-[108px] 2xl:h-[144px] rounded-lg sm:rounded-xl border border-dashed text-[0.6rem] sm:text-xs bg-[#120d09] shadow-[inset_0_0_8px_rgba(0,0,0,0.8)] relative flex flex-col items-center justify-center transition-all duration-200 cursor-pointer disabled:cursor-not-allowed ${
+                isVaultTargetActive
+                  ? 'border-amber-400 ring-2 ring-amber-400/80 animate-pulse text-amber-300 shadow-[0_0_12px_rgba(251,191,36,0.6)]'
+                  : 'border-amber-900/40 text-amber-700/60 hover:border-amber-700/60'
+              }`}
+              title={isVaultTargetActive ? 'Click to Vault selected Blessed Diamond card' : 'Select a Blessed Diamond card, then click here to Vault'}
+            >
+              <div className="absolute inset-1 border border-dashed border-amber-900/20 rounded-lg pointer-events-none" />
+              <span>♦ Vault</span>
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

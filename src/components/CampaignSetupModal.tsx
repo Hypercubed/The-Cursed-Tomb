@@ -156,7 +156,7 @@ export function CampaignSetupModal({
                 Campaign Setup & Rules
               </h2>
               <p className="text-xs text-game-muted m-0">
-                Prepare your expedition into the ancient tomb
+                Configure your expedition into the ancient tomb
               </p>
             </div>
           </div>
@@ -218,7 +218,7 @@ export function CampaignSetupModal({
           <section className="bg-[#120e0a] border border-[#2d2319] rounded-lg p-4 flex flex-col gap-3">
             <div className="flex items-center justify-between border-b border-[#251e16] pb-2">
               <h3 className="text-sm font-semibold text-game-accent font-display tracking-wider uppercase m-0 flex items-center gap-2">
-                <span>📜</span> Expedition Rules Overview ({mode === 'cursed-tomb' ? 'Cursed Tomb' : 'Standard'})
+                <span>📜</span> {mode === 'cursed-tomb' ? 'Expedition Rules Overview (Cursed Tomb)' : 'Rules Overview (Standard Solitaire)'}
               </h3>
               {onOpenFullRules && (
                 <button
@@ -383,7 +383,7 @@ export function CampaignSetupModal({
             onClick={() => onStartCampaign(selectedDifficulty, mode, volatile)}
             className="appearance-none bg-amber-950/80 border border-amber-800 text-amber-300 rounded-lg text-sm cursor-pointer font-[inherit] px-6 py-2.5 hover:bg-amber-900 hover:text-amber-100 focus:ring-2 focus:ring-amber-500 focus:outline-none transition-colors font-semibold tracking-wide flex items-center gap-2 shadow-md"
           >
-            <span>𓋹</span> Start Campaign
+            <span>𓋹</span> {mode === 'standard' ? 'Start Standard Game' : 'Start Campaign'}
           </button>
         </div>
       </div>
