@@ -28,6 +28,10 @@ export type GameStatus =
   | 'partial-victory'
   | 'pyramid-collapse';
 
+/**
+ * User-facing terminology: "Round" = one shuffle + play (one pyramid + stock).
+ * Code retains historical name `GameState` for a single round; UI displays "Round".
+ */
 export interface GameState {
   deck: Card[];
   pyramid: Card[][];
@@ -52,6 +56,11 @@ export interface CampaignAchievements {
   unlockedBadges: string[];
 }
 
+/**
+ * User-facing terminology: "Expedition" = multi-round arc within Campaign Mode.
+ * Code retains historical name `CampaignState`; UI displays "Expedition" for the
+ * active multi-round session, while "Campaign Mode" remains the mode selector.
+ */
 export interface CampaignState {
   mode: GameMode;
   difficulty: number | null;
@@ -1133,32 +1142,46 @@ export function getRemovedCardsCount(state: GameState): { count: number; total: 
   return { count, total, percentage };
 }
 
-export function getActiveRankCounts(state: GameState): Record<Rank, number> {
-  const activeIds = new Set<string>();
-  for (const row of state.pyramid) {
-    for (const card of row) {
-      if (!card.removed) activeIds.add(card.id);
-    }
-  }
-  for (const card of state.drawPile) activeIds.add(card.id);
-  for (const card of state.discardPile) activeIds.add(card.id);
-
+export function getActiveRankCounts(state: GameState, mode?: GameMode, masterDeck?: CursedCard[]): Record<Rank, number> {
+  const effectiveMode: GameMode = mode ?? state.mode ?? 'standard';
   const counts: Record<Rank, number> = {
     1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0,
   };
-
-  const suitsList: Suit[] = ['♠', '♥', '♦', '♣'];
-  const ranksList: Rank[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
-
-  for (const suit of suitsList) {
-    for (const rank of ranksList) {
-      const id = `${suit}${rank}`;
-      if (activeIds.has(id)) {
-        counts[rank] += 1;
+  if (effectiveMode !== 'cursed-tomb') {
+    const activeIds = new Set<string>();
+    for (const row of state.pyramid) {
+      for (const card of row) {
+        if (!card.removed) activeIds.add(card.id);
       }
     }
+    for (const card of state.drawPile) activeIds.add(card.id);
+    for (const card of state.discardPile) activeIds.add(card.id);
+    const suitsList: Suit[] = ['♠', '♥', '♦', '♣'];
+    const ranksList: Rank[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
+    for (const suit of suitsList) {
+      for (const rank of ranksList) {
+        const id = `${suit}${rank}`;
+        if (activeIds.has(id)) {
+          counts[rank] += 1;
+        }
+      }
+    }
+    return counts;
   }
-
+  const activeCards: Card[] = [];
+  for (const row of state.pyramid) {
+    for (const card of row) {
+      if (!card.removed) activeCards.push(card);
+    }
+  }
+  for (const card of state.drawPile) activeCards.push(card);
+  for (const card of state.discardPile) activeCards.push(card);
+  if (state.vaultCard && !state.vaultCard.removed) activeCards.push(state.vaultCard);
+  for (const card of activeCards) {
+    const fVal = getFunctionalValue(card, effectiveMode) as Rank;
+    counts[fVal] += 1;
+  }
+  void masterDeck;
   return counts;
 }
 
@@ -1171,11 +1194,51 @@ export interface PairStat {
   rank2Label?: string;
   active2?: number;
   remainingPairs: number;
+  functionalModifications1?: string[];
+  functionalModifications2?: string[];
+  hasWildcard?: boolean;
 }
 
-export function getRemainingPairStats(state: GameState): PairStat[] {
-  const counts = getActiveRankCounts(state);
-  return [
+export function getRemainingPairStats(state: GameState, mode?: GameMode, masterDeck?: CursedCard[]): PairStat[] {
+  const effectiveMode: GameMode = mode ?? state.mode ?? 'standard';
+  const counts = getActiveRankCounts(state, effectiveMode, masterDeck);
+  const isExpedition = effectiveMode === 'cursed-tomb';
+  const modMap: Record<number, string[]> = {};
+  let hasWildcard = false;
+  if (isExpedition) {
+    const activeCards: Card[] = [];
+    for (const row of state.pyramid) {
+      for (const card of row) {
+        if (!card.removed) activeCards.push(card);
+      }
+    }
+    for (const card of state.drawPile) activeCards.push(card);
+    for (const card of state.discardPile) activeCards.push(card);
+    if (state.vaultCard && !state.vaultCard.removed) activeCards.push(state.vaultCard);
+    hasWildcard = activeCards.some((c) => c.blessed && c.suit === '♣');
+    if (!hasWildcard && masterDeck) {
+      hasWildcard = masterDeck.some((c) => c.blessed && c.suit === '♣' && c.attritionStage < 5);
+    }
+    const rankLabelLocal = (r: number): string => {
+      if (r === 1) return 'A';
+      if (r === 11) return 'J';
+      if (r === 12) return 'Q';
+      if (r === 13) return 'K';
+      return String(r);
+    };
+    for (const card of activeCards) {
+      const fVal = getFunctionalValue(card, effectiveMode);
+      if (fVal !== card.rank) {
+        const isRed = card.suit === '♥' || card.suit === '♦';
+        const color = isRed ? 'Red' : 'Black';
+        const sign = isRed ? '+1' : '-1';
+        const entry = `${sign} ${color} ${rankLabelLocal(card.rank)} ➔ ${rankLabelLocal(fVal)}`;
+        if (!modMap[fVal]) modMap[fVal] = [];
+        modMap[fVal].push(entry);
+      }
+    }
+  }
+  const base: PairStat[] = [
     {
       label: 'Kings (13)',
       rank1: 13,
@@ -1244,6 +1307,13 @@ export function getRemainingPairStats(state: GameState): PairStat[] {
       remainingPairs: Math.min(counts[7], counts[6]),
     },
   ];
+  if (!isExpedition) return base;
+  return base.map((stat) => ({
+    ...stat,
+    functionalModifications1: modMap[stat.rank1] ? [...modMap[stat.rank1]] : undefined,
+    functionalModifications2: stat.rank2 !== undefined && modMap[stat.rank2] ? [...modMap[stat.rank2]] : undefined,
+    hasWildcard,
+  }));
 }
 
 

@@ -39,7 +39,6 @@ import { PyramidBoard } from './components/PyramidBoard';
 import { DrawZone } from './components/DrawZone';
 import { MatchedCardsModal } from './components/MatchedCardsModal';
 import { CampaignEndModal } from './components/CampaignEndModal';
-import { ResetConfirmationModal } from './components/ResetConfirmationModal';
 import { CampaignSetupModal } from './components/CampaignSetupModal';
 import { RulesModal, RulesTab } from './components/RulesModal';
 import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal';
@@ -90,7 +89,6 @@ function App() {
   const [animatingErrorIds, setAnimatingErrorIds] = useState<string[]>([]);
 
   const [isMatchedCardsModalOpen, setIsMatchedCardsModalOpen] = useState(false);
-  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const [isCampaignSetupModalOpen, setIsCampaignSetupModalOpen] = useState(() => game.status === 'ready');
   const [isRoundSummaryModalOpen, setIsRoundSummaryModalOpen] = useState(false);
   const [isCampaignEndModalOpen, setIsCampaignEndModalOpen] = useState(false);
@@ -177,7 +175,6 @@ function App() {
     stepOne,
     stepToConclusion,
     stop: stopAutoplay,
-    resetCount,
     setSpeedMs,
     setStrategy,
   } = useAutoplay(game, setGame, handleStart);
@@ -253,7 +250,7 @@ function App() {
 
   const removedCardsSet = useMemo(() => getRemovedCardIds(game), [game]);
   const removedCardsCount = useMemo(() => getRemovedCardsCount(game), [game]);
-  const pairStats = useMemo(() => getRemainingPairStats(game), [game]);
+  const pairStats = useMemo(() => getRemainingPairStats(game, game.mode, campaign?.masterDeck), [game, campaign?.masterDeck]);
 
   const handleForceWin = () => {
     setGame((state) => forceWin(state));
@@ -370,26 +367,7 @@ function App() {
   };
 
   const handleRestart = () => {
-    setIsResetModalOpen(true);
-  };
-
-  const handleConfirmReset = () => {
-    defaultPersistenceManager.clearGameState();
-    defaultPersistenceManager.clearCampaignState();
-    const clearedStats = defaultPersistenceManager.resetStats();
-    const clearedCampaign = defaultPersistenceManager.resetCampaignStats();
-    setCampaign(null);
-    setStats(clearedStats);
-    setCampaignStats(clearedCampaign);
-    setHasRecordedOutcome(true);
-    resetCount();
-    setGame(initialState);
-    setIsResetModalOpen(false);
     setIsCampaignSetupModalOpen(true);
-  };
-
-  const handleCancelReset = () => {
-    setIsResetModalOpen(false);
   };
 
   const handleResign = () => {
@@ -401,7 +379,7 @@ function App() {
     onDeselect: () => setGame((state) => deselectCard(state)),
     onNewGame: handleRestart,
     onToggleHelp: () => setIsShortcutsModalOpen((prev) => !prev),
-    isModalOpen: isResetModalOpen || isCampaignSetupModalOpen || isRoundSummaryModalOpen || isRulesModalOpen || isShortcutsModalOpen,
+    isModalOpen: isCampaignSetupModalOpen || isRoundSummaryModalOpen || isRulesModalOpen || isShortcutsModalOpen || isCampaignEndModalOpen,
   });
 
   const canDraw = game.drawPile.length > 0;
@@ -422,20 +400,12 @@ function App() {
   const sidebar = (
     <GameSidebar
       selectedRedraw={selectedRedraw}
-      gameStatus={game.status}
       gameMode={game.mode}
-      onStart={handleStart}
-      onOpenSetupModal={() => setIsCampaignSetupModalOpen(true)}
       onRestart={handleRestart}
       removedCardsCount={removedCardsCount}
       stats={stats}
       campaignStats={campaignStats}
       onOpenMatchedCardsModal={() => setIsMatchedCardsModalOpen(true)}
-      onOpenRulesModal={(tab?: RulesTab) => {
-        const validTab: RulesTab = typeof tab === 'string' && ['core-rules', 'web-guide', 'card-anatomy'].includes(tab) ? tab : 'core-rules';
-        setRulesTab(validTab);
-        setIsRulesModalOpen(true);
-      }}
     />
   );
 
@@ -594,12 +564,6 @@ function App() {
         mode={game.mode}
         campaignStats={campaignStats}
         achievements={campaign?.achievements}
-      />
-
-      <ResetConfirmationModal
-        isOpen={isResetModalOpen}
-        onConfirm={handleConfirmReset}
-        onCancel={handleCancelReset}
       />
 
       <RoundSummaryModal

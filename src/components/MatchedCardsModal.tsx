@@ -410,8 +410,20 @@ export function MatchedCardsModal({
 
           {/* Section 2: Remaining Pair Statistics */}
           <div className="bg-[#120e0a] border border-[#2d2319] rounded-lg p-4 shadow-[inset_0_0_8px_rgba(0,0,0,0.5)]">
-            <h3 className="text-xs font-semibold text-game-muted font-display tracking-wider uppercase mt-0 mb-3">
-              Remaining Complement Pairs (Sums to 13)
+            <h3 className="text-xs font-semibold text-game-muted font-display tracking-wider uppercase mt-0 mb-3 flex items-center justify-between flex-wrap gap-2">
+              <span>Remaining Complement Pairs (Sums to 13)</span>
+              <span className="flex items-center gap-2">
+                {mode === 'cursed-tomb' && (
+                  <span className="px-2 py-0.5 bg-amber-950/60 border border-amber-700/50 rounded-full text-amber-300 text-[11px] font-bold font-mono normal-case tracking-normal">
+                    ⚡ Functional Pair Odds
+                  </span>
+                )}
+                {(pairStats.some((s) => s.hasWildcard) || (mode === 'cursed-tomb' && (masterDeck?.some((c) => c.blessed && c.suit === '♣' && c.attritionStage < 5) ?? false))) && (
+                  <span className="px-2 py-0.5 bg-emerald-950/60 border border-emerald-700/50 rounded-full text-emerald-300 text-[11px] font-bold font-mono normal-case tracking-normal">
+                    ♣ Wildcard Active
+                  </span>
+                )}
+              </span>
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -451,6 +463,20 @@ export function MatchedCardsModal({
                       </span>
                     )}
                   </div>
+                  {(stat.functionalModifications1?.length || stat.functionalModifications2?.length) ? (
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {(() => {
+                        const grouped = new Map<string, number>();
+                        for (const m of stat.functionalModifications1 ?? []) grouped.set(m, (grouped.get(m) ?? 0) + 1);
+                        for (const m of stat.functionalModifications2 ?? []) grouped.set(m, (grouped.get(m) ?? 0) + 1);
+                        return Array.from(grouped.entries()).map(([mod, count]) => (
+                          <span key={mod} className="px-1.5 py-0.5 bg-amber-950/60 border border-amber-700/50 rounded text-amber-300 text-[10px] font-mono">
+                            ⚡ {count > 1 ? `${count}× ` : ''}{mod}
+                          </span>
+                        ));
+                      })()}
+                    </div>
+                  ) : null}
                 </div>
               ))}
             </div>

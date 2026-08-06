@@ -270,3 +270,133 @@ describe('MatchedCardsModal deck matrix visuals', () => {
     expect(blessedCell?.querySelector('path')?.getAttribute('stroke')).toBe('#1d4ed8');
   });
 });
+
+describe('MatchedCardsModal expedition pair odds', () => {
+  it('renders Functional Pair Odds badge in expedition mode and hides in standard mode', () => {
+    const masterDeck = createDeck();
+    const { container: expContainer } = render(
+      <MatchedCardsModal
+        isOpen
+        onClose={() => undefined}
+        removedCardIds={new Set()}
+        pairStats={[]}
+        masterDeck={masterDeck}
+        mode="cursed-tomb"
+      />
+    );
+    expect(expContainer.textContent).toContain('⚡ Functional Pair Odds');
+    const { container: stdContainer } = render(
+      <MatchedCardsModal
+        isOpen
+        onClose={() => undefined}
+        removedCardIds={new Set()}
+        pairStats={[]}
+        masterDeck={masterDeck}
+        mode="standard"
+      />
+    );
+    expect(stdContainer.textContent).not.toContain('⚡ Functional Pair Odds');
+  });
+
+  it('renders wildcard pill when Clubs blessed card is active', () => {
+    const masterDeck = createDeck();
+    masterDeck.find((c) => c.id === '♣5')!.blessed = true;
+    const pairStatsWithWildcard = [
+      { label: 'Kings (13)', rank1: 13 as const, rank1Label: 'K', active1: 4, remainingPairs: 4, hasWildcard: true },
+      { label: 'Q + A', rank1: 12 as const, rank1Label: 'Q', active1: 4, rank2: 1 as const, rank2Label: 'A', active2: 4, remainingPairs: 4, hasWildcard: true },
+    ];
+    const { container } = render(
+      <MatchedCardsModal
+        isOpen
+        onClose={() => undefined}
+        removedCardIds={new Set()}
+        pairStats={pairStatsWithWildcard}
+        masterDeck={masterDeck}
+        mode="cursed-tomb"
+      />
+    );
+    expect(container.textContent).toContain('♣ Wildcard Active');
+  });
+
+  it('does not render wildcard pill when no wildcard is active', () => {
+    const masterDeck = createDeck();
+    const pairStatsNoWildcard = [
+      { label: 'Kings (13)', rank1: 13 as const, rank1Label: 'K', active1: 4, remainingPairs: 4, hasWildcard: false },
+    ];
+    const { container } = render(
+      <MatchedCardsModal
+        isOpen
+        onClose={() => undefined}
+        removedCardIds={new Set()}
+        pairStats={pairStatsNoWildcard}
+        masterDeck={masterDeck}
+        mode="cursed-tomb"
+      />
+    );
+    expect(container.textContent).not.toContain('♣ Wildcard Active');
+  });
+
+  it('renders functional shift annotation chips inside pair cards', () => {
+    const pairStats = [
+      {
+        label: 'Kings (13)',
+        rank1: 13 as const,
+        rank1Label: 'K',
+        active1: 5,
+        remainingPairs: 5,
+        functionalModifications1: ['+1 Red Q ➔ K'],
+        hasWildcard: false,
+      },
+      {
+        label: 'Q + A',
+        rank1: 12 as const,
+        rank1Label: 'Q',
+        active1: 3,
+        rank2: 1 as const,
+        rank2Label: 'A',
+        active2: 4,
+        remainingPairs: 3,
+        functionalModifications1: ['-1 Black 10 ➔ 9'],
+        hasWildcard: false,
+      },
+    ];
+    const { container } = render(
+      <MatchedCardsModal
+        isOpen
+        onClose={() => undefined}
+        removedCardIds={new Set()}
+        pairStats={pairStats}
+        mode="cursed-tomb"
+      />
+    );
+    expect(container.textContent).toContain('⚡');
+    expect(container.textContent).toContain('➔');
+    expect(container.textContent).toContain('Red Q');
+    expect(container.textContent).toContain('Black 10');
+  });
+
+  it('groups duplicate modifications with count prefix', () => {
+    const pairStats = [
+      {
+        label: 'Kings (13)',
+        rank1: 13 as const,
+        rank1Label: 'K',
+        active1: 6,
+        remainingPairs: 6,
+        functionalModifications1: ['+1 Red Q ➔ K', '+1 Red Q ➔ K'],
+        hasWildcard: false,
+      },
+    ];
+    const { container } = render(
+      <MatchedCardsModal
+        isOpen
+        onClose={() => undefined}
+        removedCardIds={new Set()}
+        pairStats={pairStats}
+        mode="cursed-tomb"
+      />
+    );
+    expect(container.textContent).toContain('2×');
+    expect(container.textContent).toContain('Red Q ➔ K');
+  });
+});

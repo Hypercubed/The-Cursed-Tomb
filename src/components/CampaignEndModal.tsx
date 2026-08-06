@@ -113,10 +113,10 @@ export function CampaignEndModal({
 
         {/* Modal Body */}
         <div className="p-6 flex-1 overflow-y-auto flex flex-col gap-6 text-sm">
-          {/* Campaign Run Statistics */}
+          {/* Expedition Statistics */}
           <div className="bg-[#120e0a] border border-[#2d2319] rounded-lg p-4 flex flex-col gap-3">
             <h3 className="text-xs font-semibold text-amber-300/90 font-display uppercase tracking-wider m-0 flex items-center gap-2">
-              <span>📜</span> Campaign Run Statistics
+              <span>📜</span> Expedition Statistics
             </h3>
             <div className="grid grid-cols-2 gap-3 text-xs">
               <div className="bg-[#18130e] p-2.5 rounded border border-[#251e16] flex flex-col">
@@ -299,7 +299,7 @@ export function CampaignEndModal({
                 : 'bg-amber-600 hover:bg-amber-500 text-stone-950 border-amber-400'
             }`}
           >
-            Start New Campaign
+            Start New Expedition
           </button>
         </div>
       </div>

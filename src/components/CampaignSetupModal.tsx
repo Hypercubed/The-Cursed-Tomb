@@ -298,11 +298,11 @@ export function CampaignSetupModal({
           <section className="flex flex-col gap-3">
             <div className="flex items-center justify-between border-b border-[#2d2319] pb-2">
               <h3 className="text-sm font-semibold text-game-text font-display tracking-wider uppercase m-0 flex items-center gap-2">
-                <span>🏺</span> Select Campaign Difficulty
+                <span>🏺</span> Select Expedition Difficulty
               </h3>
               <span className="text-[11px] text-game-muted/80">
                 {mode === 'cursed-tomb'
-                  ? 'Estimated Full Campaign Victory Rate'
+                  ? 'Estimated Expedition Victory Rate'
                   : 'Estimated 200-Round Victory Rate'}
               </span>
             </div>
@@ -354,7 +354,7 @@ export function CampaignSetupModal({
                             : 'Simulated chance of complete victory within 200 rounds (base rules without attrition)'
                         }
                       >
-                        🎯 {winRateText} <span className="text-[9px] opacity-75 font-sans">({mode === 'cursed-tomb' ? 'Full Campaign' : '200 Rounds'})</span>
+                        🎯 {winRateText} <span className="text-[9px] opacity-75 font-sans">({mode === 'cursed-tomb' ? 'Expedition' : '200 Rounds'})</span>
                       </span>
                     </div>
 

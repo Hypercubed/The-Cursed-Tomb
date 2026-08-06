@@ -1,4 +1,4 @@
-import { GameState, GameMode } from '../game';
+import { GameMode } from '../game';
 
 const redrawOptions = [
   { label: 'Survivalist (Hard) — 0 Redeals', value: 0 },
@@ -10,10 +10,7 @@ const redrawOptions = [
 interface GameSidebarProps {
   // Setup controls
   selectedRedraw: number | null;
-  gameStatus: GameState['status'];
   gameMode?: GameMode;
-  onStart: () => void;
-  onOpenSetupModal?: () => void;
   onRestart: () => void;
   // Progress & Stats panel
   removedCardsCount?: { count: number; total: number; percentage: number };
@@ -32,7 +29,6 @@ interface GameSidebarProps {
     totalAttempts: number;
   };
   onOpenMatchedCardsModal?: () => void;
-  onOpenRulesModal?: (tab?: 'core-rules' | 'web-guide' | 'card-anatomy') => void;
 }
 
 const buttonClass =
@@ -48,16 +44,12 @@ const getDifficultyLabel = (value: number | null) => {
 
 export function GameSidebar({
   selectedRedraw,
-  gameStatus,
   gameMode = 'cursed-tomb',
-  onStart,
-  onOpenSetupModal,
   onRestart,
   removedCardsCount,
   stats,
   campaignStats,
   onOpenMatchedCardsModal,
-  onOpenRulesModal,
 }: GameSidebarProps) {
   const complete = stats?.completeVictories ?? 0;
   const partial = stats?.partialVictories ?? 0;
@@ -72,19 +64,8 @@ export function GameSidebar({
 
       {/* Setup section */}
       <div className="bg-[#18130e] border border-[#2d2319] rounded-lg p-5 shadow-[inset_0_0_8px_rgba(0,0,0,0.5)] z-10">
-        <h2 className="text-base font-semibold text-game-text font-display mt-0 mb-4 tracking-wider uppercase border-b border-[#3d3124] pb-2 flex items-center justify-between">
-          <span className="flex items-center gap-2">
-            <span className="text-game-accent text-lg">📜</span> Setup
-          </span>
-          {onOpenRulesModal && (
-            <button
-              type="button"
-              onClick={() => onOpenRulesModal('core-rules')}
-              className="text-xs text-amber-400 hover:text-amber-200 bg-transparent border-none cursor-pointer font-sans normal-case tracking-normal hover:underline flex items-center gap-1 transition-colors"
-            >
-              <span>📖</span> Rules
-            </button>
-          )}
+        <h2 className="text-base font-semibold text-game-text font-display mt-0 mb-4 tracking-wider uppercase border-b border-[#3d3124] pb-2 flex items-center gap-2">
+          <span className="text-game-accent text-lg">📜</span> Setup
         </h2>
         
         <div className="flex flex-col gap-1.5 text-sm mb-4">
@@ -98,29 +79,9 @@ export function GameSidebar({
         </div>
 
         <div className="flex flex-col gap-2">
-          {gameStatus === 'ready' && onOpenSetupModal ? (
-            <button
-              type="button"
-              className={buttonClass}
-              onClick={onOpenSetupModal}
-            >
-              {gameMode === 'standard' ? 'Start Game' : 'Campaign Setup'}
-            </button>
-          ) : (
-            <button
-              type="button"
-              className={buttonClass}
-              onClick={onStart}
-              disabled={gameStatus === 'in-progress'}
-            >
-              {gameMode === 'standard' ? 'Start Game' : 'Explore Pyramid'}
-            </button>
-          )}
-
-
           <button type="button" className={buttonClass} onClick={onRestart}>
             <span className="flex items-center justify-between gap-2">
-              <span>{gameMode === 'standard' ? 'New Game' : 'New Campaign'}</span>
+              <span>New Game</span>
               <span className="text-[0.65rem] text-game-muted/70 font-mono bg-amber-900/20 px-1.5 py-0.5 rounded border border-amber-900/30 whitespace-nowrap">[N]</span>
             </span>
           </button>
@@ -178,15 +139,6 @@ export function GameSidebar({
               onClick={onOpenMatchedCardsModal}
             >
               <span>📊</span> {gameMode === 'standard' ? 'Deck Matrix & Pair Odds' : 'Expedition Deck & Stats'}
-            </button>
-          )}
-          {onOpenRulesModal && (
-            <button
-              type="button"
-              className="w-full appearance-none bg-[#1a140e] border border-[#2d2319] hover:border-amber-700 text-amber-300 rounded-lg text-xs font-medium py-1.5 px-3 cursor-pointer flex items-center justify-center gap-2 transition-colors shadow-sm"
-              onClick={() => onOpenRulesModal()}
-            >
-              <span>📖</span> {gameMode === 'standard' ? 'Rules & Guide' : 'Expedition Rules & Guide'}
             </button>
           )}
         </div>

@@ -727,5 +727,124 @@ describe('Cursed Tomb campaign mechanics', () => {
       expect(nextState.drawPile.some((c: Card) => c.id === card2.id)).toBe(false);
     });
   });
+
+  describe('Expedition Mode functional pair statistics', () => {
+    function setCardStage(state: GameState, cardId: string, stage: 0 | 1 | 2 | 3 | 4 | 5, blessed?: boolean) {
+      for (const row of state.pyramid) {
+        for (const card of row) {
+          if (card.id === cardId) {
+            card.attritionStage = stage;
+            if (blessed !== undefined) card.blessed = blessed;
+            return;
+          }
+        }
+      }
+      for (const card of state.drawPile) {
+        if (card.id === cardId) {
+          card.attritionStage = stage;
+          if (blessed !== undefined) card.blessed = blessed;
+          return;
+        }
+      }
+      for (const card of state.discardPile) {
+        if (card.id === cardId) {
+          card.attritionStage = stage;
+          if (blessed !== undefined) card.blessed = blessed;
+          return;
+        }
+      }
+      if (state.vaultCard && state.vaultCard.id === cardId) {
+        state.vaultCard.attritionStage = stage;
+        if (blessed !== undefined) state.vaultCard.blessed = blessed;
+      }
+    }
+
+    it('calculates Red scar +1 functional values correctly for pair odds', () => {
+      const state = createDeterministicGameState(1);
+      state.mode = 'cursed-tomb';
+      setCardStage(state, '♥12', 3);
+      const counts = getActiveRankCounts(state, 'cursed-tomb');
+      expect(counts[12]).toBe(3);
+      expect(counts[13]).toBe(5);
+      const stats = getRemainingPairStats(state, 'cursed-tomb');
+      const kings = stats.find((s) => s.label === 'Kings (13)')!;
+      expect(kings.active1).toBe(5);
+      expect(kings.functionalModifications1).toBeDefined();
+      expect(kings.functionalModifications1!.join(' ')).toContain('➔');
+      expect(kings.functionalModifications1!.some((m) => m.includes('Red') && m.includes('Q') && m.includes('K'))).toBe(true);
+      const queenAce = stats.find((s) => s.label === 'Q + A')!;
+      expect(queenAce.active1).toBe(3);
+      expect(queenAce.remainingPairs).toBe(3);
+    });
+
+    it('calculates Black scar -1 functional values correctly for pair odds', () => {
+      const state = createDeterministicGameState(1);
+      state.mode = 'cursed-tomb';
+      setCardStage(state, '♠10', 3);
+      const counts = getActiveRankCounts(state, 'cursed-tomb');
+      expect(counts[10]).toBe(3);
+      expect(counts[9]).toBe(5);
+      const stats = getRemainingPairStats(state, 'cursed-tomb');
+      const nineFour = stats.find((s) => s.label === '9 + 4')!;
+      expect(nineFour.active1).toBe(5);
+      expect(nineFour.functionalModifications1!.some((m) => m.includes('Black') && m.includes('10') && m.includes('9') && m.includes('➔'))).toBe(true);
+      const tenThree = stats.find((s) => s.label === '10 + 3')!;
+      expect(tenThree.active1).toBe(3);
+    });
+
+    it('preserves standard mode counts when Red scar present but mode is standard', () => {
+      const state = createDeterministicGameState(1);
+      state.mode = 'cursed-tomb';
+      setCardStage(state, '♥12', 3);
+      const standardCounts = getActiveRankCounts(state, 'standard');
+      expect(standardCounts[12]).toBe(4);
+      expect(standardCounts[13]).toBe(4);
+      const standardStats = getRemainingPairStats(state, 'standard');
+      const kingsStd = standardStats.find((s) => s.label === 'Kings (13)')!;
+      expect(kingsStd.active1).toBe(4);
+      expect(kingsStd.functionalModifications1).toBeUndefined();
+      expect(kingsStd.hasWildcard).toBeUndefined();
+    });
+
+    it('detects Clubs Rally wildcard blessing as functional pair modifier', () => {
+      const state = createDeterministicGameState(1);
+      state.mode = 'cursed-tomb';
+      setCardStage(state, '♣5', 0, true);
+      const stats = getRemainingPairStats(state, 'cursed-tomb');
+      expect(stats.every((s) => s.hasWildcard === true)).toBe(true);
+      const masterDeck = createDeck() as CursedCard[];
+      const clubsCard = masterDeck.find((c) => c.id === '♣5')!;
+      clubsCard.blessed = true;
+      clubsCard.attritionStage = 0;
+      const statsMaster = getRemainingPairStats(state, 'cursed-tomb', masterDeck);
+      expect(statsMaster[0].hasWildcard).toBe(true);
+    });
+
+    it('verifies no wildcard in standard mode or when Clubs not blessed', () => {
+      const state = createDeterministicGameState(1);
+      state.mode = 'standard';
+      const stats = getRemainingPairStats(state, 'standard');
+      expect(stats[0].hasWildcard).toBeUndefined();
+      const expState = createDeterministicGameState(1);
+      expState.mode = 'cursed-tomb';
+      const expStats = getRemainingPairStats(expState, 'cursed-tomb');
+      expect(expStats[0].hasWildcard).toBe(false);
+    });
+
+    it('applies wrapping functional values for rank shifts (Ace -1 to King, King +1 to Ace)', () => {
+      const state = createDeterministicGameState(1);
+      state.mode = 'cursed-tomb';
+      setCardStage(state, '♠1', 3);
+      setCardStage(state, '♥13', 3);
+      const counts = getActiveRankCounts(state, 'cursed-tomb');
+      expect(counts[1]).toBe(4);
+      expect(counts[13]).toBe(4);
+      const stats = getRemainingPairStats(state, 'cursed-tomb');
+      const kings = stats.find((s) => s.label === 'Kings (13)')!;
+      expect(kings.functionalModifications1!.some((m) => m.includes('Black') && m.includes('A') && m.includes('K'))).toBe(true);
+      const queenAce = stats.find((s) => s.label === 'Q + A')!;
+      expect(queenAce.functionalModifications2!.some((m) => m.includes('Red') && m.includes('K') && m.includes('A'))).toBe(true);
+    });
+  });
 });
 

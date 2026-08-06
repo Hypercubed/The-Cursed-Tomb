@@ -68,7 +68,7 @@ export function KeyboardShortcutsModal({ isOpen, onClose }: KeyboardShortcutsMod
           </div>
 
           <div className="flex items-center justify-between py-2 border-b border-[#2d2319]">
-            <span className="text-game-text">New Game / Reset</span>
+            <span className="text-game-text">New Game</span>
             <kbd className="px-2 py-1 text-sm font-mono bg-[#120e0a] border border-[#251e16] rounded text-amber-400">N</kbd>
           </div>
 
