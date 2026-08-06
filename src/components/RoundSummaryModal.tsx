@@ -117,7 +117,7 @@ export function RoundSummaryModal({
                     : 'Pyramid Collapse — Attrition Summary'}
               </h2>
               <p className="text-xs text-game-muted m-0">
-                {mode === 'standard' ? 'Standard Solitaire Round Summary' : `Round ${roundNumber} End of Round Effects`}
+                {mode === 'standard' ? 'Standard Solitaire Round Summary' : `Round ${roundNumber} Attrition Summary — Expedition Continues`}
               </p>
             </div>
           </div>
@@ -493,7 +493,7 @@ export function RoundSummaryModal({
                 onClick={onNextRound}
                 className="appearance-none bg-amber-950/90 border border-amber-700 text-amber-200 rounded-lg text-xs cursor-pointer font-[inherit] px-4 py-2 hover:bg-amber-900 focus:ring-2 focus:ring-amber-500 focus:outline-none transition-colors font-semibold flex items-center gap-1.5"
               >
-                <span>📜</span> Next Round
+                <span>📜</span> {mode === 'cursed-tomb' ? `Continue to Round ${roundNumber + 1}` : 'Next Round'}
               </button>
             )}
             <button

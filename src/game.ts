@@ -792,6 +792,10 @@ export function createCampaign(
       const entombedCount = graveyard.filter((c) => c.rank === r && c.attritionStage === 5).length;
       if (entombedCount === 4) {
         volatilityWarning = true;
+        if (volatileCollapse) {
+          status = 'defeat';
+          defeatReason = 'volatile-collapse';
+        }
         break;
       }
     }
@@ -948,6 +952,10 @@ export function applyEndOfWeekLifecycle(campaign: CampaignState): CampaignState 
     const entombedCount = graveyard.filter((c) => c.rank === r && c.attritionStage === 5).length;
     if (entombedCount === 4) {
       volatilityWarning = true;
+      if (campaign.volatileCollapse) {
+        status = 'defeat';
+        defeatReason = 'volatile-collapse';
+      }
       break;
     }
   }

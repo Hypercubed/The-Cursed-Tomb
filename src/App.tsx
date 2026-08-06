@@ -117,6 +117,8 @@ function App() {
         setIsCampaignEndModalOpen(true);
       }
     } else {
+      setCampaign(null);
+      defaultPersistenceManager.clearCampaignState();
       setGame(startGame(selectedRedraw, selectedMode));
     }
 
@@ -238,6 +240,10 @@ function App() {
         if (nextCampaignState.status === 'defeat') {
           stopAutoplay();
           setCampaignEndMode('defeat');
+          setIsCampaignEndModalOpen(true);
+        } else if (game.status === 'complete-victory') {
+          stopAutoplay();
+          setCampaignEndMode('victory');
           setIsCampaignEndModalOpen(true);
         } else {
           setIsRoundSummaryModalOpen(true);

@@ -525,8 +525,8 @@ describe('Cursed Tomb campaign mechanics', () => {
     expect(updated.achievements.unlockedBadges).toContain('Perfect Win');
   });
 
-  it('sets volatilityWarning advisory flag when 4 of a rank are entombed without triggering defeat', () => {
-    const campaign = createCampaign('cursed-tomb', 1, true);
+  it('sets volatilityWarning advisory flag when 4 of a rank are entombed without triggering defeat if volatileCollapse is false', () => {
+    const campaign = createCampaign('cursed-tomb', 1, false);
     // Entomb all 4 Kings (rank 13)
     const kings = campaign.masterDeck.filter((c) => c.rank === 13);
     kings.forEach((k) => {
@@ -535,6 +535,20 @@ describe('Cursed Tomb campaign mechanics', () => {
 
     const updated = applyEndOfWeekLifecycle(campaign);
     expect(updated.status).toBe('active');
+    expect(updated.volatilityWarning).toBe(true);
+  });
+
+  it('triggers Volatile Collapse defeat when 4 of a rank are entombed and volatileCollapse is enabled', () => {
+    const campaign = createCampaign('cursed-tomb', 1, true);
+    // Entomb all 4 Kings (rank 13)
+    const kings = campaign.masterDeck.filter((c) => c.rank === 13);
+    kings.forEach((k) => {
+      k.attritionStage = 5;
+    });
+
+    const updated = applyEndOfWeekLifecycle(campaign);
+    expect(updated.status).toBe('defeat');
+    expect(updated.defeatReason).toBe('volatile-collapse');
     expect(updated.volatilityWarning).toBe(true);
   });
 
