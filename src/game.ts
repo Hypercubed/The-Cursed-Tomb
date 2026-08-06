@@ -374,7 +374,7 @@ export function cyclePile(state: GameState): GameState {
   const reshuffledWaste = state.discardPile.map((c) => ({
     ...c,
     removed: false,
-    faceDown: true,
+    faceDown: false,
     selected: false,
   }));
 
@@ -532,12 +532,12 @@ export function removePair(state: GameState, card1: Card, card2: Card): GameStat
 
     const toReshuffle: Card[] = [];
     if (c1Bc && !c2Bc) {
-      toReshuffle.push({ ...card2, removed: false, faceDown: true, selected: false });
+      toReshuffle.push({ ...card2, removed: false, faceDown: false, selected: false });
     } else if (c2Bc && !c1Bc) {
-      toReshuffle.push({ ...card1, removed: false, faceDown: true, selected: false });
+      toReshuffle.push({ ...card1, removed: false, faceDown: false, selected: false });
     } else if (c1Bc && c2Bc) {
-      toReshuffle.push({ ...card1, removed: false, faceDown: true, selected: false });
-      toReshuffle.push({ ...card2, removed: false, faceDown: true, selected: false });
+      toReshuffle.push({ ...card1, removed: false, faceDown: false, selected: false });
+      toReshuffle.push({ ...card2, removed: false, faceDown: false, selected: false });
     }
 
     if (toReshuffle.length > 0) {
@@ -569,7 +569,7 @@ function handleHeroBlessings(state: GameState, clearedCards: Card[]): GameState 
           const reshuffledWaste = nextState.discardPile.map((c) => ({
             ...c,
             removed: false,
-            faceDown: true,
+            faceDown: false,
             selected: false,
           }));
           nextState = {

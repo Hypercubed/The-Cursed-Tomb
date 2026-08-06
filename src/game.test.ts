@@ -97,6 +97,7 @@ describe('game model', () => {
     expect(current.discardPile.length).toBe(24);
     const cycled = cyclePile(current);
     expect(cycled.drawPile.length).toBe(24);
+    expect(cycled.drawPile[0].faceDown).toBe(false);
     expect(cycled.discardPile.length).toBe(0);
     expect(cycled.redrawsRemaining).toBe(0);
   });
@@ -374,7 +375,7 @@ describe('Cursed Tomb campaign mechanics', () => {
     // Partner card (♦4) should now be in drawPile, faceDown, removed: false
     const recycledCardInDraw = nextGame.drawPile.find((c) => c.id === '♦4');
     expect(recycledCardInDraw).toBeDefined();
-    expect(recycledCardInDraw?.faceDown).toBe(true);
+    expect(recycledCardInDraw?.faceDown).toBe(false);
     expect(recycledCardInDraw?.removed).toBe(false);
     expect(nextGame.discardPile.find((c) => c.id === '♦4')).toBeUndefined();
   });
