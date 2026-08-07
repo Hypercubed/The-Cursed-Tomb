@@ -11,7 +11,6 @@ export interface DifficultyOption {
   icon: string;
   winRate: string;
   standardWinRate: string;
-  campaignWinRate: string;
 }
 
 export const DIFFICULTY_OPTIONS: DifficultyOption[] = [
@@ -23,10 +22,8 @@ export const DIFFICULTY_OPTIONS: DifficultyOption[] = [
     redealsText: '5 Redeals (6 Passes)',
     description: '5 stock redeals per attempt. Ideal for casual exploration & learning.',
     icon: '📜',
-    // Note: winRate / standardWinRate / campaignWinRate need re-simulation for 5 redeals
-    winRate: '25.2%',
-    standardWinRate: '25.2%',
-    campaignWinRate: '10.5%',
+    winRate: '34.57%',
+    standardWinRate: '34.57%',
   },
   {
     id: 'explorer',
@@ -36,10 +33,8 @@ export const DIFFICULTY_OPTIONS: DifficultyOption[] = [
     redealsText: '3 Redeals (4 Passes)',
     description: '3 stock redeals per attempt. Balanced entry-level campaign mode.',
     icon: '🧭',
-    // Note: winRate / standardWinRate / campaignWinRate need re-simulation for 3 redeals
-    winRate: '21.2%',
-    standardWinRate: '21.2%',
-    campaignWinRate: '7.8%',
+    winRate: '34.37%',
+    standardWinRate: '34.37%',
   },
   {
     id: 'archaeologist',
@@ -49,9 +44,8 @@ export const DIFFICULTY_OPTIONS: DifficultyOption[] = [
     redealsText: '1 Redeal (2 Passes)',
     description: '1 stock redeal per attempt. Standard Egyptian expedition challenge.',
     icon: '🔍',
-    winRate: '6.4%',
-    standardWinRate: '6.4%',
-    campaignWinRate: '2.6%',
+    winRate: '14.91%',
+    standardWinRate: '14.91%',
   },
   {
     id: 'survivalist',
@@ -61,9 +55,8 @@ export const DIFFICULTY_OPTIONS: DifficultyOption[] = [
     redealsText: '0 Redeals (1 Pass)',
     description: '0 stock redeals (single pass). Unforgiving curse of the Pharaohs!',
     icon: '💀',
-    winRate: '0.0%',
-    standardWinRate: '0.0%',
-    campaignWinRate: '0.0%',
+    winRate: '1.17%',
+    standardWinRate: '1.17%',
   },
 ];
 
@@ -300,17 +293,16 @@ export function CampaignSetupModal({
               <h3 className="text-sm font-semibold text-game-text font-display tracking-wider uppercase m-0 flex items-center gap-2">
                 <span>🏺</span> Select Expedition Difficulty
               </h3>
-              <span className="text-[11px] text-game-muted/80">
-                {mode === 'cursed-tomb'
-                  ? 'Estimated Expedition Victory Rate'
-                  : 'Estimated 200-Round Victory Rate'}
-              </span>
+              {mode === 'standard' && (
+                <span className="text-[11px] text-game-muted/80">
+                  Estimated Single-Game Win Rate
+                </span>
+              )}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {DIFFICULTY_OPTIONS.map((option) => {
                 const isSelected = selectedDifficulty === option.value;
-                const winRateText = mode === 'cursed-tomb' ? option.campaignWinRate : option.standardWinRate;
                 return (
                   <button
                     key={option.id}
@@ -342,20 +334,18 @@ export function CampaignSetupModal({
 
                     <div className="flex items-center justify-between text-xs font-mono">
                       <span className="text-game-accent font-medium">{option.redealsText}</span>
-                      <span
-                        className={`text-[11px] font-mono px-1.5 py-0.5 rounded border ${
-                          isSelected
-                            ? 'bg-[#18130e] text-emerald-300 border-amber-800/60'
-                            : 'bg-[#18130e] text-emerald-400/90 border-[#251e16]'
-                        }`}
-                        title={
-                          mode === 'cursed-tomb'
-                            ? 'Simulated campaign victory rate under full rules with scars, curses & attrition'
-                            : 'Simulated chance of complete victory within 200 rounds (base rules without attrition)'
-                        }
-                      >
-                        🎯 {winRateText} <span className="text-[9px] opacity-75 font-sans">({mode === 'cursed-tomb' ? 'Expedition' : '200 Rounds'})</span>
-                      </span>
+                      {mode === 'standard' && (
+                        <span
+                          className={`text-[11px] font-mono px-1.5 py-0.5 rounded border ${
+                            isSelected
+                              ? 'bg-[#18130e] text-emerald-300 border-amber-800/60'
+                              : 'bg-[#18130e] text-emerald-400/90 border-[#251e16]'
+                          }`}
+                          title="Simulated single-game win rate (Pyramid Clear) under standard rules"
+                        >
+                          🎯 {option.standardWinRate}
+                        </span>
+                      )}
                     </div>
 
                     <p className="m-0 text-xs text-game-muted/80 leading-relaxed">

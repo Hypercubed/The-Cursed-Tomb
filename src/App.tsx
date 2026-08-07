@@ -565,7 +565,7 @@ function App() {
               </button>
             )}
             {game.status === 'in-progress' && isPyramidCleared(game) && (
-              <div className="mb-4 bg-emerald-950/80 border border-emerald-700/80 rounded-xl p-3 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-lg animate-fade-in">
+              <div className="absolute top-3 left-3 right-3 z-20 bg-emerald-950/95 border border-emerald-700/90 rounded-xl p-3 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-2xl backdrop-blur-md animate-fade-in">
                 <div className="flex items-center gap-3 text-emerald-200 text-xs sm:text-sm">
                   <span className="text-2xl sm:text-3xl">✨</span>
                   <div>

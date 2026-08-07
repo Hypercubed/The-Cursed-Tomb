@@ -20,22 +20,22 @@ describe('CampaignSetupModal difficulty options', () => {
     expect(survivalist?.value).toBe(0);
   });
 
-  it('includes simulated win rates for standard (Part 2) and full campaign (Part 3) results', () => {
+  it('includes simulated single-game win rates for standard solitaire from Results.md and omits campaign win rates', () => {
     const novice = DIFFICULTY_OPTIONS.find((opt) => opt.id === 'novice');
     const explorer = DIFFICULTY_OPTIONS.find((opt) => opt.id === 'explorer');
     const archaeologist = DIFFICULTY_OPTIONS.find((opt) => opt.id === 'archaeologist');
     const survivalist = DIFFICULTY_OPTIONS.find((opt) => opt.id === 'survivalist');
 
-    // Part 2 (Standard Solitaire)
-    expect(novice?.standardWinRate).toBe('25.2%');
-    expect(explorer?.standardWinRate).toBe('21.2%');
-    expect(archaeologist?.standardWinRate).toBe('6.4%');
-    expect(survivalist?.standardWinRate).toBe('0.0%');
+    // Standard Solitaire Win Rates (Pyramid Clear) from sim/RESULTS.md Part 1
+    expect(novice?.standardWinRate).toBe('34.57%');
+    expect(explorer?.standardWinRate).toBe('34.37%');
+    expect(archaeologist?.standardWinRate).toBe('14.91%');
+    expect(survivalist?.standardWinRate).toBe('1.17%');
 
-    // Part 3 (Cursed Tomb Full Rules Campaign)
-    expect(novice?.campaignWinRate).toBe('10.5%');
-    expect(explorer?.campaignWinRate).toBe('7.8%');
-    expect(archaeologist?.campaignWinRate).toBe('2.6%');
-    expect(survivalist?.campaignWinRate).toBe('0.0%');
+    // Campaign win rates are removed
+    expect('campaignWinRate' in (novice || {})).toBe(false);
+    expect('campaignWinRate' in (explorer || {})).toBe(false);
+    expect('campaignWinRate' in (archaeologist || {})).toBe(false);
+    expect('campaignWinRate' in (survivalist || {})).toBe(false);
   });
 });
