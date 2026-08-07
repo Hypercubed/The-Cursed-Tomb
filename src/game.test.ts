@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { GameState, CursedCard, Card, Suit } from './game';
+import type { GameState, CursedCard, Card, Suit, Rank } from './game';
 import {
   canAnyMove,
   canRemovePair,
@@ -23,6 +23,7 @@ import {
   isBlocked,
   isPyramidCleared,
   movePyramidToVault,
+  moveStockToVault,
   playCard,
   removePair,
   resignGame,
@@ -45,6 +46,7 @@ function createDeterministicGameState(redraws: number | null): GameState {
     redrawsRemaining: redraws,
     status: 'in-progress',
     mode: 'standard',
+    vaultCards: [],
   };
 }
 
@@ -613,7 +615,7 @@ describe('Cursed Tomb campaign mechanics', () => {
       exposedCard.suit = '♦';
 
       const nextState = movePyramidToVault(state, exposedCard.id);
-      expect(nextState.vaultCard).toEqual(exposedCard);
+      expect(nextState.vaultCards).toEqual([exposedCard]);
       expect(nextState.pyramid[6][0].removed).toBe(true);
     });
 
@@ -625,25 +627,63 @@ describe('Cursed Tomb campaign mechanics', () => {
       blockedCard.suit = '♦';
 
       const stateBlocked = movePyramidToVault(state, blockedCard.id);
-      expect(stateBlocked.vaultCard).toBeUndefined();
+      expect(stateBlocked.vaultCards).toEqual([]);
 
       // Exposed card but unblessed
       const exposedCard = state.pyramid[6][1];
       exposedCard.blessed = false;
       exposedCard.suit = '♦';
       const stateUnblessed = movePyramidToVault(state, exposedCard.id);
-      expect(stateUnblessed.vaultCard).toBeUndefined();
+      expect(stateUnblessed.vaultCards).toEqual([]);
     });
 
-    it('rejects moving pyramid card to vault if vault already contains a card', () => {
+    it('stacks multiple Blessed Diamond cards and pops them in FILO order', () => {
       const state = createDeterministicGameState(2);
-      state.vaultCard = { ...state.pyramid[6][2] };
+      const first = state.pyramid[6][0];
+      first.rank = 4;
+      first.blessed = true;
+      first.suit = '♦';
+      const afterFirst = movePyramidToVault(state, first.id);
+
+      const second = afterFirst.pyramid[6][1];
+      second.rank = 5;
+      second.blessed = true;
+      second.suit = '♦';
+      const stacked = movePyramidToVault(afterFirst, second.id);
+
+      expect(stacked.vaultCards.map((card) => card.id)).toEqual([first.id, second.id]);
+      expect(stacked.vaultCards[stacked.vaultCards.length - 1].id).toBe(second.id);
+
+      const partner = { ...stacked.pyramid[6][2], rank: 8 as Rank };
+      stacked.pyramid[6][2] = partner;
+      const firstClick = playCard(stacked, second.id);
+      const popped = playCard(firstClick, partner.id);
+      expect(popped.vaultCards.map((card) => card.id)).toEqual([first.id]);
+    });
+
+    it('only considers the top Vault card when checking move availability', () => {
+      const state = createDeterministicGameState(0);
+      state.pyramid = state.pyramid.map((row) => row.map((card) => ({ ...card, rank: 1 as const })));
+      state.drawPile = [];
+      state.discardPile = [];
+      state.vaultCards = [
+        { ...state.pyramid[6][0], id: 'vault-bottom', rank: 12 as const },
+        { ...state.pyramid[6][1], id: 'vault-top', rank: 1 as const },
+      ];
+
+      expect(canAnyMove(state)).toBe(false);
+      expect(canAnyMove({ ...state, vaultCards: [state.vaultCards[0], { ...state.vaultCards[1], rank: 13 as const }] })).toBe(true);
+    });
+
+    it('allows adding to a non-empty vault and keeps the existing card when the move is rejected', () => {
+      const state = createDeterministicGameState(2);
+      state.vaultCards = [{ ...state.pyramid[6][2] }];
       const exposedCard = state.pyramid[6][0];
       exposedCard.blessed = true;
-      exposedCard.suit = '♦';
+      exposedCard.suit = '♣';
 
       const nextState = movePyramidToVault(state, exposedCard.id);
-      expect(nextState.vaultCard).toEqual(state.vaultCard);
+      expect(nextState.vaultCards).toEqual(state.vaultCards);
       expect(nextState.pyramid[6][0].removed).toBe(false);
     });
   });
@@ -801,9 +841,10 @@ describe('Cursed Tomb campaign mechanics', () => {
           return;
         }
       }
-      if (state.vaultCard && state.vaultCard.id === cardId) {
-        state.vaultCard.attritionStage = stage;
-        if (blessed !== undefined) state.vaultCard.blessed = blessed;
+      const vaultCard = state.vaultCards.find((card) => card.id === cardId);
+      if (vaultCard) {
+        vaultCard.attritionStage = stage;
+        if (blessed !== undefined) vaultCard.blessed = blessed;
       }
     }
 
@@ -892,6 +933,30 @@ describe('Cursed Tomb campaign mechanics', () => {
       expect(kings.functionalModifications1!.some((m) => m.includes('Black') && m.includes('A') && m.includes('K'))).toBe(true);
       const queenAce = stats.find((s) => s.label === 'Q + A')!;
       expect(queenAce.functionalModifications2!.some((m) => m.includes('Red') && m.includes('K') && m.includes('A'))).toBe(true);
+    });
+
+    it('allows moving an exposed Blessed Diamond card from top of Stock to Vault', () => {
+      const state = initializeGame(1, 'cursed-tomb');
+      const blessedDiamond: Card = {
+        id: '♦7',
+        suit: '♦',
+        rank: 7,
+        removed: false,
+        selected: false,
+        attritionStage: 0,
+        rewardStage: 0,
+        blessed: true,
+      };
+      const testState: GameState = {
+        ...state,
+        drawPile: [blessedDiamond, ...state.drawPile.filter((c) => c.id !== '♦7')],
+        vaultCards: [],
+      };
+      const result = moveStockToVault(testState);
+      expect(result.vaultCards.length).toBe(1);
+      expect(result.vaultCards[0].id).toBe('♦7');
+      expect(result.drawPile.length).toBe(testState.drawPile.length - 1);
+      expect(result.drawPile.some((c) => c.id === '♦7')).toBe(false);
     });
   });
 });

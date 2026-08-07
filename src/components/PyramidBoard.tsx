@@ -6,7 +6,7 @@ interface PyramidBoardProps {
   pyramid: Card[][];
   selectedCardId: string | null;
   status: GameState['status'];
-  vaultCard?: Card | null;
+  vaultCards?: Card[];
   interactionMode?: 'normal' | 'targeting-spades' | 'targeting-hearts';
   mode?: GameState['mode'];
   animatingMatchIds?: string[];
@@ -39,7 +39,7 @@ export function PyramidBoard({
   pyramid,
   selectedCardId,
   status,
-  vaultCard,
+  vaultCards,
   interactionMode = 'normal',
   mode = 'standard',
   animatingMatchIds = [],

@@ -291,7 +291,7 @@ export function RulesModal({ isOpen, onClose, initialTab = 'core-rules' }: Rules
                   </div>
                   <div className="bg-[#18130e] p-2.5 rounded border border-[#251e16]">
                     <strong className="text-amber-300 block mb-0.5">The Vault <span className="text-xs font-normal text-game-muted">(♦ Diamond Blessing)</span></strong>
-                    A separate holding area distinct from the Foundation. Blessed ♦ Diamond cards may be freely placed here without spending an action — unblocking cards beneath them. Vaulted cards survive Redeals and can be paired normally at any time.
+                    A separate holding area distinct from the Foundation. Multiple Blessed ♦ Diamond cards may be freely placed here without spending an action, forming a First-In, Last-Out (FILO) stack and unblocking cards beneath them. Only the top vaulted card is playable; vaulted cards survive Redeals.
                   </div>
                   <div className="bg-[#18130e] p-2.5 rounded border border-[#251e16]">
                     <strong className="text-amber-300 block mb-0.5">Graveyard Box</strong>
@@ -396,7 +396,7 @@ export function RulesModal({ isOpen, onClose, initialTab = 'core-rules' }: Rules
                     </div>
                     <div className="bg-[#18130e] p-2.5 rounded border border-[#251e16]">
                       <strong className="text-cyan-300 font-display block mb-0.5">♦ Diamonds (The Vault) — □ Vault Box</strong>
-                      Exposed Diamond cards can be moved into the Vault slot for free without consuming a turn.
+                      Multiple exposed Blessed Diamond cards can be moved into the Vault for free without consuming a turn. They form a FILO stack: only the most recently vaulted (top) card can be paired.
                     </div>
                     <div className="bg-[#18130e] p-2.5 rounded border border-[#251e16]">
                       <strong className="text-indigo-300 font-display block mb-0.5">♠ Spades (The Tunnel) — Tunnel Shovel</strong>
@@ -468,11 +468,11 @@ export function RulesModal({ isOpen, onClose, initialTab = 'core-rules' }: Rules
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
                     <div className="bg-[#18130e] p-3 rounded border border-[#251e16]">
                       <span className="text-game-muted block text-[11px] uppercase tracking-wider font-semibold mb-1">Physical Rule</span>
-                      Exposed Diamond cards can be placed into a separate Vault slot on the table for free.
+                      Multiple exposed Blessed Diamond cards can be placed into a separate Vault stack for free. Stack them in FILO order; only the top card is playable.
                     </div>
                     <div className="bg-[#18130e] p-3 rounded border border-cyan-900/30">
                       <span className="text-cyan-300 block text-[11px] uppercase tracking-wider font-semibold mb-1">Web UI Interaction</span>
-                      Select an exposed Diamond card (from pyramid or waste pile) and click the glowing <strong>Vault Slot</strong> in the Draw Zone to vault it without losing your turn.
+                      Select an exposed Blessed Diamond card (from pyramid, stock, or waste pile) and click the glowing <strong>Vault Slot</strong> in the Draw Zone to add it to the FILO stack without losing your turn. The badge shows the total vaulted count.
                     </div>
                   </div>
                 </div>

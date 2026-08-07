@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Compare Baseline Diamond Vaulting (Waste Only) vs. Pyramid Self-Vaulting (Waste + Pyramid).
+Compare automatic Stock-to-Vault Diamond vaulting vs. additional Pyramid Self-Vaulting.
 """
 
 import copy
@@ -93,11 +93,11 @@ def play_round_compare(pool, rng, max_redeals, flags, allow_pyramid_vault=False,
         singles = []
         if waste:
             singles.append(('waste', None))
-        for vi in range(len(vault)):
-            singles.append(('vault', vi))
+        if vault:
+            singles.append(('vault', None))
 
         for kind_s, vi in singles:
-            single_card = waste[-1] if kind_s == 'waste' else vault[vi]
+            single_card = waste[-1] if kind_s == 'waste' else vault[-1]
             if single_card.functional_value(flags) == TARGET:
                 candidates.append((0, 'alone_single', (kind_s, vi)))
             for a in exp:
@@ -123,12 +123,12 @@ def play_round_compare(pool, rng, max_redeals, flags, allow_pyramid_vault=False,
                 last_clear_type, last_clear_cards = 'solo', (pyr[a],)
             elif kind == 'alone_single':
                 kind_s, vi = payload
-                card = waste.pop() if kind_s == 'waste' else vault.pop(vi)
+                card = waste.pop() if kind_s == 'waste' else vault.pop()
                 fire_on_clear(card)
                 last_clear_type, last_clear_cards = 'solo', (card,)
             elif kind == 'pw':
                 a, kind_s, vi = payload
-                card = waste.pop() if kind_s == 'waste' else vault.pop(vi)
+                card = waste.pop() if kind_s == 'waste' else vault.pop()
                 removed.add(a)
                 fire_on_clear(pyr[a]); fire_on_clear(card)
                 last_clear_type, last_clear_cards = 'pair', (pyr[a], card)
@@ -179,10 +179,11 @@ def run_campaign_compare(rng, max_redeals, flags, max_rounds, allow_pyramid_vaul
             return 'collapse', rounds_played
 
         if flags.volatile_collapse:
-            counts = {}
-            for c in active_pool:
-                counts[c.rank] = counts.get(c.rank, 0) + 1
-            if any(cnt < 4 for cnt in counts.values()):
+            entombed_by_rank = {}
+            for c in registry:
+                if c.attrition_stage >= 5:
+                    entombed_by_rank[c.rank] = entombed_by_rank.get(c.rank, 0) + 1
+            if any(count >= 4 for count in entombed_by_rank.values()):
                 return 'collapse', rounds_played
 
         outcome = play_round_compare(active_pool, rng, max_redeals, flags, allow_pyramid_vault)
@@ -219,7 +220,8 @@ def run_experiment(num_campaigns=1000, seed=42, n_workers=None):
     print("-" * 88)
 
     for diff_name, redeals in difficulties:
-        for allow_pyr, mode_name in [(False, "Baseline (Waste)"), (True, "Pyramid Self-Vault")]:
+        for allow_pyr, mode_name in [(False, "Stock Auto-Vault"), (True, "Pyramid Self-Vault")]:
+
             base_rng = random.Random(seed)
             flags = RuleFlags(scars=True, curses=True, blessings=True, attrition=True)
             worker_args = [(base_rng.randint(0, 1_000_000_000), redeals, flags, 500, allow_pyr) for _ in range(num_campaigns)]

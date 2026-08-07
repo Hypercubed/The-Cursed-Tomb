@@ -41,7 +41,7 @@ export interface GameState {
   redrawsRemaining: number | null;
   status: GameStatus;
   mode: GameMode;
-  vaultCard?: Card | null;
+  vaultCards: Card[];
   interactionMode?: 'normal' | 'targeting-spades' | 'targeting-hearts';
   pendingHeroCardId?: string | null;
   lastClearedPair?: Card[];
@@ -190,7 +190,8 @@ export function getCardById(cardId: string, state: GameState): Card | undefined 
   if (pyramidCard) return pyramidCard;
   const drawCard = state.drawPile.find((card) => card.id === cardId && !card.removed);
   if (drawCard) return drawCard;
-  if (state.vaultCard && state.vaultCard.id === cardId && !state.vaultCard.removed) return state.vaultCard;
+  const topVaultCard = state.vaultCards[state.vaultCards.length - 1];
+  if (topVaultCard && topVaultCard.id === cardId && !topVaultCard.removed) return topVaultCard;
   const discardCard = state.discardPile.find((card) => card.id === cardId && !card.removed);
   if (discardCard) return discardCard;
 
@@ -199,7 +200,7 @@ export function getCardById(cardId: string, state: GameState): Card | undefined 
   if (removedPyramidCard) return removedPyramidCard;
   const removedDrawCard = state.drawPile.find((card) => card.id === cardId);
   if (removedDrawCard) return removedDrawCard;
-  if (state.vaultCard && state.vaultCard.id === cardId) return state.vaultCard;
+  if (topVaultCard && topVaultCard.id === cardId) return topVaultCard;
   return state.discardPile.find((card) => card.id === cardId);
 }
 
@@ -258,7 +259,7 @@ export function initializeGame(
     redrawsRemaining: redraws,
     status: 'ready',
     mode,
-    vaultCard: null,
+    vaultCards: [],
     interactionMode: 'normal',
     pendingHeroCardId: null,
     lastClearedPair: [],
@@ -276,7 +277,8 @@ export function getCardLocation(
   }
   const drawIndex = state.drawPile.findIndex((card) => card.id === cardId && !card.removed);
   if (drawIndex !== -1) return { zone: 'draw', index: drawIndex };
-  if (state.vaultCard && state.vaultCard.id === cardId && !state.vaultCard.removed) return { zone: 'vault' };
+  const topVaultCard = state.vaultCards[state.vaultCards.length - 1];
+  if (topVaultCard && topVaultCard.id === cardId && !topVaultCard.removed) return { zone: 'vault' };
   const discardIndex = state.discardPile.findIndex((card) => card.id === cardId && !card.removed);
   if (discardIndex !== -1) return { zone: 'discard', index: discardIndex };
 
@@ -287,7 +289,7 @@ export function getCardLocation(
   }
   const fallbackDrawIndex = state.drawPile.findIndex((card) => card.id === cardId);
   if (fallbackDrawIndex !== -1) return { zone: 'draw', index: fallbackDrawIndex };
-  if (state.vaultCard && state.vaultCard.id === cardId) return { zone: 'vault' };
+  if (topVaultCard && topVaultCard.id === cardId) return { zone: 'vault' };
   const fallbackDiscardIndex = state.discardPile.findIndex((card) => card.id === cardId);
   if (fallbackDiscardIndex !== -1) return { zone: 'discard', index: fallbackDiscardIndex };
 
@@ -307,20 +309,42 @@ export function moveCardToDiscard(state: GameState): GameState {
 export function moveWasteToVault(state: GameState): GameState {
   if (state.discardPile.length === 0) return state;
   const topDiscard = state.discardPile[0];
-  if (!topDiscard.blessed || topDiscard.suit !== '♦' || state.vaultCard) {
+  if (!topDiscard.blessed || topDiscard.suit !== '♦') {
     return state;
   }
   const [movedCard, ...remainingDiscard] = state.discardPile;
-  return {
+  const nextState: GameState = {
     ...state,
     discardPile: remainingDiscard,
-    vaultCard: { ...movedCard, removed: false, faceDown: false, selected: false },
+    vaultCards: [...state.vaultCards, { ...movedCard, removed: false, faceDown: false, selected: false }],
+    selectedCardId: state.selectedCardId === topDiscard.id ? null : state.selectedCardId,
+  };
+  return {
+    ...nextState,
+    status: checkForWin(nextState),
+  };
+}
+
+export function moveStockToVault(state: GameState): GameState {
+  if (state.drawPile.length === 0) return state;
+  const topStock = state.drawPile[0];
+  if (!topStock.blessed || topStock.suit !== '♦') {
+    return state;
+  }
+  const [movedCard, ...remainingDraw] = state.drawPile;
+  const nextState: GameState = {
+    ...state,
+    drawPile: remainingDraw,
+    vaultCards: [...state.vaultCards, { ...movedCard, removed: false, faceDown: false, selected: false }],
+    selectedCardId: state.selectedCardId === topStock.id ? null : state.selectedCardId,
+  };
+  return {
+    ...nextState,
+    status: checkForWin(nextState),
   };
 }
 
 export function movePyramidToVault(state: GameState, cardId: string): GameState {
-  if (state.vaultCard) return state;
-
   const card = state.pyramid.flat().find((c) => c.id === cardId);
   if (!card || card.removed || card.faceDown || isBlocked(card.id, state.pyramid)) {
     return state;
@@ -337,7 +361,7 @@ export function movePyramidToVault(state: GameState, cardId: string): GameState 
   const nextState: GameState = {
     ...state,
     pyramid: nextPyramid,
-    vaultCard: { ...card, removed: false, faceDown: false, selected: false },
+    vaultCards: [...state.vaultCards, { ...card, removed: false, faceDown: false, selected: false }],
     selectedCardId: state.selectedCardId === cardId ? null : state.selectedCardId,
   };
 
@@ -422,7 +446,7 @@ export function checkForWin(state: GameState): GameStatus {
   const hasPyramidCards = remainingPyramid > 0;
 
   if (!hasPyramidCards) {
-    const discardEmpty = state.discardPile.length === 0 && !state.vaultCard;
+    const discardEmpty = state.discardPile.length === 0 && state.vaultCards.length === 0;
     const drawEmpty = state.drawPile.length === 0;
     if (drawEmpty && discardEmpty) {
       return 'complete-victory';
@@ -458,7 +482,7 @@ export function canAnyMove(state: GameState, extraCards: Card[] = []): boolean {
   const visible = visibleCards(state.pyramid);
   const topDiscard = state.discardPile[0] ?? null;
   const topStock = state.drawPile[0] ?? null;
-  const vaultCard = state.vaultCard ?? null;
+  const vaultCard = state.vaultCards[state.vaultCards.length - 1] ?? null;
 
   const available: { card: Card; location: 'pyramid' | 'draw' | 'discard' | 'vault' }[] = [
     ...visible.map((card) => ({ card, location: 'pyramid' as const })),
@@ -522,7 +546,7 @@ function removeCard(state: GameState, cardId: string): GameState {
     ),
     discardPile: state.discardPile.filter((card) => card.id !== cardId),
     drawPile: state.drawPile.filter((card) => card.id !== cardId),
-    vaultCard: state.vaultCard?.id === cardId ? null : state.vaultCard,
+    vaultCards: state.vaultCards.filter((card) => card.id !== cardId),
     selectedCardId: null,
   };
 }
@@ -732,13 +756,13 @@ export function playCard(state: GameState, cardId: string): GameState {
   }
 
   if (located.zone === 'vault') {
-    const vaultCard = state.vaultCard;
+    const vaultCard = state.vaultCards[state.vaultCards.length - 1];
     if (!vaultCard) return state;
 
     if (canRemoveSingle(vaultCard, state.mode)) {
       let nextState: GameState = {
         ...state,
-        vaultCard: null,
+        vaultCards: state.vaultCards.slice(0, -1),
         selectedCardId: null,
         lastClearedPair: [vaultCard],
       };
@@ -1140,6 +1164,10 @@ export function getRemovedCardIds(state: GameState): Set<string> {
     activeIds.add(card.id);
   }
 
+  for (const card of state.vaultCards) {
+    activeIds.add(card.id);
+  }
+
   const removed = new Set<string>();
   const suitsList: Suit[] = ['♠', '♥', '♦', '♣'];
   const ranksList: Rank[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
@@ -1197,7 +1225,9 @@ export function getActiveRankCounts(state: GameState, mode?: GameMode, masterDec
   }
   for (const card of state.drawPile) activeCards.push(card);
   for (const card of state.discardPile) activeCards.push(card);
-  if (state.vaultCard && !state.vaultCard.removed) activeCards.push(state.vaultCard);
+  for (const card of state.vaultCards) {
+    if (!card.removed) activeCards.push(card);
+  }
   for (const card of activeCards) {
     const fVal = getFunctionalValue(card, effectiveMode) as Rank;
     counts[fVal] += 1;
@@ -1235,7 +1265,9 @@ export function getRemainingPairStats(state: GameState, mode?: GameMode, masterD
     }
     for (const card of state.drawPile) activeCards.push(card);
     for (const card of state.discardPile) activeCards.push(card);
-    if (state.vaultCard && !state.vaultCard.removed) activeCards.push(state.vaultCard);
+    for (const card of state.vaultCards) {
+      if (!card.removed) activeCards.push(card);
+    }
     hasWildcard = activeCards.some((c) => c.blessed && c.suit === '♣');
     if (!hasWildcard && masterDeck) {
       hasWildcard = masterDeck.some((c) => c.blessed && c.suit === '♣' && c.attritionStage < 5);

@@ -29,10 +29,10 @@ choices this simulator makes, called out here for transparency):
 3. The "Rule of Ink Overlap" (reward lost if the card already has failure
    ink) is applied to both Final Pair Clears and Solo King/Sibling Clears,
    for consistency, even though the text only spells it out under (A).
-4. Diamond Vault is simplified: a vaulted card becomes an extra, independent
-   "available single" (like a second waste-top) for the rest of the round,
-   and isn't touched by redeals. It returns to the pool at the campaign
-   reset like everything else.
+4. Diamond Vault uses a multi-card FILO stack: Blessed Diamonds are appended
+   to the Vault, only the top card is available for pairing or solo clearing,
+   and clearing it exposes the card beneath. The Vault isn't touched by
+   redeals and returns to the pool at campaign reset like everything else.
 5. Hearts (Martyr) protection target: the most at-risk currently-exposed
    pyramid card (highest attrition stage) is chosen as the beneficiary.
 6. A round is declared frozen (no legal move AND no useful draw/redeal left)
@@ -246,11 +246,11 @@ class GameState:
         singles = []
         if self.waste:
             singles.append(('waste', None))
-        for vi in range(len(self.vault)):
-            singles.append(('vault', vi))
+        if self.vault:
+            singles.append(('vault', len(self.vault) - 1))
 
         for kind_s, vi in singles:
-            single_card = self.waste[-1] if kind_s == 'waste' else self.vault[vi]
+            single_card = self.waste[-1] if kind_s == 'waste' else self.vault[-1]
             if single_card.functional_value(self.flags) == TARGET:
                 moves.append(Move('alone_single', (kind_s, vi), score=0.0))
             for a in exp:
@@ -271,7 +271,7 @@ class GameState:
                     moves.append(Move('stock_pyramid', (a,), score=float(score)))
 
             for kind_s, vi in singles:
-                other_card = self.waste[-1] if kind_s == 'waste' else self.vault[vi]
+                other_card = self.waste[-1] if kind_s == 'waste' else self.vault[-1]
                 if pair_sum(stock_top, other_card, self.flags) == TARGET:
                     moves.append(Move('stock_waste', (kind_s, vi), score=0.0))
 
@@ -343,7 +343,7 @@ class GameState:
             elif kind_s == 'waste':
                 card = self.waste.pop()
             else:
-                card = self.vault.pop(vi)
+                card = self.vault.pop()
             self.fire_on_clear(card)
             self.last_clear_type, self.last_clear_cards = 'solo', (card,)
             self.moves_played += 1
@@ -351,7 +351,7 @@ class GameState:
 
         elif kind == 'pw':
             a, kind_s, vi = payload
-            card_w = self.waste.pop() if kind_s == 'waste' else self.vault.pop(vi)
+            card_w = self.waste.pop() if kind_s == 'waste' else self.vault.pop()
             card_a = self.pyr[a]
             self.removed.add(a)
             a_bc = card_a.is_black_cursed(self.flags)
@@ -396,7 +396,7 @@ class GameState:
         elif kind == 'stock_waste':
             kind_s, vi = payload
             stock_card = self.stock.pop(0)
-            other_card = self.waste.pop() if kind_s == 'waste' else self.vault.pop(vi)
+            other_card = self.waste.pop() if kind_s == 'waste' else self.vault.pop()
             s_bc = stock_card.is_black_cursed(self.flags)
             o_bc = other_card.is_black_cursed(self.flags)
             if s_bc and not o_bc:

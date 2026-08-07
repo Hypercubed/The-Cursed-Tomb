@@ -23,6 +23,7 @@ import {
   applyEndOfWeekLifecycle,
   computeRoundLifecycleEffects,
   moveWasteToVault,
+  moveStockToVault,
   movePyramidToVault,
   deselectCard,
   GameState,
@@ -55,6 +56,7 @@ const initialState: GameState = {
   redrawsRemaining: null,
   status: 'ready',
   mode: 'standard',
+  vaultCards: [],
 };
 
 function App() {
@@ -351,28 +353,30 @@ function App() {
   };
 
   const selectedCardForVault = useMemo(() => {
-    if (!game.selectedCardId || game.vaultCard) return null;
+    if (!game.selectedCardId) return null;
     const card = getCardById(game.selectedCardId, game);
     if (!card || !card.blessed || card.suit !== '♦') return null;
     const location = getCardLocation(card.id, game);
     const isUnblockedPyramid = location.zone === 'pyramid' && !isBlocked(card.id, game.pyramid);
     const isTopDiscard = location.zone === 'discard' && topDiscard?.id === card.id;
-    return (isUnblockedPyramid || isTopDiscard) ? card : null;
-  }, [game, topDiscard]);
+    const isTopStock = location.zone === 'draw' && topStock?.id === card.id;
+    return (isUnblockedPyramid || isTopDiscard || isTopStock) ? card : null;
+  }, [game, topDiscard, topStock]);
 
   const isVaultTargetActive = Boolean(selectedCardForVault);
 
   const handleVaultSlotClick = () => {
     if (game.status !== 'in-progress') return;
-    if (game.vaultCard) return;
     if (!game.selectedCardId) return;
 
     if (selectedCardForVault) {
       const location = getCardLocation(selectedCardForVault.id, game);
       setGame((state) => {
-        const nextState = location.zone === 'discard'
-          ? moveWasteToVault(state)
-          : movePyramidToVault(state, selectedCardForVault.id);
+        const nextState = location.zone === 'draw'
+          ? moveStockToVault(state)
+          : location.zone === 'discard'
+            ? moveWasteToVault(state)
+            : movePyramidToVault(state, selectedCardForVault.id);
         return { ...nextState, selectedCardId: null };
       });
     } else {
@@ -591,7 +595,7 @@ function App() {
               pyramid={game.pyramid}
               selectedCardId={game.selectedCardId}
               status={game.status}
-              vaultCard={game.vaultCard}
+              vaultCards={game.vaultCards}
               interactionMode={game.interactionMode}
               mode={game.mode}
               animatingMatchIds={animatingMatchIds}
@@ -606,7 +610,7 @@ function App() {
                 discardPileCount={game.discardPile.length}
                 topStock={topStock}
                 topDiscard={topDiscard}
-                vaultCard={game.vaultCard}
+                vaultCards={game.vaultCards}
                 selectedCardId={game.selectedCardId}
                 redrawsRemaining={game.redrawsRemaining}
                 canDraw={canDraw}

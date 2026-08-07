@@ -93,8 +93,8 @@ The game SHALL enforce the persistent powers of Hero Cards when cleared or expos
 - **AND** IF the Graveyard Box is empty, no action SHALL be taken
 
 #### Scenario: Diamonds Vault blessing
-- **WHEN** a Blessed Diamonds card is exposed on top of the Waste pile OR is exposed in the Pyramid layout
-- **THEN** the player MAY move it for free into the Diamond Vault slot adjacent to the Waste pile by selecting the card and clicking the empty Diamond Vault slot provided the Diamond Vault slot is empty
+- **WHEN** a Blessed Diamonds card is exposed on top of the Stock pile, on top of the Waste pile, OR is exposed in the Pyramid layout
+- **THEN** the player MAY move it for free into the Diamond Vault slot by selecting the card and clicking the Diamond Vault slot
 
 #### Scenario: Spades Tunnel blessing
 - **WHEN** a Blessed Spades card is cleared

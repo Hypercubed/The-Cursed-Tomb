@@ -21,6 +21,7 @@ describe('useAutoplay', () => {
       redrawsRemaining: null,
       status: 'ready',
       mode: 'standard',
+      vaultCards: [],
     };
     const setGame = vi.fn();
     const onStartNewGame = vi.fn();
@@ -45,6 +46,7 @@ describe('useAutoplay', () => {
       redrawsRemaining: null,
       status: 'complete-victory',
       mode: 'standard',
+      vaultCards: [],
     };
     const onStartNewGame = vi.fn();
 

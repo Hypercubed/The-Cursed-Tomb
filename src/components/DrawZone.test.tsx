@@ -46,7 +46,7 @@ describe('DrawZone Component', () => {
         discardPileCount={7}
         topStock={dummyStockCard}
         topDiscard={dummyDiscardCard}
-        vaultCard={dummyVaultCard}
+        vaultCards={[dummyVaultCard]}
         selectedCardId={null}
         redrawsRemaining={1}
         canDraw={true}
@@ -60,17 +60,17 @@ describe('DrawZone Component', () => {
 
     expect(screen.getByText('18')).toBeDefined();
     expect(screen.getByText('7')).toBeDefined();
-    expect(screen.getByText('1/1')).toBeDefined();
+    expect(screen.getByText('1')).toBeDefined();
   });
 
-  it('renders 0/1 for empty vault slot in Cursed Tomb mode', () => {
+  it('renders 0 for empty vault slot in Cursed Tomb mode', () => {
     render(
       <DrawZone
         drawPileCount={24}
         discardPileCount={0}
         topStock={dummyStockCard}
         topDiscard={null}
-        vaultCard={null}
+        vaultCards={[]}
         selectedCardId={null}
         redrawsRemaining={1}
         canDraw={true}
@@ -83,8 +83,7 @@ describe('DrawZone Component', () => {
     );
 
     expect(screen.getByText('24')).toBeDefined();
-    expect(screen.getByText('0')).toBeDefined();
-    expect(screen.getByText('0/1')).toBeDefined();
+    expect(screen.getAllByText('0')).toHaveLength(2);
   });
 
   it('hides vault slot in Standard Solitaire mode', () => {
@@ -94,7 +93,7 @@ describe('DrawZone Component', () => {
         discardPileCount={4}
         topStock={dummyStockCard}
         topDiscard={dummyDiscardCard}
-        vaultCard={null}
+        vaultCards={[]}
         selectedCardId={null}
         redrawsRemaining={null}
         canDraw={true}
@@ -108,6 +107,6 @@ describe('DrawZone Component', () => {
 
     expect(screen.getByText('10')).toBeDefined();
     expect(screen.getByText('4')).toBeDefined();
-    expect(screen.queryByText('0/1')).toBeNull();
+    expect(screen.queryByText('0')).toBeNull();
   });
 });

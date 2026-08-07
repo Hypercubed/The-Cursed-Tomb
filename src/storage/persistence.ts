@@ -183,7 +183,11 @@ export class PersistenceManager {
       ...state,
       drawPile: Array.isArray(state.drawPile) ? state.drawPile.map((c) => ({ ...c, removed: false })) : [],
       discardPile: Array.isArray(state.discardPile) ? state.discardPile.map((c) => ({ ...c, removed: false })) : [],
-      vaultCard: state.vaultCard ? { ...state.vaultCard, removed: false } : null,
+      vaultCards: Array.isArray((state as any).vaultCards)
+        ? (state as any).vaultCards.map((c: any) => ({ ...c, removed: false }))
+        : (state as any).vaultCard
+          ? [{ ...(state as any).vaultCard, removed: false }]
+          : [],
     };
   }
 
@@ -358,6 +362,7 @@ export class PersistenceManager {
     if (!Array.isArray(state.pyramid)) return false;
     if (!Array.isArray(state.drawPile)) return false;
     if (!Array.isArray(state.discardPile)) return false;
+    if (!Array.isArray(state.vaultCards) && !state.vaultCard) return false;
     const validStatuses = ['ready', 'in-progress', 'complete-victory', 'partial-victory', 'pyramid-collapse', 'won', 'lost'];
     if (!validStatuses.includes(state.status)) return false;
     return true;

@@ -265,12 +265,12 @@ describe('solver', () => {
         return row;
       });
       const customDraw = game.drawPile.map((c, idx) => (idx === 0 ? { ...c, rank: 2 as const } : c));
-      const state: GameState = { ...game, pyramid: customPyramid, drawPile: customDraw, vaultCard: null };
+      const state: GameState = { ...game, pyramid: customPyramid, drawPile: customDraw, vaultCards: [] };
 
       const nextState = findNextGreedyMove(state);
       expect(nextState).not.toBeNull();
-      expect(nextState!.vaultCard).toBeDefined();
-      expect(nextState!.vaultCard?.suit).toBe('♦');
+      expect(nextState!.vaultCards).toHaveLength(1);
+      expect(nextState!.vaultCards[0].suit).toBe('♦');
       expect(nextState!.pyramid[6][0].removed).toBe(true);
     });
   });
@@ -453,6 +453,24 @@ describe('solver', () => {
         (s) => s.pyramid[6][0].removed && !s.drawPile.some((c) => c.id === topStock.id)
       );
       expect(pairedState).toBeDefined();
+    });
+
+    it('vaults Blessed Diamond directly from top of Stock', () => {
+      const game = startGame(1);
+      const topStock = game.drawPile[0];
+      topStock.suit = '♦';
+      topStock.blessed = true;
+
+      const state: GameState = {
+        ...game,
+        mode: 'cursed-tomb',
+        vaultCards: [],
+      };
+
+      const nextState = findNextGreedyMove(state);
+      expect(nextState).not.toBeNull();
+      expect(nextState!.vaultCards.length).toBe(1);
+      expect(nextState!.vaultCards[0].id).toBe(topStock.id);
     });
   });
 });

@@ -8,7 +8,7 @@ interface DrawZoneProps {
   discardPileCount?: number;
   topStock?: Card | null;
   topDiscard: Card | null;
-  vaultCard?: Card | null;
+  vaultCards: Card[];
   selectedCardId: string | null;
   redrawsRemaining: number | null;
   canDraw: boolean;
@@ -28,7 +28,7 @@ export function DrawZone({
   discardPileCount = 0,
   topStock = null,
   topDiscard,
-  vaultCard = null,
+  vaultCards,
   selectedCardId,
   redrawsRemaining,
   canDraw,
@@ -54,7 +54,7 @@ export function DrawZone({
       {/* Draw / Stock pile slot */}
       <div className="flex flex-col items-center">
         <div className="text-xs text-game-muted uppercase tracking-wide mb-2 font-display h-6 flex items-center justify-between gap-1.5 w-full">
-          <span>Stock top</span>
+          <span>Stock</span>
           <span className="bg-[#18120c] border border-amber-900/40 text-amber-300 font-mono text-[0.65rem] px-1.5 py-0.5 rounded shadow-sm" title={`${drawPileCount} cards remaining in stock`}>
             {drawPileCount}
           </span>
@@ -104,7 +104,7 @@ export function DrawZone({
       {/* Discard / Waste pile slot */}
       <div>
         <div className="flex items-center justify-between mb-2 h-6 gap-1.5 w-full">
-          <span className="text-xs text-game-muted uppercase tracking-wide font-display">Waste top</span>
+          <span className="text-xs text-game-muted uppercase tracking-wide font-display">Waste</span>
           <span className="bg-[#18120c] border border-amber-900/40 text-amber-300 font-mono text-[0.65rem] px-1.5 py-0.5 rounded shadow-sm" title={`${discardPileCount} cards in waste`}>
             {discardPileCount}
           </span>
@@ -138,24 +138,24 @@ export function DrawZone({
         <div>
           <div className="text-xs text-amber-400/80 uppercase tracking-wide mb-2 font-display flex items-center justify-between gap-1.5 h-6 w-full">
             <span className="flex items-center gap-1"><span>♦</span> Vault</span>
-            <span className="bg-[#18120c] border border-amber-900/40 text-amber-300 font-mono text-[0.65rem] px-1.5 py-0.5 rounded shadow-sm" title={`${vaultCard ? 1 : 0} of 1 card vaulted`}>
-              {vaultCard ? '1/1' : '0/1'}
+            <span className="bg-[#18120c] border border-amber-900/40 text-amber-300 font-mono text-[0.65rem] px-1.5 py-0.5 rounded shadow-sm" title={`${vaultCards.length} card${vaultCards.length === 1 ? '' : 's'} vaulted`}>
+              {vaultCards.length}
             </span>
           </div>
-          {vaultCard ? (
+          {vaultCards.length > 0 ? (
             <div>
               <PlayingCard
-                rank={vaultCard.rank}
-                suit={vaultCard.suit}
-                attritionStage={vaultCard.attritionStage}
-                rewardStage={vaultCard.rewardStage}
-                blessed={vaultCard.blessed}
-                faceDown={vaultCard.faceDown}
-                selected={vaultCard.id === selectedCardId}
+                rank={vaultCards[vaultCards.length - 1].rank}
+                suit={vaultCards[vaultCards.length - 1].suit}
+                attritionStage={vaultCards[vaultCards.length - 1].attritionStage}
+                rewardStage={vaultCards[vaultCards.length - 1].rewardStage}
+                blessed={vaultCards[vaultCards.length - 1].blessed}
+                faceDown={vaultCards[vaultCards.length - 1].faceDown}
+                selected={vaultCards[vaultCards.length - 1].id === selectedCardId}
                 disabled={!gameActive}
-                animatingMatch={animatingMatchIds.includes(vaultCard.id)}
-                animatingError={animatingErrorIds.includes(vaultCard.id)}
-                onClick={() => onCardClick(vaultCard.id)}
+                animatingMatch={animatingMatchIds.includes(vaultCards[vaultCards.length - 1].id)}
+                animatingError={animatingErrorIds.includes(vaultCards[vaultCards.length - 1].id)}
+                onClick={() => onCardClick(vaultCards[vaultCards.length - 1].id)}
               />
             </div>
           ) : (

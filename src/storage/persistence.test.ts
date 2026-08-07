@@ -74,6 +74,20 @@ describe('Storage Persistence', () => {
       expect(manager.getGameState()).toBeNull();
     });
 
+    it('migrates a legacy single vaultCard save into a vaultCards stack', () => {
+      const state = startGame(1);
+      const legacyVaultCard = { ...state.pyramid[6][0], blessed: true, suit: '♦' as const };
+      const legacyState = { ...state, vaultCard: legacyVaultCard } as any;
+      delete legacyState.vaultCards;
+      adapter.setItem(
+        'cursed_tomb_game_state',
+        JSON.stringify({ version: 1, savedAt: Date.now(), state: legacyState })
+      );
+
+      const restored = manager.getGameState();
+      expect(restored?.vaultCards).toEqual([{ ...legacyVaultCard, removed: false }]);
+    });
+
     it('returns null on invalid game state structure', () => {
       adapter.setItem(
         'cursed_tomb_game_state',
