@@ -625,6 +625,8 @@ export function forceWin(state: GameState, complete: boolean = false): GameState
     row.map((card) => ({ ...card, removed: true, selected: false }))
   );
 
+  const isComplete = complete || (state.drawPile.length === 0 && state.discardPile.length === 0 && !state.vaultCard);
+
   const nextState: GameState = {
     ...state,
     pyramid: clearedPyramid,
@@ -632,13 +634,10 @@ export function forceWin(state: GameState, complete: boolean = false): GameState
     discardPile: complete ? [] : state.discardPile,
     selectedCardId: null,
     lastClearedPair,
-    status: 'in-progress',
+    status: isComplete ? 'complete-victory' : 'in-progress',
   };
 
-  return {
-    ...nextState,
-    status: complete ? 'complete-victory' : 'partial-victory',
-  };
+  return nextState;
 }
 
 /**

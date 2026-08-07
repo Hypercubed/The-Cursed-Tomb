@@ -11,6 +11,7 @@ interface DebugPanelProps {
   speedMs: number;
   moveCount: number;
   onForceWin: () => void;
+  onForcePerfectWin: () => void;
   onForceLoss: () => void;
   onStepOne: () => void;
   onAutoplayRound?: () => void;
@@ -36,6 +37,7 @@ export function DebugPanel({
   speedMs,
   moveCount,
   onForceWin,
+  onForcePerfectWin,
   onForceLoss,
   onStepOne,
   onAutoplayRound,
@@ -165,6 +167,15 @@ export function DebugPanel({
                 title="Instantly exhaust draw pile and end game"
               >
                 ⚡ Force Loss
+              </button>
+              <button
+                type="button"
+                className={`${buttonClass} col-span-2`}
+                onClick={onForcePerfectWin}
+                disabled={isActionsDisabled}
+                title="Instantly clear pyramid and deck for complete victory"
+              >
+                🌟 Force Perfect Win
               </button>
             </div>
           </div>

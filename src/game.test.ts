@@ -241,6 +241,18 @@ describe('game model', () => {
     expect(cycled.redrawsRemaining).toBe(1);
   });
 
+  it('cyclePile preserves original card order so that each cycle passes through cards in the same order', () => {
+    const state = initializeGame(2);
+    const initialOrder = state.drawPile.map((c) => c.id);
+    let current = state;
+    for (let i = 0; i < state.drawPile.length; i += 1) {
+      current = drawCard(current);
+    }
+    const cycled = cyclePile(current);
+    const cycledOrder = cycled.drawPile.map((c) => c.id);
+    expect(cycledOrder).toEqual(initialOrder);
+  });
+
   it('cyclePile with redrawsRemaining === null leaves counter as null', () => {
     const state = initializeGame(null);
     let current = state;
@@ -513,7 +525,7 @@ describe('Cursed Tomb campaign mechanics', () => {
     const campaign = createCampaign('cursed-tomb', 1, false);
     campaign.currentRound.pyramid[0][0] = { ...campaign.currentRound.pyramid[0][0], rank: 7, suit: '♠', attritionStage: 0 };
     campaign.currentRound.pyramid[6][0] = { ...campaign.currentRound.pyramid[6][0], rank: 6, suit: '♦', attritionStage: 0 };
-    campaign.currentRound = forceWin(campaign.currentRound);
+    campaign.currentRound = forceWin(campaign.currentRound, true);
 
     const updated = applyEndOfWeekLifecycle(campaign);
     const blessedCard = updated.masterDeck.find((c: CursedCard) => c.blessed);

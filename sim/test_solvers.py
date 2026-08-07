@@ -82,8 +82,29 @@ def parse_args():
     return p.parse_args()
 
 
+from cursed_tomb_sim import GameState, Move
+
+
+def verify_redeal_order():
+    pool = create_fresh_pool()
+    rng = random.Random(42)
+    rng.shuffle(pool)
+    pyr = pool[:28]
+    stock = list(pool[28:])
+    initial_stock_ids = [f"{c.rank}{c.suit}" for c in stock]
+    state = GameState(pyr, list(stock), [], [], set(), {}, 2, BASE_FLAGS, rng)
+    while state.stock:
+        state.apply_move(Move('draw', ()))
+    state.clears_this_pass = 1
+    state.apply_move(Move('redeal', ()))
+    redealt_stock_ids = [f"{c.rank}{c.suit}" for c in state.stock]
+    assert initial_stock_ids == redealt_stock_ids, f"Redeal order mismatch: {initial_stock_ids} vs {redealt_stock_ids}"
+    print("✓ Verification: Simulation redeal preserves exact card draw order across passes")
+
+
 def main():
     args = parse_args()
+    verify_redeal_order()
     run_benchmark(n_games=args.games, seed=args.seed, max_redeals=args.redraws)
 
 

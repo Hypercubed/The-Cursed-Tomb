@@ -371,7 +371,7 @@ export function cyclePile(state: GameState): GameState {
     return state;
   }
 
-  const reshuffledWaste = state.discardPile.map((c) => ({
+  const reshuffledWaste = [...state.discardPile].reverse().map((c) => ({
     ...c,
     removed: false,
     faceDown: false,

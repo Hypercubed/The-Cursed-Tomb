@@ -89,11 +89,11 @@ describe('solver', () => {
     expect(nextState!.status).toBe('pyramid-collapse');
   });
 
-  it('forceWin clears pyramid and sets status to partial-victory when deck has cards', () => {
+  it('forceWin clears pyramid and sets status to in-progress when deck has cards', () => {
     const game = startGame(1);
     const wonState = forceWin(game);
 
-    expect(wonState.status).toBe('partial-victory');
+    expect(wonState.status).toBe('in-progress');
     const remainingCards = wonState.pyramid.flat().filter((card) => !card.removed);
     expect(remainingCards.length).toBe(0);
     expect(wonState.lastClearedPair).toBeDefined();

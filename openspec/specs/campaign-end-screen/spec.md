@@ -2,33 +2,21 @@
 
 ## Requirements
 
-### Requirement: Campaign end screen appears on campaign defeat
-When the campaign ends in defeat (starvation or volatile collapse), the application SHALL display a full-screen, non-dismissible `CampaignEndModal` in defeat mode. The player SHALL NOT be able to close the modal by clicking outside it or pressing a close button. The only available action is "Start New Campaign", which opens the campaign setup flow.
+### Requirement: Campaign end screen appears on campaign defeat or voluntary retirement
+When the campaign ends in defeat (starvation) or voluntary retirement, the application SHALL display a full-screen `CampaignEndModal`. Under the Endless Campaign Paradigm, a Perfect Win (clearing all 52 cards) is celebrated as an achievement in the `RoundSummaryModal` and allows the campaign to continue indefinitely rather than forcing a campaign victory end screen.
 
 #### Scenario: Defeat modal opens on starvation
 - **WHEN** `applyEndOfWeekLifecycle` resolves a campaign as `status === 'defeat'` with `defeatReason === 'starvation'`
 - **THEN** the `CampaignEndModal` SHALL open in defeat mode with the headline "The Tomb Collapsed" and the sub-message "Starvation — not enough cards remain to deal a new pyramid"
-
-#### Scenario: Defeat modal opens on volatile collapse
-- **WHEN** `applyEndOfWeekLifecycle` resolves a campaign as `status === 'defeat'` with `defeatReason === 'volatile-collapse'`
-- **THEN** the `CampaignEndModal` SHALL open in defeat mode with the headline "The Tomb Collapsed" and the sub-message "Volatile Collapse — an entire rank has been entombed"
 
 #### Scenario: Defeat modal is non-dismissible except via new campaign
 - **WHEN** the `CampaignEndModal` is open in defeat mode
 - **THEN** clicking the backdrop or any close icon SHALL NOT close the modal
 - **AND** the only enabled action SHALL be "Start New Campaign"
 
-### Requirement: Campaign end screen appears on campaign victory
-When all campaign rounds are completed with a full pyramid clear (complete-victory on the final round), the application SHALL display the `CampaignEndModal` in victory mode. The modal SHALL be non-dismissible except via "Start New Campaign" or "View Card Codex" (which opens the Deck Matrix but does not close the campaign end modal).
-
-#### Scenario: Victory modal opens on campaign complete-victory
-- **WHEN** a round resolves as `complete-victory` AND the campaign has no further rounds to advance
-- **THEN** the `CampaignEndModal` SHALL open in victory mode with the headline "The Tomb Has Been Conquered"
-
-#### Scenario: Victory modal is non-dismissible except via new campaign
-- **WHEN** the `CampaignEndModal` is open in victory mode
-- **THEN** clicking the backdrop SHALL NOT close the modal
-- **AND** the exit actions SHALL be "Start New Campaign" and "View Card Codex"
+#### Scenario: Voluntary retirement modal opens
+- **WHEN** the player clicks "Retire Campaign" from the summary or options UI
+- **THEN** the `CampaignEndModal` SHALL open displaying final run metrics and achievements
 
 ### Requirement: Campaign end screen displays campaign run statistics
 The `CampaignEndModal` SHALL display the player's campaign statistics for the completed run in both defeat and victory modes.

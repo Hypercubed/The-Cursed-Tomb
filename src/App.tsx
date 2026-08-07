@@ -248,13 +248,11 @@ function App() {
           stopAutoplay();
           setCampaignEndMode('defeat');
           setIsCampaignEndModalOpen(true);
-        } else if (game.status === 'complete-victory') {
-          stopAutoplay();
-          setCampaignEndMode('victory');
-          setIsCampaignEndModalOpen(true);
         } else {
           setIsRoundSummaryModalOpen(true);
         }
+      } else {
+        setIsRoundSummaryModalOpen(true);
       }
     }
   }, [game.status, hasRecordedOutcome, campaign, game, stopAutoplay]);
@@ -268,6 +266,10 @@ function App() {
 
   const handleForceWin = () => {
     setGame((state) => forceWin(state));
+  };
+
+  const handleForcePerfectWin = () => {
+    setGame((state) => forceWin(state, true));
   };
 
   const handleForceLoss = () => {
@@ -540,6 +542,7 @@ function App() {
           speedMs={speedMs}
           moveCount={moveCount}
           onForceWin={handleForceWin}
+          onForcePerfectWin={handleForcePerfectWin}
           onForceLoss={handleForceLoss}
           onStepOne={stepOne}
           onAutoplayRound={stepToConclusion}
@@ -552,7 +555,7 @@ function App() {
         {/* Board: only shown when game is active */}
         {game.status !== 'ready' && (
           <div className="mobile-board-panel relative bg-game-panel border border-game-border rounded-2xl p-3 sm:p-5 lg:p-6 overflow-hidden">
-            {game.status === 'in-progress' && (
+            {game.status === 'in-progress' && !isPyramidCleared(game) && (
               <button
                 type="button"
                 className="absolute top-3 right-3 z-10 appearance-none bg-transparent border border-red-900/50 hover:border-game-red hover:text-game-red text-red-400 rounded-lg text-xs cursor-pointer font-[inherit] px-3 py-1.5 transition-[border-color,color] duration-[120ms]"
@@ -600,6 +603,7 @@ function App() {
             <div className="border-t border-game-border mt-2">
               <DrawZone
                 drawPileCount={game.drawPile.length}
+                discardPileCount={game.discardPile.length}
                 topStock={topStock}
                 topDiscard={topDiscard}
                 vaultCard={game.vaultCard}

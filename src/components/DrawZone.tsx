@@ -5,6 +5,7 @@ import { hapticTap } from '../utils/haptics';
 
 interface DrawZoneProps {
   drawPileCount: number;
+  discardPileCount?: number;
   topStock?: Card | null;
   topDiscard: Card | null;
   vaultCard?: Card | null;
@@ -24,6 +25,7 @@ interface DrawZoneProps {
 
 export function DrawZone({
   drawPileCount,
+  discardPileCount = 0,
   topStock = null,
   topDiscard,
   vaultCard = null,
@@ -51,7 +53,12 @@ export function DrawZone({
     <div className="game-interactive-surface flex flex-row gap-2 sm:gap-5 lg:gap-8 items-start pt-4 overflow-x-auto pb-1">
       {/* Draw / Stock pile slot */}
       <div className="flex flex-col items-center">
-        <div className="text-xs text-game-muted uppercase tracking-wide mb-2 font-display h-6 flex items-center">Stock top</div>
+        <div className="text-xs text-game-muted uppercase tracking-wide mb-2 font-display h-6 flex items-center justify-between gap-1.5 w-full">
+          <span>Stock top</span>
+          <span className="bg-[#18120c] border border-amber-900/40 text-amber-300 font-mono text-[0.65rem] px-1.5 py-0.5 rounded shadow-sm" title={`${drawPileCount} cards remaining in stock`}>
+            {drawPileCount}
+          </span>
+        </div>
         {topStock !== null && drawPileCount > 0 ? (
           <div>
             <PlayingCard
@@ -96,8 +103,11 @@ export function DrawZone({
 
       {/* Discard / Waste pile slot */}
       <div>
-        <div className="flex items-center justify-between mb-2 h-6">
+        <div className="flex items-center justify-between mb-2 h-6 gap-1.5 w-full">
           <span className="text-xs text-game-muted uppercase tracking-wide font-display">Waste top</span>
+          <span className="bg-[#18120c] border border-amber-900/40 text-amber-300 font-mono text-[0.65rem] px-1.5 py-0.5 rounded shadow-sm" title={`${discardPileCount} cards in waste`}>
+            {discardPileCount}
+          </span>
         </div>
         {topDiscard !== null ? (
           <div>
@@ -126,8 +136,11 @@ export function DrawZone({
       {/* Diamond Vault Slot - only in cursed-tomb mode */}
       {mode === 'cursed-tomb' && (
         <div>
-          <div className="text-xs text-amber-400/80 uppercase tracking-wide mb-2 font-display flex items-center gap-1 h-6">
-            <span>♦</span> Vault
+          <div className="text-xs text-amber-400/80 uppercase tracking-wide mb-2 font-display flex items-center justify-between gap-1.5 h-6 w-full">
+            <span className="flex items-center gap-1"><span>♦</span> Vault</span>
+            <span className="bg-[#18120c] border border-amber-900/40 text-amber-300 font-mono text-[0.65rem] px-1.5 py-0.5 rounded shadow-sm" title={`${vaultCard ? 1 : 0} of 1 card vaulted`}>
+              {vaultCard ? '1/1' : '0/1'}
+            </span>
           </div>
           {vaultCard ? (
             <div>
