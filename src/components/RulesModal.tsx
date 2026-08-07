@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { PlayingCard, InkBleedFilterDef } from './PlayingCard';
 
-export type RulesTab = 'core-rules' | 'web-guide' | 'card-anatomy';
+export type RulesTab = 'core-rules' | 'standard-pyramid' | 'web-guide' | 'card-anatomy';
 
 interface RulesModalProps {
   isOpen: boolean;
@@ -122,7 +122,7 @@ function RealRankMark({
   );
 }
 
-const VALID_TABS: RulesTab[] = ['core-rules', 'web-guide', 'card-anatomy'];
+const VALID_TABS: RulesTab[] = ['core-rules', 'standard-pyramid', 'web-guide', 'card-anatomy'];
 
 function sanitizeTab(tab?: unknown): RulesTab {
   if (typeof tab === 'string' && (VALID_TABS as string[]).includes(tab)) {
@@ -197,38 +197,49 @@ export function RulesModal({ isOpen, onClose, initialTab = 'core-rules' }: Rules
         </div>
 
         {/* Tab Bar Navigation */}
-        <div className="flex border-b border-[#2d2319] bg-[#140f0a] px-4 pt-3 gap-2 shrink-0 overflow-x-auto">
+        <div className="flex border-b border-[#2d2319] bg-[#140f0a] px-2 sm:px-4 pt-2.5 gap-1.5 sm:gap-2 shrink-0 overflow-x-auto">
           <button
             type="button"
-            onClick={() => setActiveTab('core-rules')}
-            className={`px-4 py-2.5 text-xs sm:text-sm font-semibold font-display tracking-wide rounded-t-lg transition-colors border-t border-x cursor-pointer flex items-center gap-2 whitespace-nowrap ${activeTab === 'core-rules'
+            onClick={() => setActiveTab('standard-pyramid')}
+            className={`flex-1 sm:flex-initial justify-center px-2.5 sm:px-3.5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold font-display tracking-wide rounded-t-lg transition-colors border-t border-x cursor-pointer flex items-center gap-1.5 sm:gap-2 whitespace-nowrap ${activeTab === 'standard-pyramid'
                 ? 'bg-[#18130e] text-amber-300 border-[#3d3124] border-b-[#18130e] -mb-[1px]'
                 : 'bg-[#100c08] text-game-muted border-transparent hover:text-game-text hover:bg-[#18130e]/50'
               }`}
           >
-            <span>📜</span> Core Physical Ruleset
+            <span>🔺</span> Standard Pyramid
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('core-rules')}
+            className={`flex-1 sm:flex-initial justify-center px-2.5 sm:px-3.5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold font-display tracking-wide rounded-t-lg transition-colors border-t border-x cursor-pointer flex items-center gap-1.5 sm:gap-2 whitespace-nowrap ${activeTab === 'core-rules'
+                ? 'bg-[#18130e] text-amber-300 border-[#3d3124] border-b-[#18130e] -mb-[1px]'
+                : 'bg-[#100c08] text-game-muted border-transparent hover:text-game-text hover:bg-[#18130e]/50'
+              }`}
+          >
+            <span>📜</span> Expedition Rules
           </button>
 
           <button
             type="button"
             onClick={() => setActiveTab('web-guide')}
-            className={`px-4 py-2.5 text-xs sm:text-sm font-semibold font-display tracking-wide rounded-t-lg transition-colors border-t border-x cursor-pointer flex items-center gap-2 whitespace-nowrap ${activeTab === 'web-guide'
+            className={`flex-1 sm:flex-initial justify-center px-2.5 sm:px-3.5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold font-display tracking-wide rounded-t-lg transition-colors border-t border-x cursor-pointer flex items-center gap-1.5 sm:gap-2 whitespace-nowrap ${activeTab === 'web-guide'
                 ? 'bg-[#18130e] text-amber-300 border-[#3d3124] border-b-[#18130e] -mb-[1px]'
                 : 'bg-[#100c08] text-game-muted border-transparent hover:text-game-text hover:bg-[#18130e]/50'
               }`}
           >
-            <span>🌐</span> Web Controls & Guide
+            <span>🌐</span> Web Guide
           </button>
 
           <button
             type="button"
             onClick={() => setActiveTab('card-anatomy')}
-            className={`px-4 py-2.5 text-xs sm:text-sm font-semibold font-display tracking-wide rounded-t-lg transition-colors border-t border-x cursor-pointer flex items-center gap-2 whitespace-nowrap ${activeTab === 'card-anatomy'
+            className={`flex-1 sm:flex-initial justify-center px-2.5 sm:px-3.5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold font-display tracking-wide rounded-t-lg transition-colors border-t border-x cursor-pointer flex items-center gap-1.5 sm:gap-2 whitespace-nowrap ${activeTab === 'card-anatomy'
                 ? 'bg-[#18130e] text-amber-300 border-[#3d3124] border-b-[#18130e] -mb-[1px]'
                 : 'bg-[#100c08] text-game-muted border-transparent hover:text-game-text hover:bg-[#18130e]/50'
               }`}
           >
-            <span>🂡</span> Card Anatomy & Ink
+            <span>🂡</span> Card Anatomy
           </button>
         </div>
 
@@ -412,7 +423,124 @@ export function RulesModal({ isOpen, onClose, initialTab = 'core-rules' }: Rules
             </div>
           )}
 
-          {/* TAB 2: WEB CONTROLS & DIGITAL GUIDE */}
+          {/* TAB 2: STANDARD PYRAMID SOLITAIRE */}
+          {activeTab === 'standard-pyramid' && (
+            <div className="space-y-6 animate-fade-in">
+              <div className="bg-[#120e0a] border border-amber-900/40 p-4 rounded-lg text-amber-200/90 text-xs leading-relaxed flex items-start gap-3">
+                <span className="text-xl">🔺</span>
+                <div>
+                  <strong className="text-amber-300 font-display uppercase tracking-wider block mb-1">
+                    Classic Pyramid Solitaire Foundation
+                  </strong>
+                  <em>The Cursed Tomb</em> is built upon standard Pyramid Solitaire. Understanding standard rules helps you master campaign mechanics and persistent legacy ink modifications.
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                {/* 1. Objective & Layout */}
+                <section className="bg-[#120e0a] border border-[#2d2319] p-4 rounded-lg flex flex-col justify-between">
+                  <div>
+                    <h3 className="text-sm font-semibold text-game-accent font-display tracking-wider uppercase m-0 pb-2 border-b border-[#251e16] flex items-center gap-2">
+                      <span>── 1.</span> Layout & Objective
+                    </h3>
+                    <div className="mt-3 space-y-2 text-xs leading-relaxed">
+                      <p className="m-0 text-game-text">
+                        <strong>Pyramid Layout:</strong> 28 cards are dealt face-up into 7 overlapping rows forming a pyramid (Row 1 has 1 card, Row 7 has 7 cards).
+                      </p>
+                      <p className="m-0 text-game-muted">
+                        <strong>Exposed Cards:</strong> Only cards with no overlapping cards beneath them in lower rows are exposed and available to pair.
+                      </p>
+                      <p className="m-0 text-game-muted">
+                        <strong>Win Condition:</strong> Dismantle the pyramid by clearing all 28 cards to the Foundation pile.
+                      </p>
+                    </div>
+                  </div>
+                </section>
+
+                {/* 2. Card Ranks & Pairing Sum */}
+                <section className="bg-[#120e0a] border border-[#2d2319] p-4 rounded-lg flex flex-col justify-between">
+                  <div>
+                    <h3 className="text-sm font-semibold text-game-accent font-display tracking-wider uppercase m-0 pb-2 border-b border-[#251e16] flex items-center gap-2">
+                      <span>── 2.</span> Target Sum 13 Pairing Rules
+                    </h3>
+                    <div className="mt-3 space-y-2 text-xs leading-relaxed">
+                      <p className="m-0 text-game-text">
+                        Cards are cleared by selecting pairs of exposed cards whose values sum exactly to <strong>13</strong>:
+                      </p>
+                      <div className="bg-[#18130e] p-2.5 rounded border border-[#251e16] space-y-1 font-mono text-[11px]">
+                        <div><strong className="text-amber-300">King (13):</strong> Clears solo (1 click)</div>
+                        <div><strong className="text-amber-300">Queen (12) + Ace (1):</strong> Sums to 13</div>
+                        <div><strong className="text-amber-300">Jack (11) + 2:</strong> Sums to 13</div>
+                        <div><strong className="text-amber-300">10 + 3 | 9 + 4 | 8 + 5 | 7 + 6:</strong> Sums to 13</div>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                {/* 3. Stock, Waste & Redeals */}
+                <section className="bg-[#120e0a] border border-[#2d2319] p-4 rounded-lg flex flex-col justify-between">
+                  <div>
+                    <h3 className="text-sm font-semibold text-game-accent font-display tracking-wider uppercase m-0 pb-2 border-b border-[#251e16] flex items-center gap-2">
+                      <span>── 3.</span> Stock Draw & Waste Pile
+                    </h3>
+                    <div className="mt-3 space-y-2 text-xs leading-relaxed">
+                      <p className="m-0 text-game-text">
+                        <strong>Stock Draw:</strong> The remaining 24 cards form the face-down Stock pile. Turn cards 1-by-1 onto the Waste pile.
+                      </p>
+                      <p className="m-0 text-game-muted">
+                        <strong>Eligible Cards:</strong> The top card of the Waste pile, current exposed Stock card, and exposed Pyramid cards can be paired together.
+                      </p>
+                      <p className="m-0 text-game-muted">
+                        <strong>Redeals:</strong> Standard Pyramid allows resetting the Waste back to Stock up to 2 times (3 total passes through the deck).
+                      </p>
+                    </div>
+                  </div>
+                </section>
+
+                {/* 4. Comparative Matrix */}
+                <section className="bg-[#120e0a] border border-[#2d2319] p-4 rounded-lg">
+                  <h3 className="text-sm font-semibold text-game-accent font-display tracking-wider uppercase m-0 pb-2 border-b border-[#251e16] flex items-center gap-2">
+                    <span>── 4.</span> Standard vs. Cursed Tomb
+                  </h3>
+                  <div className="mt-3 space-y-2 text-xs">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="border-b border-[#251e16] text-[11px] text-amber-300">
+                          <th className="py-1 pr-2">Feature</th>
+                          <th className="py-1 px-2">Standard Pyramid</th>
+                          <th className="py-1 pl-2">The Cursed Tomb</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#251e16]/60 text-[11px]">
+                        <tr>
+                          <td className="py-1.5 pr-2 font-medium text-game-text">Card Values</td>
+                          <td className="py-1.5 px-2 text-game-muted">Static (A–K)</td>
+                          <td className="py-1.5 pl-2 text-amber-200">Dynamic Scars (+1/-1)</td>
+                        </tr>
+                        <tr>
+                          <td className="py-1.5 pr-2 font-medium text-game-text">Defeat Penalty</td>
+                          <td className="py-1.5 px-2 text-game-muted">Game over / Reset</td>
+                          <td className="py-1.5 pl-2 text-amber-200">Attrition Ink Marks</td>
+                        </tr>
+                        <tr>
+                          <td className="py-1.5 pr-2 font-medium text-game-text">Special Powers</td>
+                          <td className="py-1.5 px-2 text-game-muted">None</td>
+                          <td className="py-1.5 pl-2 text-amber-200">Suit Hero Blessings</td>
+                        </tr>
+                        <tr>
+                          <td className="py-1.5 pr-2 font-medium text-game-text">Traps & Extra</td>
+                          <td className="py-1.5 px-2 text-game-muted">None</td>
+                          <td className="py-1.5 pl-2 text-amber-200">Red Curses, Vault, etc.</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 3: WEB CONTROLS & DIGITAL GUIDE */}
           {activeTab === 'web-guide' && (
             <div className="space-y-6 animate-fade-in">
               <div className="bg-[#120e0a] border border-blue-900/40 p-4 rounded-lg text-blue-200/90 text-xs leading-relaxed flex items-start gap-3">

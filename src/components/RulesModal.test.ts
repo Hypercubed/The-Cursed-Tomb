@@ -7,8 +7,8 @@ describe('RulesModal component definition', () => {
     expect(typeof RulesModal).toBe('function');
   });
 
-  it('supports core-rules, web-guide, and card-anatomy tabs', () => {
-    const tabs: RulesTab[] = ['core-rules', 'web-guide', 'card-anatomy'];
-    expect(tabs).toHaveLength(3);
+  it('supports core-rules, standard-pyramid, web-guide, and card-anatomy tabs', () => {
+    const tabs: RulesTab[] = ['core-rules', 'standard-pyramid', 'web-guide', 'card-anatomy'];
+    expect(tabs).toHaveLength(4);
   });
 });

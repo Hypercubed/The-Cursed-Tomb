@@ -50,7 +50,7 @@ export function DrawZone({
   const drawButtonIcon = canDraw ? '→' : canCycle ? '↻' : '—';
 
   return (
-    <div className="game-interactive-surface flex flex-row gap-2 sm:gap-5 lg:gap-8 items-start pt-4 overflow-x-auto pb-1">
+    <div className="game-interactive-surface flex flex-row gap-2 sm:gap-5 lg:gap-8 items-start pt-2.5 overflow-x-auto pb-1">
       {/* Draw / Stock pile slot */}
       <div className="flex flex-col items-center">
         <div className="text-xs text-game-muted uppercase tracking-wide mb-2 font-display h-6 flex items-center justify-between gap-1.5 w-full">

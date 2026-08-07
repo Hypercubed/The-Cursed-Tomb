@@ -436,7 +436,7 @@ function App() {
   );
 
   const header = (
-    <div className="bg-game-panel border border-game-border rounded-2xl p-3 sm:p-4 sm:px-6 flex flex-col gap-3 shadow-lg safe-area-toolbar">
+    <div className="bg-game-panel border border-game-border rounded-2xl py-2.5 px-4 sm:px-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-lg safe-area-toolbar">
       <div className="flex items-center gap-3">
         <span className="text-2xl sm:text-3xl text-game-accent">𓋹</span>
         <div>
@@ -558,7 +558,7 @@ function App() {
       <GameShell header={header} sidebar={sidebar} gameStatus={game.status}>
         {/* Board: only shown when game is active */}
         {game.status !== 'ready' && (
-          <div className="mobile-board-panel relative bg-game-panel border border-game-border rounded-2xl p-3 sm:p-5 lg:p-6 overflow-hidden">
+          <div className="mobile-board-panel relative bg-game-panel border border-game-border rounded-2xl p-3 sm:p-4 lg:py-3 lg:px-5 overflow-hidden">
             {game.status === 'in-progress' && !isPyramidCleared(game) && (
               <button
                 type="button"

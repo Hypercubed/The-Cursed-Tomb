@@ -7,7 +7,7 @@ Responsive layout and structure for the Pyramid Solitaire game, dividing the UI 
 ## Requirements
 
 ### Requirement: App shell uses responsive two-column layout on desktop
-On viewports ≥ 1024px, the game shell SHALL display a full-width header bar at the top, and a two-column grid below containing a fixed-width left sidebar (setup controls and game status) alongside a main content area (pyramid board and draw zone) inside a fluid container that expands up to a maximum width of 1600px. The top edges of both the sidebar and the main content area SHALL align at the exact same vertical baseline underneath the top header. On narrower viewports (< 1024px), the layout SHALL stack vertically with responsive padding, collapsible or scroll-aligned sidebar panels, and full-width card container fitting narrow mobile screen widths without horizontal scrollbars.
+On viewports ≥ 1024px, the game shell SHALL display a full-width header bar at the top, and a two-column grid below containing a fixed-width left sidebar (setup controls and game status) alongside a main content area (pyramid board and draw zone) inside a fluid container that expands up to a maximum width of 1600px. On desktop viewports, the outer safe-area padding, header footprint, and play container margins SHALL use compact vertical spacing to fit within standard desktop browser window heights without causing page-level vertical scrollbars. The top edges of both the sidebar and the main content area SHALL align at the exact same vertical baseline underneath the top header. On narrower viewports (< 1024px), the layout SHALL stack vertically with responsive padding, collapsible or scroll-aligned sidebar panels, and full-width card container fitting narrow mobile screen widths without horizontal scrollbars.
 
 #### Scenario: Desktop shows header bar and aligned two-column layout
 - **WHEN** the viewport is 1024px or wider
@@ -16,6 +16,10 @@ On viewports ≥ 1024px, the game shell SHALL display a full-width header bar at
 #### Scenario: Mobile shows stacked layout
 - **WHEN** the viewport is narrower than 1024px
 - **THEN** all panels SHALL stack vertically with setup controls and stats formatted to fit narrow mobile screen widths without horizontal scrollbars or clipping board visibility
+
+#### Scenario: Desktop layout fits without vertical scrollbars
+- **WHEN** viewed on desktop viewports (1024px or wider) with standard window heights (such as 1080p, 900p, or 768p displays)
+- **THEN** the header, sidebar, pyramid board, and draw zone SHALL fit within the browser window without triggering page-level vertical scrolling
 
 ### Requirement: Compact mobile header status bar
 On viewports narrower than 768px, the game shell SHALL render a compact sticky top header showing essential game progress (cards removed, current streak, active mode) and quick action triggers (Reset, Rules) so key controls remain reachable without requiring scrolling past the sidebar.
@@ -95,6 +99,28 @@ The draw pile SHALL render with a stone pedestal visual containing a golden icon
 - **WHEN** the discard pile is rendered
 - **THEN** it SHALL show a sandstone altar slot, and show a glowing golden frame when a card is selected or active
 
+### Requirement: Multi-card Vault stacking and top-card rendering
+The Diamond Vault SHALL support storing multiple Blessed Diamond cards in a First-In, Last-Out (FILO) stack. When multiple cards reside in the Vault, the Draw zone SHALL render the top (most recently vaulted) card as playable, while the Vault count badge SHALL display the total count of cards in the Vault stack.
+
+#### Scenario: Stacking multiple cards into the Vault
+- **WHEN** a player vaults a Blessed Diamond card while another card is already in the Vault
+- **THEN** the new card SHALL be added to the top of the Vault stack, and the top card SHALL become the exposed, playable Vault card
+
+#### Scenario: Clearing top card from Vault stack
+- **WHEN** the top card of a multi-card Vault stack is paired and cleared to the Foundation
+- **THEN** it SHALL be removed from the Vault, exposing the previously vaulted card beneath it on top of the Vault stack
+
+### Requirement: Viewport height-aware card scaling
+The pyramid board cards, row overlaps, draw zone slot card placeholders, and action buttons SHALL dynamically downscale when the browser viewport height is constrained (e.g., height < 900px or < 800px) on desktop display widths.
+
+#### Scenario: Card size downscales on reduced viewport height
+- **WHEN** the desktop browser window height is reduced below 900px
+- **THEN** card dimensions and row vertical spacing SHALL automatically adjust to smaller height proportions so the full 7-row pyramid and draw zone fit visually within the available height
+
+#### Scenario: Sidebar handles reduced height gracefully
+- **WHEN** the browser window height is insufficient to show the complete sidebar without overflow
+- **THEN** the sidebar content SHALL remain internally scrollable without forcing the entire application window to scroll
+
 ### Requirement: Card count indicators for Stock, Waste, and Vault piles
 The draw and discard zone SHALL display prominent card count indicators for the Stock pile, Waste pile, and Vault slot during gameplay. The Stock pile SHALL display the total number of remaining stock cards. The Waste pile SHALL display the total number of cards currently in the waste pile. In Cursed Tomb mode, the Vault slot SHALL display an indicator of its stored card count capacity (0/1 or 1/1).
 
@@ -106,9 +132,9 @@ The draw and discard zone SHALL display prominent card count indicators for the 
 - **WHEN** a game is in progress
 - **THEN** the Waste pile slot SHALL render a visible count indicator displaying the total count of cards currently in the waste pile
 
-#### Scenario: Vault slot renders card capacity indicator in Cursed Tomb mode
+#### Scenario: Vault slot renders card count indicator in Cursed Tomb mode
 - **WHEN** the game mode is `cursed-tomb`
-- **THEN** the Vault slot SHALL render a count indicator displaying whether 0 or 1 card is currently vaulted
+- **THEN** the Vault slot SHALL render a count indicator displaying the total number of cards currently stored in the Vault stack
 
 ### Requirement: Sidebar is styled as a leather-bound journal
 The left sidebar containing the setup and status panels SHALL use a styled container background with uniform border widths and rounded corners, matching the dark sandstone tomb visual hierarchy without asymmetrical border offsets.
