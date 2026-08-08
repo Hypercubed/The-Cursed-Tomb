@@ -109,4 +109,58 @@ describe('DrawZone Component', () => {
     expect(screen.getByText('4')).toBeDefined();
     expect(screen.queryByText('0')).toBeNull();
   });
+
+  it('triggers onVaultSlotClick when clicking empty vault slot', () => {
+    const onVaultSlotClick = vi.fn();
+    render(
+      <DrawZone
+        drawPileCount={10}
+        discardPileCount={4}
+        topStock={dummyStockCard}
+        topDiscard={dummyDiscardCard}
+        vaultCards={[]}
+        selectedCardId={null}
+        redrawsRemaining={null}
+        canDraw={true}
+        canCycle={false}
+        gameActive={true}
+        mode="cursed-tomb"
+        onDraw={vi.fn()}
+        onCardClick={vi.fn()}
+        onVaultSlotClick={onVaultSlotClick}
+      />
+    );
+
+    const vaultButton = screen.getByText('♦ Vault');
+    vaultButton.click();
+    expect(onVaultSlotClick).toHaveBeenCalledTimes(1);
+  });
+
+  it('triggers onVaultSlotClick when clicking occupied vault slot while vault target is active', () => {
+    const onVaultSlotClick = vi.fn();
+    render(
+      <DrawZone
+        drawPileCount={10}
+        discardPileCount={4}
+        topStock={dummyStockCard}
+        topDiscard={dummyDiscardCard}
+        vaultCards={[dummyVaultCard]}
+        selectedCardId="♦5"
+        isVaultTargetActive={true}
+        redrawsRemaining={null}
+        canDraw={true}
+        canCycle={false}
+        gameActive={true}
+        mode="cursed-tomb"
+        onDraw={vi.fn()}
+        onCardClick={vi.fn()}
+        onVaultSlotClick={onVaultSlotClick}
+      />
+    );
+
+    const vaultCard = screen.getByTitle(/A♦/);
+    const vaultCardWrapper = vaultCard.closest('div.relative') as HTMLElement | null;
+    vaultCardWrapper?.click();
+    expect(onVaultSlotClick).toHaveBeenCalled();
+  });
 });

@@ -13,7 +13,7 @@ function RealRankMark({
   rank = '7',
   stage = 0,
   funcVal,
-  color = 'blue',
+  color = 'red',
   isSunCross = false,
 }: {
   rank?: string;
@@ -368,19 +368,19 @@ export function RulesModal({ isOpen, onClose, initialTab = 'core-rules' }: Rules
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-5 gap-2 text-center mt-3">
                     <div className="bg-[#18130e] p-2.5 rounded border border-[#251e16] flex flex-col items-center gap-1.5">
-                      <RealRankMark rank="7" stage={1} color="blue" />
+                      <RealRankMark rank="7" stage={1} color="red" />
                       <span className="text-[10px] text-game-muted font-medium">Stage 1: Vulnerable</span>
                     </div>
                     <div className="bg-[#18130e] p-2.5 rounded border border-[#251e16] flex flex-col items-center gap-1.5">
-                      <RealRankMark rank="7" stage={2} color="blue" />
+                      <RealRankMark rank="7" stage={2} color="red" />
                       <span className="text-[10px] text-game-muted font-medium">Stage 2: Doubtful</span>
                     </div>
                     <div className="bg-[#18130e] p-2.5 rounded border border-[#251e16] flex flex-col items-center gap-1.5">
-                      <RealRankMark rank="7" stage={3} funcVal="8" color="blue" />
+                      <RealRankMark rank="7" stage={3} funcVal="8" color="red" />
                       <span className="text-[10px] text-game-muted font-medium">Stage 3: Scar (+1 / -1)</span>
                     </div>
                     <div className="bg-[#18130e] p-2.5 rounded border border-[#251e16] flex flex-col items-center gap-1.5">
-                      <RealRankMark rank="7" stage={4} funcVal="8" color="blue" />
+                      <RealRankMark rank="7" stage={4} funcVal="8" color="red" />
                       <span className="text-[10px] text-game-muted font-medium">Stage 4: Curse (Trap/Weight)</span>
                     </div>
                     <div className="bg-[#18130e] p-2.5 rounded border border-[#251e16] flex flex-col items-center gap-1.5 justify-center">
@@ -668,7 +668,7 @@ export function RulesModal({ isOpen, onClose, initialTab = 'core-rules' }: Rules
                 <div className="bg-[#18130e] p-3 rounded border border-[#251e16] space-y-1.5">
                   <strong className="text-amber-300 block font-display">Top-Left Index Zone</strong>
                   <p className="m-0 text-game-muted leading-relaxed">
-                    Reserved for Attrition Marks, Scars, Curses, and Sun Cross wildcard rank cross-outs (<RealRankMark rank="7" isSunCross={true} color="blue" />) over the rank number pip. Vertical lines frame the rank digit, Scar backslash strokes <RealRankMark rank="7" stage={3} funcVal="8" color="blue" /> overlap the rank, and Sun Cross wildcards feature a blue crossed-out rank number.
+                    Reserved for Attrition Marks, Scars, Curses, and Sun Cross wildcard rank cross-outs (<RealRankMark rank="7" isSunCross={true} color="blue" />) over the rank number pip. Vertical lines frame the rank digit, Scar backslash strokes <RealRankMark rank="7" stage={3} funcVal="8" color="red" /> overlap the rank, and Sun Cross wildcards feature a blue crossed-out rank number.
                   </p>
                 </div>
                 <div className="bg-[#18130e] p-3 rounded border border-[#251e16] space-y-1.5">

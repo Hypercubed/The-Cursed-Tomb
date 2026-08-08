@@ -47,7 +47,7 @@ class BeamSearchSolver(BaseSolver):
             return None
 
         # Filter removal moves vs draw/redeal
-        removal_moves = [m for m in legal_moves if m.kind in ('pp', 'p', 'pw', 'alone_single', 'vault_p', 'stock_pyramid', 'stock_waste')]
+        removal_moves = [m for m in legal_moves if m.kind in ('pp', 'p', 'pw', 'alone_single', 'vault_p', 'vault_stock', 'vault_waste', 'stock_pyramid', 'stock_waste')]
         candidates_to_evaluate = removal_moves if removal_moves else legal_moves
 
         best_root_move = candidates_to_evaluate[0]

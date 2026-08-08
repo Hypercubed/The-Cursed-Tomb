@@ -331,6 +331,12 @@ function App() {
         }, 220);
         return;
       } else {
+        const targetLocation = getCardLocation(cardId, game);
+        if (targetLocation.zone === 'vault' && selectedCardForVault && selectedCardForVault.id === game.selectedCardId) {
+          handleVaultSlotClick();
+          return;
+        }
+
         const errorIds = [game.selectedCardId, cardId];
         hapticError();
         setAnimatingErrorIds(errorIds);
@@ -371,6 +377,7 @@ function App() {
 
     if (selectedCardForVault) {
       const location = getCardLocation(selectedCardForVault.id, game);
+      hapticMatch();
       setGame((state) => {
         const nextState = location.zone === 'draw'
           ? moveStockToVault(state)

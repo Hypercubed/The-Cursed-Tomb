@@ -65,7 +65,7 @@ class DFSSolver(BaseSolver):
             if not legal_moves:
                 return None
 
-            removal_moves = [m for m in legal_moves if m.kind in ('pp', 'p', 'pw', 'alone_single', 'vault_p', 'stock_pyramid', 'stock_waste')]
+            removal_moves = [m for m in legal_moves if m.kind in ('pp', 'p', 'pw', 'alone_single', 'vault_p', 'vault_stock', 'vault_waste', 'stock_pyramid', 'stock_waste')]
             other_moves = [m for m in legal_moves if m.kind in ('draw', 'redeal')]
             
             removal_moves.sort(key=lambda m: self.fallback_solver._evaluate_move(curr_state, m), reverse=True)

@@ -108,6 +108,12 @@ def play_round_compare(pool, rng, max_redeals, flags, allow_pyramid_vault=False,
                     score = newly_exposed_after(removed, locks, (a,))
                     candidates.append((score, 'pw', (a, kind_s, vi)))
 
+        if flags.blessings:
+            if stock and stock[0].blessed and stock[0].suit == 'D':
+                candidates.append((1, 'vault_stock', ()))
+            if waste and waste[-1].blessed and waste[-1].suit == 'D':
+                candidates.append((1, 'vault_waste', ()))
+
         if candidates:
             candidates.sort(key=lambda x: x[0], reverse=True)
             _, kind, payload = candidates[0]
@@ -132,16 +138,23 @@ def play_round_compare(pool, rng, max_redeals, flags, allow_pyramid_vault=False,
                 removed.add(a)
                 fire_on_clear(pyr[a]); fire_on_clear(card)
                 last_clear_type, last_clear_cards = 'pair', (pyr[a], card)
+            elif kind == 'vault_stock':
+                card = stock.pop(0)
+                vault.append(card)
+                fire_on_clear(card)
+                last_clear_type, last_clear_cards = 'vault', (card,)
+            elif kind == 'vault_waste':
+                card = waste.pop()
+                vault.append(card)
+                fire_on_clear(card)
+                last_clear_type, last_clear_cards = 'vault', (card,)
             moves_played += 1
             progress_this_pass = True
             continue
 
         if stock:
             drawn = stock.pop(0)
-            if flags.blessings and drawn.blessed and drawn.suit == 'D':
-                vault.append(drawn)
-            else:
-                waste.append(drawn)
+            waste.append(drawn)
             moves_played += 1
             continue
 

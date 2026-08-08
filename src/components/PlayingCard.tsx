@@ -65,7 +65,7 @@ function SuitIcon({ suit, className = 'w-4 h-4' }: { suit: string; className?: s
 function getUpperLeftTooltip(suit: string, blessed: boolean, rewardStage: number): string {
   if (blessed) {
     if (suit === '♥') return 'Blessed Hero (∩ Archway): Hearts Stock Reshuffle power (shuffles Waste back into Stock when cleared)';
-    if (suit === '♦') return 'Blessed Hero (□ Vault Box): Diamonds Vault power (can store 1 Waste card in Vault)';
+    if (suit === '♦') return 'Blessed Hero (□ Vault Box): Diamonds Vault power (can be freely stacked in the FILO Vault; only the top card is playable)';
     if (suit === '♠') return 'Blessed Hero (Tunnel Shovel): Spades Tunnel power (moves 1 exposed pyramid card to Waste when cleared)';
     if (suit === '♣') return 'Blessed Hero (⊕ Sun Cross): Clubs Universal Wildcard power (pairs with ANY exposed card to total 13)';
     return 'Blessed Hero: Unlocks Suit Blessing power when cleared';

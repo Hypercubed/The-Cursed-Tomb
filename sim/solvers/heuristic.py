@@ -24,7 +24,7 @@ class HeuristicSolver(BaseSolver):
         super().__init__(name="HeuristicSolver")
 
     def _evaluate_move(self, state: GameState, move: Move) -> float:
-        if move.kind not in ('pp', 'p', 'pw', 'alone_single', 'vault_p', 'stock_pyramid', 'stock_waste'):
+        if move.kind not in ('pp', 'p', 'pw', 'alone_single', 'vault_p', 'vault_stock', 'vault_waste', 'stock_pyramid', 'stock_waste'):
             return 0.0
 
         score = move.score * 10.0  # Base exposed cards weight
@@ -78,6 +78,20 @@ class HeuristicSolver(BaseSolver):
             # Self-vaulting a Diamond hero card is useful when stuck
             score += 2.0
 
+        elif move.kind in ('vault_stock', 'vault_waste'):
+            score += 2.5 if move.kind == 'vault_stock' else 2.0
+            if state.vault:
+                top_v = state.vault[-1]
+                if top_v.functional_value(state.flags) == 13:
+                    score -= 2.0
+                else:
+                    from cursed_tomb_sim import exposed_slots, pair_sum
+                    exp = exposed_slots(state.removed, state.locks)
+                    for a in exp:
+                        if pair_sum(state.pyr[a], top_v, state.flags) == 13:
+                            score -= 2.0
+                            break
+
         # Blessing synergy evaluation
         if state.flags.blessings:
             # Spades Tunnel check
@@ -101,7 +115,7 @@ class HeuristicSolver(BaseSolver):
         if not legal_moves:
             return None
 
-        removal_moves = [m for m in legal_moves if m.kind in ('pp', 'p', 'pw', 'alone_single', 'vault_p', 'stock_pyramid', 'stock_waste')]
+        removal_moves = [m for m in legal_moves if m.kind in ('pp', 'p', 'pw', 'alone_single', 'vault_p', 'vault_stock', 'vault_waste', 'stock_pyramid', 'stock_waste')]
         if removal_moves:
             # Score each removal move
             scored_moves = [(self._evaluate_move(state, m), m) for m in removal_moves]

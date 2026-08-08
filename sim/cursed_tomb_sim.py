@@ -69,7 +69,7 @@ class RuleFlags:
     curses: bool = True             # stage-4 red trap / black pairing restriction
     blessings: bool = True          # Hero's Blessing unlocks + all 4 suit blessing effects
     attrition: bool = True          # failure track progresses at all on freeze
-    volatile_collapse: bool = True  # optional "all 4 of a rank entombed" instant collapse
+    volatile_collapse: bool = False # optional "all 4 of a rank entombed" instant collapse (disabled by default)
     max_attrition_stage: int = 5    # stage at which a card is considered entombed (default 5)
     anchor_absorption: bool = False # Anchored cards absorb 4 marks before anchor exhausts (disabled)
     anchor_max_absorption: int = 4  # Number of absorbed marks on + before exhaustion (default 4)
@@ -195,7 +195,7 @@ class GameState:
         self.rng = rng
         self.max_moves = max_moves
         self.moves_played = 0
-        self.clears_this_pass = 0
+        self.progress_this_pass = False
         self.last_clear_type = None
         self.last_clear_cards = None
 
@@ -213,7 +213,7 @@ class GameState:
             max_moves=self.max_moves,
         )
         st.moves_played = self.moves_played
-        st.clears_this_pass = self.clears_this_pass
+        st.progress_this_pass = self.progress_this_pass
         st.last_clear_type = self.last_clear_type
         st.last_clear_cards = self.last_clear_cards
         return st
@@ -280,10 +280,14 @@ class GameState:
                 card = self.pyr[i]
                 if card.blessed and card.suit == 'D':
                     moves.append(Move('vault_p', (i,), score=0.0))
+            if self.stock and self.stock[0].blessed and self.stock[0].suit == 'D':
+                moves.append(Move('vault_stock', (), score=0.0))
+            if self.waste and self.waste[-1].blessed and self.waste[-1].suit == 'D':
+                moves.append(Move('vault_waste', (), score=0.0))
 
         if self.stock:
             moves.append(Move('draw', (), score=0.0))
-        elif self.redeals_left > 0 and self.waste and self.clears_this_pass > 0:
+        elif self.redeals_left > 0 and self.waste and self.progress_this_pass:
             moves.append(Move('redeal', (), score=0.0))
 
         return moves
@@ -326,7 +330,7 @@ class GameState:
             self.fire_on_clear(card_a); self.fire_on_clear(card_b)
             self.last_clear_type, self.last_clear_cards = 'pair', (card_a, card_b)
             self.moves_played += 1
-            self.clears_this_pass += 1
+            self.progress_this_pass = True
 
         elif kind == 'p':
             a, = payload
@@ -334,7 +338,7 @@ class GameState:
             self.fire_on_clear(self.pyr[a])
             self.last_clear_type, self.last_clear_cards = 'solo', (self.pyr[a],)
             self.moves_played += 1
-            self.clears_this_pass += 1
+            self.progress_this_pass = True
 
         elif kind == 'alone_single':
             kind_s, vi = payload
@@ -347,7 +351,7 @@ class GameState:
             self.fire_on_clear(card)
             self.last_clear_type, self.last_clear_cards = 'solo', (card,)
             self.moves_played += 1
-            self.clears_this_pass += 1
+            self.progress_this_pass = True
 
         elif kind == 'pw':
             a, kind_s, vi = payload
@@ -369,7 +373,7 @@ class GameState:
             self.fire_on_clear(card_a); self.fire_on_clear(card_w)
             self.last_clear_type, self.last_clear_cards = 'pair', (card_a, card_w)
             self.moves_played += 1
-            self.clears_this_pass += 1
+            self.progress_this_pass = True
 
         elif kind == 'stock_pyramid':
             a, = payload
@@ -391,7 +395,7 @@ class GameState:
             self.fire_on_clear(stock_card); self.fire_on_clear(pyr_card)
             self.last_clear_type, self.last_clear_cards = 'pair', (stock_card, pyr_card)
             self.moves_played += 1
-            self.clears_this_pass += 1
+            self.progress_this_pass = True
 
         elif kind == 'stock_waste':
             kind_s, vi = payload
@@ -412,7 +416,7 @@ class GameState:
             self.fire_on_clear(stock_card); self.fire_on_clear(other_card)
             self.last_clear_type, self.last_clear_cards = 'pair', (stock_card, other_card)
             self.moves_played += 1
-            self.clears_this_pass += 1
+            self.progress_this_pass = True
 
         elif kind == 'vault_p':
             a, = payload
@@ -420,24 +424,35 @@ class GameState:
             self.removed.add(a)
             self.vault.append(card)
             self.moves_played += 1
-            self.clears_this_pass += 1
+            self.progress_this_pass = True
+
+        elif kind == 'vault_stock':
+            if self.stock:
+                card = self.stock.pop(0)
+                self.vault.append(card)
+                self.moves_played += 1
+                self.progress_this_pass = True
+
+        elif kind == 'vault_waste':
+            if self.waste:
+                card = self.waste.pop()
+                self.vault.append(card)
+                self.moves_played += 1
+                self.progress_this_pass = True
 
         elif kind == 'draw':
             if self.stock:
                 drawn = self.stock.pop(0)
-                if self.flags.blessings and drawn.blessed and drawn.suit == 'D':
-                    self.vault.append(drawn)
-                else:
-                    self.waste.append(drawn)
+                self.waste.append(drawn)
                 self.moves_played += 1
 
         elif kind == 'redeal':
-            if self.redeals_left > 0 and self.waste and self.clears_this_pass > 0:
+            if self.redeals_left > 0 and self.waste and self.progress_this_pass:
                 self.stock = self.waste
                 self.waste = []
                 self.redeals_left -= 1
                 self.moves_played += 1
-                self.clears_this_pass = 0
+                self.progress_this_pass = False
 
     def apply_freeze_attrition(self) -> None:
         exp = exposed_slots(self.removed, self.locks)

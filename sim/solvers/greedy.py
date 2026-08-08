@@ -22,8 +22,8 @@ class GreedySolver(BaseSolver):
         if not legal_moves:
             return None
 
-        # Filter removal moves (pp, p, pw, alone_single, vault_p, stock_pyramid, stock_waste) vs draw/redeal moves
-        removal_moves = [m for m in legal_moves if m.kind in ('pp', 'p', 'pw', 'alone_single', 'vault_p', 'stock_pyramid', 'stock_waste')]
+        # Filter removal moves (pp, p, pw, alone_single, vault_p, vault_stock, vault_waste, stock_pyramid, stock_waste) vs draw/redeal moves
+        removal_moves = [m for m in legal_moves if m.kind in ('pp', 'p', 'pw', 'alone_single', 'vault_p', 'vault_stock', 'vault_waste', 'stock_pyramid', 'stock_waste')]
         if removal_moves:
             # Sort by score descending; pick highest
             removal_moves.sort(key=lambda m: m.score, reverse=True)

@@ -7,7 +7,7 @@ interface PyramidBoardProps {
   selectedCardId: string | null;
   status: GameState['status'];
   vaultCards?: Card[];
-  interactionMode?: 'normal' | 'targeting-spades' | 'targeting-hearts';
+  interactionMode?: 'normal' | 'targeting-spades';
   mode?: GameState['mode'];
   animatingMatchIds?: string[];
   animatingErrorIds?: string[];

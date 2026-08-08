@@ -143,7 +143,23 @@ export function DrawZone({
             </span>
           </div>
           {vaultCards.length > 0 ? (
-            <div>
+            <div
+              className={`relative rounded-lg sm:rounded-xl transition-all duration-200 ${
+                isVaultTargetActive
+                  ? 'ring-2 ring-amber-400/80 animate-pulse shadow-[0_0_12px_rgba(251,191,36,0.6)] cursor-pointer'
+                  : ''
+              }`}
+              onClick={() => {
+                if (isVaultTargetActive && onVaultSlotClick) {
+                  onVaultSlotClick();
+                }
+              }}
+              onPointerDown={(event) => {
+                if (event.pointerType === 'touch' && gameActive && isVaultTargetActive) {
+                  hapticTap();
+                }
+              }}
+            >
               <PlayingCard
                 rank={vaultCards[vaultCards.length - 1].rank}
                 suit={vaultCards[vaultCards.length - 1].suit}
@@ -162,6 +178,11 @@ export function DrawZone({
             <button
               type="button"
               onClick={onVaultSlotClick}
+              onPointerDown={(event) => {
+                if (event.pointerType === 'touch' && gameActive) {
+                  hapticTap();
+                }
+              }}
               disabled={!gameActive}
               className={`playing-card-slot w-12 h-[64px] sm:w-[72px] sm:h-[96px] lg:w-[88px] lg:h-[116px] xl:w-[96px] xl:h-[128px] 2xl:w-[108px] 2xl:h-[144px] rounded-lg sm:rounded-xl border border-dashed text-[0.6rem] sm:text-xs bg-[#120d09] shadow-[inset_0_0_8px_rgba(0,0,0,0.8)] relative flex flex-col items-center justify-center transition-all duration-200 cursor-pointer disabled:cursor-not-allowed ${
                 isVaultTargetActive

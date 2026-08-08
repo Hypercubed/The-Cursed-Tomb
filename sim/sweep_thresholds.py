@@ -39,7 +39,7 @@ def _run_sweep_worker(args):
     solver = create_solver(solver_name)
     return cursed_tomb_sim.run_campaign(rng, max_redeals, flags, max_rounds, deadlock_limit=deadlock_limit, solver=solver)
 
-def run_batch(n, seed, difficulty_name, max_rounds, deadlock_limit, volatile_collapse=True, solver_name="heuristic", n_workers=None):
+def run_batch(n, seed, difficulty_name, max_rounds, deadlock_limit, volatile_collapse=False, solver_name="heuristic", n_workers=None):
     if n_workers is None:
         n_workers = cpu_count() or 1
 
@@ -136,7 +136,7 @@ def parse_args():
                         help="Deadlock threshold (either float fraction of max-rounds e.g. 0.10 or int round count e.g. 30) (default: 0.10)")
     parser.add_argument("-s", "--seed", type=int, default=42, help="Random seed (default: 42)")
     parser.add_argument("--solver", choices=["greedy", "heuristic", "beam", "dfs"], default="heuristic", help="Solver strategy")
-    parser.add_argument("--no-volatile", action="store_true", help="Disable Volatile Collapse variant rule (default: Volatile Collapse is ENABLED)")
+    parser.add_argument("--volatile-collapse", action="store_true", help="Enable Volatile Collapse variant rule (default: disabled)")
     parser.add_argument("--workers", type=int, default=cpu_count(), help="Number of parallel worker processes (default: CPU cores)")
     return parser.parse_args()
 
@@ -144,7 +144,7 @@ if __name__ == '__main__':
     args = parse_args()
     
     dl_val = float(args.deadlock_limit) if '.' in args.deadlock_limit else int(args.deadlock_limit)
-    volatile_enabled = not args.no_volatile
+    volatile_enabled = args.volatile_collapse
     
     dl_desc = f"{dl_val:.0%}" if isinstance(dl_val, float) and dl_val < 1.0 else f"{dl_val} rounds"
     print(f"Running difficulty sweep: campaigns/diff={args.campaigns}, max_rounds={args.max_rounds}, deadlock_limit={dl_desc}, volatile_collapse={volatile_enabled}, solver={args.solver}, seed={args.seed}, workers={args.workers}")

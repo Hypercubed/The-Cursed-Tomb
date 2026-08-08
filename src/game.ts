@@ -42,7 +42,7 @@ export interface GameState {
   status: GameStatus;
   mode: GameMode;
   vaultCards: Card[];
-  interactionMode?: 'normal' | 'targeting-spades' | 'targeting-hearts';
+  interactionMode?: 'normal' | 'targeting-spades';
   pendingHeroCardId?: string | null;
   lastClearedPair?: Card[];
   lifecycleProcessed?: boolean;
@@ -1191,7 +1191,7 @@ export function getRemovedCardsCount(state: GameState): { count: number; total: 
   return { count, total, percentage };
 }
 
-export function getActiveRankCounts(state: GameState, mode?: GameMode, masterDeck?: CursedCard[]): Record<Rank, number> {
+export function getActiveRankCounts(state: GameState, mode?: GameMode): Record<Rank, number> {
   const effectiveMode: GameMode = mode ?? state.mode ?? 'standard';
   const counts: Record<Rank, number> = {
     1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0,
@@ -1232,7 +1232,6 @@ export function getActiveRankCounts(state: GameState, mode?: GameMode, masterDec
     const fVal = getFunctionalValue(card, effectiveMode) as Rank;
     counts[fVal] += 1;
   }
-  void masterDeck;
   return counts;
 }
 
@@ -1252,7 +1251,7 @@ export interface PairStat {
 
 export function getRemainingPairStats(state: GameState, mode?: GameMode, masterDeck?: CursedCard[]): PairStat[] {
   const effectiveMode: GameMode = mode ?? state.mode ?? 'standard';
-  const counts = getActiveRankCounts(state, effectiveMode, masterDeck);
+  const counts = getActiveRankCounts(state, effectiveMode);
   const isExpedition = effectiveMode === 'cursed-tomb';
   const modMap: Record<number, string[]> = {};
   let hasWildcard = false;

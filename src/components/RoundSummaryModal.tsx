@@ -76,7 +76,7 @@ export function RoundSummaryModal({
       case '♠':
         return '♠ Tunnel: Move 1 exposed pyramid card to the Waste pile when cleared';
       case '♣':
-        return '♣ Equalizer: Partner card ignores all active scar value shifts';
+        return '♣ Equalizer: Pairs with ANY exposed card regardless of value sum';
       default:
         return 'Hero Suit Blessing Unlocked!';
     }
