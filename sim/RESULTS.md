@@ -10,21 +10,21 @@ Simulated with [`cursed_tomb_sim.py`](./cursed_tomb_sim.py), [`test_solvers.py`]
 
 ---
 
-## Part 1 — Single-Game Win & Collapse Rates
+## Part 1 — Single-Game Win & Round Loss Rates
 
 > **Command:** `python3 sim/base_game_sim.py --games 10000 --seed 42 --solver heuristic --workers 4`
 
-Each game is one round of Pyramid Solitaire. A **Pyramid Clear** means all 28 pyramid cards were cleared. A **Total Victory** means all 52 cards (pyramid and stock/waste) were cleared in that round. A **Collapse** means the player ran out of legal moves with no draws or redeals remaining.
+Each game is one round of Pyramid Solitaire. A **Pyramid Clear** means all 28 pyramid cards were cleared. A **Total Victory** means all 52 cards (pyramid and stock/waste) were cleared in that round. A **Round Loss** (or **Freeze**) means the player ran out of legal moves with no draws or redeals remaining.
 
 **Sample size:** 10,000 games per setting
 
 <!-- BEGIN PART 1 TABLE -->
-| UI Redraw Setting        | Redraws | Pyramid Clear Rate | Total Victory Rate | Collapse Rate |
-| :----------------------- | :-----: | -----------------: | -----------------: | ------------: |
-| 0 redraws (Survivalist)  |    0    |              1.17% |              0.28% |        98.83% |
-| 1 redraw  (Archaeologist) |    1    |             14.91% |              3.58% |        85.09% |
-| 3 redraws (Explorer)     |    3    |             34.37% |              6.79% |        65.63% |
-| 5 redraws (Novice)       |    5    |             34.57% |              6.81% |        65.43% |
+| UI Redraw Setting        | Redraws | Pyramid Clear Rate | Total Victory Rate | Round Loss Rate |
+| :----------------------- | :-----: | -----------------: | -----------------: | --------------: |
+| 0 redraws (Survivalist)  |    0    |              1.17% |              0.28% |          98.83% |
+| 1 redraw  (Archaeologist) |    1    |             14.91% |              3.58% |          85.09% |
+| 3 redraws (Explorer)     |    3    |             34.37% |              6.79% |          65.63% |
+| 5 redraws (Novice)       |    5    |             34.57% |              6.81% |          65.43% |
 <!-- END PART 1 TABLE -->
 
 ### Observations
@@ -122,10 +122,10 @@ Volatile Collapse is enabled by default in this sweep. The deadlock threshold is
 <!-- BEGIN PART 4 TABLE 2 -->
 | Difficulty    | Starvation | Volatile Collapse | Deadlock | Round Cap |
 | :------------ | ---------: | ----------------: | -------: | --------: |
-| Survivalist   |   deadlock |               0.0% |     0.0% |      0.0% |
-| Archaeologist |      45.4% |               0.0% |     1.6% |     10.3% |
-| Explorer      |       9.9% |               0.0% |     8.1% |     26.5% |
-| Novice        |       9.9% |               0.0% |     8.1% |     26.5% |
+| Survivalist   |     100.0% |              0.0% |     0.0% |      0.0% |
+| Archaeologist |      45.4% |              0.0% |     1.6% |     10.3% |
+| Explorer      |       9.9% |              0.0% |     8.1% |     26.5% |
+| Novice        |       9.9% |              0.0% |     8.1% |     26.5% |
 <!-- END PART 4 TABLE 2 -->
 
 ---
@@ -140,9 +140,9 @@ Comparative benchmark across identical deck seeds at Explorer difficulty (3 redr
 | Solver Policy       | Single-Game Win Rate | Wins | Losses | Execution Time* | Moves / Game |
 | :------------------ | -------------------: | ---: | -----: | --------------: | -----------: |
 | Greedy             |                34.0% |   17 |     33 |           0.02s |         50.1 |
-| Heuristic          |                34.0% |   17 |     33 |           0.02s |         49.9 |
-| BeamSearch (D3,B4) |                42.0% |   21 |     29 |           0.07s |         49.0 |
-| DFS (Max 3k nodes) |                46.0% |   23 |     27 |           0.21s |         49.4 |
+| Heuristic          |                34.0% |   17 |     33 |           0.01s |         49.9 |
+| BeamSearch (D3,B4) |                42.0% |   21 |     29 |           0.15s |         49.0 |
+| DFS (Max 3k nodes) |                46.0% |   23 |     27 |           0.40s |         49.4 |
 <!-- END PART 5 TABLE -->
 
 \* Execution time is machine-dependent; the reported values are from the recorded run.

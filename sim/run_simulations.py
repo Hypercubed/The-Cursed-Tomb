@@ -27,8 +27,8 @@ PROJECT_ROOT = os.path.dirname(SIM_DIR)
 RESULTS_MD = os.path.join(SIM_DIR, "RESULTS.md")
 
 # Header and Separator Definitions
-P1_HEADER = "| UI Redraw Setting        | Redraws | Pyramid Clear Rate | Total Victory Rate | Collapse Rate |"
-P1_SEP    = "| :----------------------- | :-----: | -----------------: | -----------------: | ------------: |"
+P1_HEADER = "| UI Redraw Setting        | Redraws | Pyramid Clear Rate | Total Victory Rate | Round Loss Rate |"
+P1_SEP    = "| :----------------------- | :-----: | -----------------: | -----------------: | --------------: |"
 
 P2_HEADER = "| Difficulty    | Redraws | Win Rate within 500 Rounds | Avg Rounds to Win | Median Rounds |"
 P2_SEP    = "| :------------ | :-----: | -------------------------: | ----------------: | ------------: |"
@@ -217,22 +217,17 @@ def run_part4(campaigns, seed, solver, workers):
                 perf_wins = line.split(":")[-1].split("per")[0].strip()
             elif "Rank-Anchor Achievement:" in line:
                 anchor_ach = line.split(":")[-1].split("(")[0].strip()
-            elif "starvation" in line and "|" in line:
+            elif "|" in line:
                 parts = [p.strip() for p in line.split("|")]
                 if len(parts) >= 3:
-                    starv_rate = parts[2]
-            elif "volatile_collapse" in line and "|" in line:
-                parts = [p.strip() for p in line.split("|")]
-                if len(parts) >= 3:
-                    vol_col_rate = parts[2]
-            elif "deadlock" in line and "|" in line:
-                parts = [p.strip() for p in line.split("|")]
-                if len(parts) >= 3:
-                    deadlock_rate = parts[2]
-            elif "round_cap" in line and "|" in line:
-                parts = [p.strip() for p in line.split("|")]
-                if len(parts) >= 3:
-                    round_cap_rate = parts[2]
+                    if parts[0] == "starvation":
+                        starv_rate = parts[2]
+                    elif parts[0] == "volatile_collapse":
+                        vol_col_rate = parts[2]
+                    elif parts[0] == "deadlock":
+                        deadlock_rate = parts[2]
+                    elif parts[0] == "round_cap":
+                        round_cap_rate = parts[2]
                     
         metrics_by_diff[diff_key] = {
             "survived": rounds_survived,
