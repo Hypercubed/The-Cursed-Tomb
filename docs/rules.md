@@ -17,10 +17,9 @@ A persistent, mutating tactical card game played with a standard 52-card deck an
 Your ultimate goal is to play as long as possible before the deck becomes unplayable.
 
 ### The Tomb Collapses (Campaign End Conditions)
-The campaign ends in instant defeat if the tomb collapses. The tomb collapses the moment **either** of the following conditions is met:
+The campaign ends in instant defeat if the tomb collapses. The tomb collapses the moment the following condition is met:
 
 1.  **Starvation Condition (Mandatory):** At the start of a new round, you do not have enough active cards remaining in your pool to build a full 28-card pyramid layout.
-2.  **Volatile Collapse Condition (Optional / Variant):** All four physical cards sharing the exact same Printed Rank (e.g., all four 5s, or all four Aces) reside inside the Graveyard Box. This serves as a practical heuristic for when the deck becomes unplayable due to losing an entire rank. It is optional because it is not absolute (modifications like Scars or Club wildcards may still enable valid pairs), allowing players to opt into a faster, highly volatile campaign-ending threat.
 
 ---
 
@@ -152,5 +151,5 @@ If the final match played to clear the entire deck and achieve a **Perfect Win**
 
 ### Campaign Reset Protocol
 1.  **Assemble Active Pool:** Gather all cards from the Foundation pile, remaining Stock, Waste, and the Diamond Vault. This forms your active pool. Leave all entombed `[ X ]` cards behind in the Graveyard Box.
-2.  **Audit the Tomb:** Check the active pool and the Graveyard Box against your active campaign end conditions (Section 1). If you have fewer than 28 cards total in the active pool, or if your variant rule applies and a rank hits a count of 4, the campaign ends in immediate defeat.
+2.  **Audit the Tomb:** Check the active pool and the Graveyard Box against your active campaign end conditions (Section 1). If you have fewer than 28 cards total in the active pool, the campaign ends in immediate defeat.
 3.  **Shuffle and Re-Deal:** Re-shuffle the active pool and deal a new 28-card pyramid according to the setup constraints.

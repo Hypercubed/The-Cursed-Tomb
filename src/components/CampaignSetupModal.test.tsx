@@ -1,5 +1,8 @@
-import { describe, it, expect } from 'vitest';
-import { DIFFICULTY_OPTIONS } from './CampaignSetupModal';
+import { describe, it, expect, vi } from 'vitest';
+import React from 'react';
+import { render, screen } from '@testing-library/react';
+import { DIFFICULTY_OPTIONS, CampaignSetupModal } from './CampaignSetupModal';
+import type { RulesTab } from './RulesModal';
 
 describe('CampaignSetupModal difficulty options', () => {
   it('defines four distinct campaign difficulty levels', () => {
@@ -37,5 +40,56 @@ describe('CampaignSetupModal difficulty options', () => {
     expect('campaignWinRate' in (explorer || {})).toBe(false);
     expect('campaignWinRate' in (archaeologist || {})).toBe(false);
     expect('campaignWinRate' in (survivalist || {})).toBe(false);
+  });
+});
+
+// Shared minimal props for rendering the modal open
+const baseProps = {
+  isOpen: true,
+  onClose: vi.fn(),
+  selectedDifficulty: null,
+  onSelectDifficulty: vi.fn(),
+  onStartCampaign: vi.fn(),
+};
+
+describe('CampaignSetupModal onOpenFullRules tab-argument behaviour', () => {
+  it('calls onOpenFullRules with "core-rules" when mode is "cursed-tomb" (Campaign)', () => {
+    const onOpenFullRules = vi.fn();
+    render(
+      <CampaignSetupModal
+        {...baseProps}
+        selectedMode="cursed-tomb"
+        onOpenFullRules={onOpenFullRules}
+      />
+    );
+
+    const button = screen.getByRole('button', { name: /Read Full Rules/i });
+    button.click();
+
+    expect(onOpenFullRules).toHaveBeenCalledTimes(1);
+    expect(onOpenFullRules).toHaveBeenCalledWith<[RulesTab]>('core-rules');
+  });
+
+  it('calls onOpenFullRules with "standard-pyramid" when mode is "standard"', () => {
+    const onOpenFullRules = vi.fn();
+    render(
+      <CampaignSetupModal
+        {...baseProps}
+        selectedMode="standard"
+        onOpenFullRules={onOpenFullRules}
+      />
+    );
+
+    const button = screen.getByRole('button', { name: /Read Full Rules/i });
+    button.click();
+
+    expect(onOpenFullRules).toHaveBeenCalledTimes(1);
+    expect(onOpenFullRules).toHaveBeenCalledWith<[RulesTab]>('standard-pyramid');
+  });
+
+  it('"Read Full Rules" button is absent when onOpenFullRules is not provided', () => {
+    render(<CampaignSetupModal {...baseProps} />);
+
+    expect(screen.queryByRole('button', { name: /Read Full Rules/i })).toBeNull();
   });
 });

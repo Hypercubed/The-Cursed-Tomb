@@ -129,7 +129,7 @@ export function useAutoplay(
 
     const intervalId = setInterval(() => {
       if (gameRef.current.status !== 'in-progress') {
-        setIsPlaying(false);
+        startNewGame();
         return;
       }
 
@@ -141,7 +141,7 @@ export function useAutoplay(
           setGame(nextState);
           setMoveCount((prev) => prev + 1);
         } else {
-          setIsPlaying(false);
+          startNewGame();
         }
       }
     }, delay);

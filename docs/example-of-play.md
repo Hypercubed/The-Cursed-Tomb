@@ -171,7 +171,7 @@ Round 5 freezes with bottlenecks `8♦ □ (Anchored +)` and `5♠ |5|`. Per §5
 
 `7♥` has survived to Stage 4 `|7X| 8`. One more freeze as bottleneck:
 
-* Stage 4 → Stage 5: draw a giant `X` across the entire face in red (§5 Entombed). Place it in the **Graveyard Box** (§2). It is permanently removed. From now on your Active Pool is 51 cards. Starvation (§1) is still far away (you need <28 to collapse), but losing the fourth `7` would trigger the optional Volatile Collapse variant if you are playing with it.
+* Stage 4 → Stage 5: draw a giant `X` across the entire face in red (§5 Entombed). Place it in the **Graveyard Box** (§2). It is permanently removed. From now on your Active Pool is 51 cards. Starvation (§1) is still far away (you need <28 to collapse).
 
 ---
 
@@ -180,7 +180,7 @@ Round 5 freezes with bottlenecks `8♦ □ (Anchored +)` and `5♠ |5|`. Per §5
 After each round (clear or freeze):
 
 1. **Assemble:** Foundation + Stock + Waste + Vault → Active Pool. Leave Graveyard cards behind.
-2. **Audit:** Is Active Pool < 28? → **Starvation** defeat, mandatory (§1). If playing with Volatile variant, does any Printed Rank have *all four* copies in Graveyard? → Volatile defeat (§1.2). Otherwise, shuffle Active Pool and deal a new 28-card pyramid — remembering:
+2. **Audit:** Is Active Pool < 28? → **Starvation** defeat, mandatory (§1). Otherwise, shuffle Active Pool and deal a new 28-card pyramid — remembering:
    * Red Cursed cards force face-down deals below them (§4.2).
    * Vault-eligible Diamonds can be vaulted instantly when exposed.
 
@@ -205,4 +205,4 @@ Face-down cards from Red Curses are temporary — flip face-up the moment they b
 
 ---
 
-*Try replaying the scripted shuffle above solo once, then start a real campaign at **Novice (5 Redeals)** to learn the mutation rhythm before moving to Archaeologist. For the digital implementation, see the web game's **📖 Expedition Rules** and **Card Anatomy** tabs — they render these same zones with digital ink styling.*
+*Try replaying the scripted shuffle above solo once, then start a real campaign at **Novice (Infinite Redeals)** to learn the mutation rhythm before moving to Archaeologist. For the digital implementation, see the web game's **📖 Expedition Rules** and **Card Anatomy** tabs — they render these same zones with digital ink styling.*

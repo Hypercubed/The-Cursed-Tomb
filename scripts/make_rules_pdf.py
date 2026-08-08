@@ -2,12 +2,12 @@
 """
 Generate a combined, print-ready PDF rulebook for The Cursed Tomb.
 
-Combines `docs/rules.md` (official ruleset v0.0.11) and `docs/example-of-play.md`
-into a single styled PDF rendered with fpdf2:
+Combines `docs/standard-pyramid-rules.md`, `docs/rules.md` (official ruleset v0.0.11),
+and `docs/example-of-play.md` into a single styled PDF rendered with fpdf2:
 
   * Cover page with a drawn playing-card motif
   * Table of contents with page numbers (two-pass render)
-  * Part I — Official Ruleset / Part II — Example of Play
+  * Part I — Standard Pyramid Solitaire / Part II — Official Ruleset / Part III — Example of Play
   * Running headers, page footers, styled code blocks and tables
 
 Fonts used (all system-installed except Noto Sans Symbols):
@@ -979,11 +979,6 @@ def render_cover(pdf: RulebookPDF) -> None:
     pdf.set_y(202)
     pdf.cell(PAGE_W, 5, "Solo Kings clear singly. Mutations — scars, curses, blessings, anchors — persist across the campaign.", align="C")
 
-    pdf.set_text_color(*DARK)
-    pdf.set_font_style("B", 10)
-    pdf.set_y(216)
-    pdf.cell(PAGE_W, 5, "Compiled from  docs/rules.md  +  docs/example-of-play.md", align="C")
-
     pdf.set_text_color(*GRAY)
     pdf.set_font_style("", 8)
     pdf.set_y(224)
@@ -1031,9 +1026,9 @@ def render_toc(pdf: RulebookPDF, toc: List[Tuple[str, List[Tuple[str, int]]]]) -
     pdf.set_font_style("I", 8.5)
     pdf.set_text_color(*GRAY)
     pdf.multi_cell(CONTENT_W, 4.5,
-                   "This document combines the official ruleset (docs/rules.md) with a scripted, "
-                   "annotated walkthrough (docs/example-of-play.md). All mechanics in the example "
-                   "follow Sections 1–7 of the rules.",
+                   "This document combines standard Pyramid Solitaire rules (docs/standard-pyramid-rules.md), "
+                   "the official Cursed Tomb ruleset (docs/rules.md), and a scripted, annotated walkthrough "
+                   "(docs/example-of-play.md). All mechanics in the example follow Sections 1–7 of the rules.",
                    align="L", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
 
@@ -1059,10 +1054,15 @@ def build_document(pdf: RulebookPDF, parts, record_toc: bool, with_toc_page: boo
     pdf._show_header = True
     pdf._show_footer = True
     for idx, (part_title, blocks) in enumerate(parts):
+        if idx == 0:
+            subtitle = "Classic Pyramid Solitaire Foundation"
+        elif idx == 1:
+            subtitle = "Ruleset v0.0.11"
+        else:
+            subtitle = "Companion to the Official Ruleset"
         render_part_divider(
             pdf, part_title,
-            "Ruleset v0.0.11 · Compiled from docs/rules.md" if idx == 0
-            else "Companion to the Official Ruleset · Compiled from docs/example-of-play.md",
+            subtitle,
             new_page=(idx > 0 or with_toc_page))
         render_blocks(pdf, blocks, record_toc)
 
@@ -1100,25 +1100,28 @@ def configure(pdf: RulebookPDF) -> None:
     setup_fonts(pdf)
     pdf.set_margins(ML, MT, MR)
     pdf.set_auto_page_break(True, MB)
-    pdf.set_title("The Cursed Tomb — Official Ruleset & Example of Play (v0.0.11)")
+    pdf.set_title("The Cursed Tomb — Complete Rulebook (v0.0.11)")
     pdf.set_author("The Cursed Tomb Project")
-    pdf.set_subject("Persistent, mutating tactical card game — rules and example of play")
-    pdf.set_keywords("cursed tomb, pyramid solitaire, card game, ruleset, campaign")
-    pdf.set_creator("scripts/make_rules_pdf.py (fpdf2)")
+    pdf.set_subject("Standard Pyramid Solitaire, Cursed Tomb ruleset, and example of play")
+    pdf.set_keywords("cursed tomb, pyramid solitaire, card game, ruleset, campaign, standard rules")
+    pdf.set_creator("The Cursed Tomb Project")
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="Build the combined Cursed Tomb rulebook PDF.")
     ap.add_argument("--rules", default="docs/rules.md")
+    ap.add_argument("--standard", default="docs/standard-pyramid-rules.md")
     ap.add_argument("--example", default="docs/example-of-play.md")
     ap.add_argument("--output", default="docs/cursed-tomb-rulebook.pdf")
     args = ap.parse_args()
 
     rules_md = strip_frontmatter(Path(args.rules).read_text(encoding="utf-8"))
+    standard_md = strip_frontmatter(Path(args.standard).read_text(encoding="utf-8"))
     example_md = Path(args.example).read_text(encoding="utf-8")
     parts = [
-        ("Part I — The Official Ruleset", parse_blocks(rules_md)),
-        ("Part II — Example of Play", parse_blocks(example_md)),
+        ("Part I — Standard Pyramid Solitaire", parse_blocks(standard_md)),
+        ("Part II — The Official Ruleset", parse_blocks(rules_md)),
+        ("Part III — Example of Play", parse_blocks(example_md)),
     ]
 
     # Pass A: render once to learn heading page numbers.

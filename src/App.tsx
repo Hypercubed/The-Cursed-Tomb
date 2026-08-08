@@ -102,6 +102,13 @@ function App() {
   const [roundEffects, setRoundEffects] = useState<RoundLifecycleEffects | null>(null);
 
   const handleStart = useCallback(() => {
+    if (campaign && campaign.status === 'defeat') {
+      setIsRoundSummaryModalOpen(false);
+      setCampaignEndMode('defeat');
+      setIsCampaignEndModalOpen(true);
+      return;
+    }
+
     if (game.status === 'in-progress' && !hasRecordedOutcome) {
       const outcome = isPyramidCleared(game) ? 'partial-victory' : 'pyramid-collapse';
       const { stats: updated, campaign: updatedCampaign } = defaultPersistenceManager.recordOutcome(outcome);
@@ -703,8 +710,8 @@ function App() {
         selectedMode={selectedMode}
         onSelectMode={setSelectedMode}
         onStartCampaign={handleStartCampaign}
-        onOpenFullRules={() => {
-          setRulesTab('core-rules');
+        onOpenFullRules={(tab) => {
+          setRulesTab(tab);
           setIsRulesModalOpen(true);
         }}
       />

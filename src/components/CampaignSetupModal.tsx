@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { GameMode } from '../game';
+import type { RulesTab } from './RulesModal';
 
 export interface DifficultyOption {
   id: string;
@@ -68,7 +69,7 @@ interface CampaignSetupModalProps {
   selectedMode?: GameMode;
   onSelectMode?: (mode: GameMode) => void;
   onStartCampaign: (difficulty: number | null, mode?: GameMode) => void;
-  onOpenFullRules?: () => void;
+  onOpenFullRules?: (tab: RulesTab) => void;
 }
 
 export function CampaignSetupModal({
@@ -205,7 +206,7 @@ export function CampaignSetupModal({
               {onOpenFullRules && (
                 <button
                   type="button"
-                  onClick={onOpenFullRules}
+                  onClick={() => onOpenFullRules(mode === 'cursed-tomb' ? 'core-rules' : 'standard-pyramid')}
                   className="text-xs text-amber-400 hover:text-amber-200 hover:underline bg-transparent border-none cursor-pointer font-medium flex items-center gap-1 transition-colors"
                 >
                   <span>📖</span> Read Full Rules
