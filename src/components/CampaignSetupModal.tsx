@@ -17,10 +17,10 @@ export const DIFFICULTY_OPTIONS: DifficultyOption[] = [
   {
     id: 'novice',
     label: 'Novice',
-    value: 5,
+    value: null,
     tag: 'Sandbox',
-    redealsText: '5 Redeals (6 Passes)',
-    description: '5 stock redeals per attempt. Ideal for casual exploration & learning.',
+    redealsText: '∞ Redeals (Unlimited Passes)',
+    description: 'Unlimited stock redeals per attempt. Ideal for casual exploration & learning.',
     icon: '📜',
     winRate: '34.57%',
     standardWinRate: '34.57%',
@@ -28,10 +28,10 @@ export const DIFFICULTY_OPTIONS: DifficultyOption[] = [
   {
     id: 'explorer',
     label: 'Explorer',
-    value: 3,
+    value: 2,
     tag: 'Easy',
-    redealsText: '3 Redeals (4 Passes)',
-    description: '3 stock redeals per attempt. Balanced entry-level campaign mode.',
+    redealsText: '2 Redeals (3 Passes)',
+    description: '2 stock redeals per attempt. Balanced entry-level campaign mode.',
     icon: '🧭',
     winRate: '34.37%',
     standardWinRate: '34.37%',
@@ -67,9 +67,7 @@ interface CampaignSetupModalProps {
   onSelectDifficulty: (difficulty: number | null) => void;
   selectedMode?: GameMode;
   onSelectMode?: (mode: GameMode) => void;
-  volatileCollapse?: boolean;
-  onToggleVolatileCollapse?: (enabled: boolean) => void;
-  onStartCampaign: (difficulty: number | null, mode?: GameMode, volatileCollapse?: boolean) => void;
+  onStartCampaign: (difficulty: number | null, mode?: GameMode) => void;
   onOpenFullRules?: () => void;
 }
 
@@ -80,25 +78,16 @@ export function CampaignSetupModal({
   onSelectDifficulty,
   selectedMode: propMode,
   onSelectMode,
-  volatileCollapse: propVolatile,
-  onToggleVolatileCollapse,
   onStartCampaign,
   onOpenFullRules,
 }: CampaignSetupModalProps) {
   const [internalMode, setInternalMode] = useState<GameMode>('cursed-tomb');
-  const [internalVolatile, setInternalVolatile] = useState<boolean>(false);
 
   const mode = propMode ?? internalMode;
-  const volatile = propVolatile ?? internalVolatile;
 
   const handleModeChange = (newMode: GameMode) => {
     setInternalMode(newMode);
     onSelectMode?.(newMode);
-  };
-
-  const handleVolatileChange = (val: boolean) => {
-    setInternalVolatile(val);
-    onToggleVolatileCollapse?.(val);
   };
 
   const startCampaignBtnRef = useRef<HTMLButtonElement>(null);
@@ -370,7 +359,7 @@ export function CampaignSetupModal({
           <button
             ref={startCampaignBtnRef}
             type="button"
-            onClick={() => onStartCampaign(selectedDifficulty, mode, volatile)}
+            onClick={() => onStartCampaign(selectedDifficulty, mode)}
             className="appearance-none bg-amber-950/80 border border-amber-800 text-amber-300 rounded-lg text-sm cursor-pointer font-[inherit] px-6 py-2.5 hover:bg-amber-900 hover:text-amber-100 focus:ring-2 focus:ring-amber-500 focus:outline-none transition-colors font-semibold tracking-wide flex items-center gap-2 shadow-md"
           >
             <span>𓋹</span> {mode === 'standard' ? 'Start Standard Game' : 'Start Campaign'}

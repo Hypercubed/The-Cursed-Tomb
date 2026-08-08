@@ -84,7 +84,6 @@ export function RoundSummaryModal({
 
   const activeCount = campaign ? campaign.masterDeck.filter((c) => c.attritionStage < 5).length : 52;
   const deckHealthPct = Math.round((activeCount / 52) * 100);
-  const showVolatilityWarning = Boolean(campaign?.volatilityWarning);
   const achievements = campaign?.achievements;
 
   return (
@@ -165,17 +164,6 @@ export function RoundSummaryModal({
                       : 0}%
                   </span>
                 </div>
-              </div>
-            </div>
-          )}
-
-          {/* Advisory Volatility Warning Banner */}
-          {showVolatilityWarning && (
-            <div className="bg-amber-950/70 border-2 border-amber-600 rounded-lg p-3 flex items-center gap-3 text-amber-200 text-xs shadow-md">
-              <span className="text-2xl animate-pulse">⚠️</span>
-              <div>
-                <strong className="block text-amber-300 font-display tracking-wide uppercase">High Volatility Warning</strong>
-                <span>All 4 cards of a printed rank have been entombed to the Graveyard! Deck vulnerability is high.</span>
               </div>
             </div>
           )}

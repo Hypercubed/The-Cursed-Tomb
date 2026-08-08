@@ -53,8 +53,8 @@ The system SHALL provide an autoplay controller that automatically executes solv
 - **AND IF** an active campaign is present, starting a new game SHALL reuse the campaign's master deck and graveyard rather than resetting to an unmarked default deck
 
 #### Scenario: Solver hero power targeting resolution
-- **WHEN** solver execution encounters an active hero power targeting mode (`targeting-spades` or `targeting-hearts`)
-- **THEN** the solver SHALL automatically select a valid target card (revealing a face-down card for Spades or granting temporary immunity to an exposed card for Hearts) and reset `interactionMode` to `normal` without stalling or force-resigning
+- **WHEN** solver execution encounters an active hero power targeting mode (`targeting-spades`)
+- **THEN** the solver SHALL automatically select a valid exposed pyramid card and move it onto the top of the Waste pile (Spades Tunnel) and reset `interactionMode` to `normal` without stalling or force-resigning
 
 ### Requirement: Strategy selector and winnability UI
 The system SHALL display solver strategy selection controls, a deal winnability status badge, and an active computation status indicator inside the Debug & Autoplay UI panel.

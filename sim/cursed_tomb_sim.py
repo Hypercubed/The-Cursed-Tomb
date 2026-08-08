@@ -9,7 +9,6 @@ physical cards carry ink marks (scars, curses, entombment, anchors,
 blessings) across many rounds until the campaign ends in:
   - VICTORY   : a Perfect Win (all 52 cards reach the Foundation in one round)
   - COLLAPSE  : Starvation (fewer than 28 active cards remain for a pyramid)
-                or Volatile Collapse (all 4 cards of one rank entombed, optional rule)
   - TIMEOUT   : neither happened within --max-rounds (safety valve; reported
                 separately, not counted in win/collapse rates)
 
@@ -69,7 +68,6 @@ class RuleFlags:
     curses: bool = True             # stage-4 red trap / black pairing restriction
     blessings: bool = True          # Hero's Blessing unlocks + all 4 suit blessing effects
     attrition: bool = True          # failure track progresses at all on freeze
-    volatile_collapse: bool = False # optional "all 4 of a rank entombed" instant collapse (disabled by default)
     max_attrition_stage: int = 5    # stage at which a card is considered entombed (default 5)
     anchor_absorption: bool = False # Anchored cards absorb 4 marks before anchor exhausts (disabled)
     anchor_max_absorption: int = 4  # Number of absorbed marks on + before exhaustion (default 4)
@@ -541,7 +539,7 @@ def _apply_survival_reward(last_clear_type, last_clear_cards, flags):
 
 def run_campaign(rng, max_redeals, flags, max_rounds, deadlock_limit=None, solver=None):
     # `registry` holds all 52 physical cards for the entire campaign,
-    # including entombed ones (needed for the volatile-collapse rank check).
+    # including entombed ones.
     registry = [CardState(r, s) for s in SUITS for r in RANKS]
     rounds_played = 0
     pyramids_cleared = 0
@@ -604,21 +602,6 @@ def run_campaign(rng, max_redeals, flags, max_rounds, deadlock_limit=None, solve
             anchored_ranks = {c.rank for c in registry if c.is_anchored()}
             if len(anchored_ranks) == len(RANKS):
                 rank_anchor_unlocked_round = rounds_played
-
-        if outcome.kind == 'freeze' and flags.volatile_collapse:
-            by_rank = {}
-            for c in registry:
-                if c.attrition_stage >= flags.max_attrition_stage:
-                    by_rank.setdefault(c.rank, 0)
-                    by_rank[c.rank] += 1
-            if any(count >= 4 for count in by_rank.values()):
-                return {
-                    "result": "collapse_volatile",
-                    "rounds": rounds_played,
-                    "pyramids_cleared": pyramids_cleared,
-                    "perfect_wins": perfect_wins,
-                    "rank_anchor_unlocked_round": rank_anchor_unlocked_round,
-                }
 
         # Check if any physical card state changed during this round
         state_after = [(c.attrition_stage, c.reward_stage, c.blessed, c.anchor_absorption) for c in registry]
@@ -722,7 +705,6 @@ def run_many_campaigns(difficulty, campaigns, seed, flags, max_rounds, verbose=F
     print(f"curses:              {'on' if flags.curses else 'off'}")
     print(f"blessings:           {'on' if flags.blessings else 'off'}")
     print(f"attrition track:     {'on' if flags.attrition else 'off'}")
-    print(f"volatile collapse:   {'enabled' if flags.volatile_collapse else 'disabled'}")
     print(f"campaign round cap:  {max_rounds}")
     print(f"campaigns run:       {campaigns}")
     print(f"workers:             {n_workers}")
@@ -763,8 +745,6 @@ def parse_args():
     p.add_argument("--difficulty", choices=list(DIFFICULTIES.keys()), default="archaeologist")
     p.add_argument("--solver", choices=["greedy", "heuristic", "beam", "dfs"], default="heuristic", help="solver strategy")
     p.add_argument("--seed", type=int, default=None)
-    p.add_argument("--volatile-collapse", action="store_true",
-                   help="enable the optional Volatile Collapse variant rule")
     p.add_argument("--no-scars", action="store_true", help="disable the stage-3 scar value shift")
     p.add_argument("--no-curses", action="store_true", help="disable stage-4 red/black curse effects")
     p.add_argument("--no-blessings", action="store_true", help="disable Hero's Blessing unlocks and all suit blessing effects")
@@ -798,7 +778,6 @@ def main():
         curses=not args.no_curses,
         blessings=not args.no_blessings,
         attrition=not args.no_attrition,
-        volatile_collapse=args.volatile_collapse,
     )
     run_many_campaigns(
         difficulty=args.difficulty,

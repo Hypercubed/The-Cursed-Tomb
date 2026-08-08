@@ -42,8 +42,8 @@ P3_T2_SEP    = "| :------------ | --------------------: | ----------------------
 P4_T1_HEADER = "| Difficulty    | Redraws | Mean Rounds Survived | Pyramids Cleared / Campaign | Perfect Wins / Campaign | Rank-Anchor Achievement |"
 P4_T1_SEP    = "| :------------ | :-----: | -------------------: | --------------------------: | ----------------------: | ----------------------: |"
 
-P4_T2_HEADER = "| Difficulty    | Starvation | Volatile Collapse | Deadlock | Round Cap |"
-P4_T2_SEP    = "| :------------ | ---------: | ----------------: | -------: | --------: |"
+P4_T2_HEADER = "| Difficulty    | Starvation | Deadlock | Round Cap |"
+P4_T2_SEP    = "| :------------ | ---------: | -------: | --------: |"
 
 P5_HEADER = "| Solver Policy       | Single-Game Win Rate | Wins | Losses | Execution Time* | Moves / Game |"
 P5_SEP    = "| :------------------ | -------------------: | ---: | -----: | --------------: | -----------: |"
@@ -124,7 +124,7 @@ def run_part2(campaigns, seed, solver, workers):
 
 def _run_part3_diff(args):
     label, redraw, diff, campaigns, solver, seed, workers = args
-    cmd = f"python3 sim/cursed_tomb_sim.py --campaigns {campaigns} --seed {seed} --difficulty {diff} --solver {solver} --volatile-collapse --max-rounds 500 --workers {workers}"
+    cmd = f"python3 sim/cursed_tomb_sim.py --campaigns {campaigns} --seed {seed} --difficulty {diff} --solver {solver} --max-rounds 500 --workers {workers}"
     output = run_command(cmd)
     
     vic_all = "0.00%"
@@ -172,7 +172,7 @@ def run_part3(campaigns, seed, solver, workers):
         ("Novice", "5", "novice")
     ]
     tasks = [(label, redraw, diff, campaigns, solver, seed, max(1, workers // 2)) for label, redraw, diff in diffs]
-    cmd_pattern = f"python3 sim/cursed_tomb_sim.py --campaigns {campaigns} --seed {seed} --difficulty [difficulty] --solver {solver} --volatile-collapse --max-rounds 500 --workers {workers}"
+    cmd_pattern = f"python3 sim/cursed_tomb_sim.py --campaigns {campaigns} --seed {seed} --difficulty [difficulty] --solver {solver} --max-rounds 500 --workers {workers}"
 
     with ThreadPoolExecutor(max_workers=min(4, workers)) as executor:
         results = list(executor.map(_run_part3_diff, tasks))
@@ -204,7 +204,6 @@ def run_part4(campaigns, seed, solver, workers):
         anchor_ach = "0.0%"
         
         starv_rate = "0.0%"
-        vol_col_rate = "0.0%"
         deadlock_rate = "0.0%"
         round_cap_rate = "0.0%"
         
@@ -222,8 +221,6 @@ def run_part4(campaigns, seed, solver, workers):
                 if len(parts) >= 3:
                     if parts[0] == "starvation":
                         starv_rate = parts[2]
-                    elif parts[0] == "volatile_collapse":
-                        vol_col_rate = parts[2]
                     elif parts[0] == "deadlock":
                         deadlock_rate = parts[2]
                     elif parts[0] == "round_cap":
@@ -235,7 +232,6 @@ def run_part4(campaigns, seed, solver, workers):
             "perf_wins": perf_wins,
             "anchor_ach": anchor_ach,
             "starv": starv_rate,
-            "vol_col": vol_col_rate,
             "deadlock": deadlock_rate,
             "round_cap": round_cap_rate
         }
@@ -249,12 +245,11 @@ def run_part4(campaigns, seed, solver, workers):
         anch = m.get("anchor_ach", "0.0%")
         
         starv = m.get("starv", "0.0%")
-        vol = m.get("vol_col", "0.0%")
         dead = m.get("deadlock", "0.0%")
         cap = m.get("round_cap", "0.0%")
-        
+
         table1_rows.append(f"| {label:<13} | {redraw:^7} | {surv:>20} | {pyr:>26} | {wins:>23} | {anch:>23} |")
-        table2_rows.append(f"| {label:<13} | {starv:>10} | {vol:>18} | {dead:>8} | {cap:>9} |")
+        table2_rows.append(f"| {label:<13} | {starv:>10} | {dead:>8} | {cap:>9} |")
         
     return cmd, table1_rows, table2_rows
 

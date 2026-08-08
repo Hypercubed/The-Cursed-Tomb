@@ -64,13 +64,13 @@ The base-game campaign has no attrition, so the tomb cannot starve or collapse. 
 
 > **Command pattern:**
 > ```bash
-> python3 sim/cursed_tomb_sim.py --campaigns 1000 --seed 42 --difficulty [difficulty] --solver heuristic --volatile-collapse --max-rounds 500 --workers 4
+> python3 sim/cursed_tomb_sim.py --campaigns 1000 --seed 42 --difficulty [difficulty] --solver heuristic --max-rounds 500 --workers 4
 > ```
 
-This section enables scars, curses, blessings, attrition, and the optional Volatile Collapse rule. The Diamond Vault uses FILO semantics throughout the core simulator. A campaign can end in:
+This section enables scars, curses, blessings, and attrition. The Diamond Vault uses FILO semantics throughout the core simulator. A campaign can end in:
 
 - **Victory:** Perfect Win clears all 52 cards in one round.
-- **Collapse:** Starvation or Volatile Collapse.
+- **Collapse:** Starvation.
 - **Stall:** no-progress/all-immune deadlock detected by the simulator.
 - **Timeout:** the 500-round safety cap is reached.
 
@@ -104,7 +104,7 @@ The resolved-rate column excludes stalls and timeouts; the all-outcome columns i
 
 > **Command:** `python3 sim/sweep_thresholds.py --campaigns 1000 --max-rounds 300 --solver heuristic --seed 42 --workers 4`
 
-Volatile Collapse is enabled by default in this sweep. The deadlock threshold is 10% of the 300-round cap (30 rounds).
+The deadlock threshold is 10% of the 300-round cap (30 rounds).
 
 **Sample size:** 1,000 campaigns per setting; maximum 300 rounds per campaign
 
@@ -120,12 +120,12 @@ Volatile Collapse is enabled by default in this sweep. The deadlock threshold is
 ### End-type rates
 
 <!-- BEGIN PART 4 TABLE 2 -->
-| Difficulty    | Starvation | Volatile Collapse | Deadlock | Round Cap |
-| :------------ | ---------: | ----------------: | -------: | --------: |
-| Survivalist   |     100.0% |              0.0% |     0.0% |      0.0% |
-| Archaeologist |      45.4% |              0.0% |     1.6% |     10.3% |
-| Explorer      |       9.9% |              0.0% |     8.1% |     26.5% |
-| Novice        |       9.9% |              0.0% |     8.1% |     26.5% |
+| Difficulty    | Starvation | Deadlock | Round Cap |
+| :------------ | ---------: | -------: | --------: |
+| Survivalist   |     100.0% |     0.0% |      0.0% |
+| Archaeologist |      45.4% |     1.6% |     10.3% |
+| Explorer      |       9.9% |     8.1% |     26.5% |
+| Novice        |       9.9% |     8.1% |     26.5% |
 <!-- END PART 4 TABLE 2 -->
 
 ---
@@ -155,7 +155,7 @@ Comparative benchmark across identical deck seeds at Explorer difficulty (3 redr
 | :--------------------------------------------------- | :-------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [`base_game_sim.py`](./base_game_sim.py)             | Part 1: single-game win/collapse rates  | `python3 sim/base_game_sim.py --games 10000 --seed 42 --solver heuristic --workers 4`                                                                 |
 | [`campaign_rounds_sim.py`](./campaign_rounds_sim.py) | Part 2: base-game rounds to Perfect Win | `python3 sim/campaign_rounds_sim.py --campaigns 1000 --difficulty explorer --max-rounds 500 --solver heuristic --seed 42 --workers 4`                 |
-| [`cursed_tomb_sim.py`](./cursed_tomb_sim.py)         | Part 3: full-rules campaign runner      | `python3 sim/cursed_tomb_sim.py --campaigns 1000 --seed 42 --difficulty explorer --solver heuristic --volatile-collapse --max-rounds 500 --workers 4` |
+| [`cursed_tomb_sim.py`](./cursed_tomb_sim.py)         | Part 3: full-rules campaign runner      | `python3 sim/cursed_tomb_sim.py --campaigns 1000 --seed 42 --difficulty explorer --solver heuristic --max-rounds 500 --workers 4` |
 | [`sweep_thresholds.py`](./sweep_thresholds.py)       | Part 4: cross-difficulty endurance sweep| `python3 sim/sweep_thresholds.py --campaigns 1000 --max-rounds 300 --solver heuristic --seed 42 --workers 4`                                          |
 | [`test_solvers.py`](./test_solvers.py)               | Part 5: solver benchmark comparison     | `python3 sim/test_solvers.py --games 50 --redraws 3 --seed 42`                                                                                        |
 

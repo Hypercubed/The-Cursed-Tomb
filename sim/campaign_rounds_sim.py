@@ -16,7 +16,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 from cursed_tomb_sim import play_round, CardState, RuleFlags, SUITS, RANKS
 from solvers import GreedySolver, HeuristicSolver, BeamSearchSolver, DFSSolver
 
-BASE_FLAGS = RuleFlags(scars=False, curses=False, blessings=False, attrition=False, volatile_collapse=False)
+BASE_FLAGS = RuleFlags(scars=False, curses=False, blessings=False, attrition=False)
 
 DIFFICULTIES = {
     "novice": 5,             # 6 total passes

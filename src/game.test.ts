@@ -14,6 +14,7 @@ import {
   drawCard,
   getActiveRankCounts,
   getFunctionalValue,
+  determineHeroAndAnchor,
   getRemainingPairStats,
   getRemovedCardIds,
   getRemovedCardsCount,
@@ -441,7 +442,7 @@ describe('Cursed Tomb campaign mechanics', () => {
   });
 
   it('applies Attrition Phase to exposed pyramid bottlenecks on collapse', () => {
-    const campaign = createCampaign('cursed-tomb', 1, false);
+    const campaign = createCampaign('cursed-tomb', 1);
     campaign.currentRound.status = 'pyramid-collapse';
 
     const updated = applyEndOfWeekLifecycle(campaign);
@@ -454,7 +455,7 @@ describe('Cursed Tomb campaign mechanics', () => {
   });
 
   it('ensures applyEndOfWeekLifecycle and advanceCampaignRound apply attrition exactly once per failed round', () => {
-    const campaign = createCampaign('cursed-tomb', 1, false);
+    const campaign = createCampaign('cursed-tomb', 1);
     campaign.currentRound.status = 'pyramid-collapse';
 
     const exposedCards = visibleCards(campaign.currentRound.pyramid);
@@ -473,7 +474,7 @@ describe('Cursed Tomb campaign mechanics', () => {
   });
 
   it('applies Reward Phase to cleared final pair', () => {
-    const campaign = createCampaign('cursed-tomb', 1, false);
+    const campaign = createCampaign('cursed-tomb', 1);
     const cardHigh = { id: '♥8', suit: '♥' as const, rank: 8 as const, removed: true, selected: false, attritionStage: 0 as const, rewardStage: 0 as const, blessed: false };
     const cardLow = { id: '♦5', suit: '♦' as const, rank: 5 as const, removed: true, selected: false, attritionStage: 0 as const, rewardStage: 0 as const, blessed: false };
 
@@ -489,7 +490,7 @@ describe('Cursed Tomb campaign mechanics', () => {
   });
 
   it('allows active cards at all stages (including Stage 3+ Scarred/Cursed) to receive Anchor rewards until entombed', () => {
-    const campaign = createCampaign('cursed-tomb', 1, false);
+    const campaign = createCampaign('cursed-tomb', 1);
     const cardHigh = campaign.masterDeck.find((c) => c.rank === 10)!; // 10
     const cardLowStage1 = campaign.masterDeck.find((c) => c.rank === 2 && c.suit === '♥')!; // 2 of Hearts
     cardLowStage1.attritionStage = 1;
@@ -506,7 +507,7 @@ describe('Cursed Tomb campaign mechanics', () => {
     expect(effects1.clearDetails?.anchorBlockedByScar).toBe(false);
 
     // Now test Stage 3 card (Scarred) - should also receive Anchor reward
-    const campaignStage3 = createCampaign('cursed-tomb', 1, false);
+    const campaignStage3 = createCampaign('cursed-tomb', 1);
     const cardHigh3 = campaignStage3.masterDeck.find((c) => c.rank === 10)!;
     const cardLowStage3 = campaignStage3.masterDeck.find((c) => c.rank === 2 && c.suit === '♥')!;
     cardLowStage3.attritionStage = 3;
@@ -524,7 +525,7 @@ describe('Cursed Tomb campaign mechanics', () => {
   });
 
   it('applies Hero Blessing and Anchor Reward when forceWin is called in campaign mode', () => {
-    const campaign = createCampaign('cursed-tomb', 1, false);
+    const campaign = createCampaign('cursed-tomb', 1);
     campaign.currentRound.pyramid[0][0] = { ...campaign.currentRound.pyramid[0][0], rank: 7, suit: '♠', attritionStage: 0 };
     campaign.currentRound.pyramid[6][0] = { ...campaign.currentRound.pyramid[6][0], rank: 6, suit: '♦', attritionStage: 0 };
     campaign.currentRound = forceWin(campaign.currentRound, true);
@@ -536,8 +537,31 @@ describe('Cursed Tomb campaign mechanics', () => {
     expect(rewardedCard).toBeDefined();
   });
 
+  it('assigns existing Wildcard in final pair as Anchor and partner as Hero candidate', () => {
+    const campaign = createCampaign('cursed-tomb', 1);
+    const wildcard = campaign.masterDeck.find((c) => c.suit === '♣' && c.rank === 3)!;
+    wildcard.blessed = true; // Sun Cross Universal Wildcard
+    const partner = campaign.masterDeck.find((c) => c.suit === '♥' && c.rank === 2)!;
+
+    // determineHeroAndAnchor check
+    const pairResult = determineHeroAndAnchor(wildcard, partner, 'cursed-tomb');
+    expect(pairResult.heroCard.id).toBe(partner.id);
+    expect(pairResult.anchorCard.id).toBe(wildcard.id);
+
+    // applyEndOfWeekLifecycle check
+    campaign.currentRound.status = 'partial-victory';
+    campaign.currentRound.lastClearedPair = [wildcard, partner];
+
+    const updated = applyEndOfWeekLifecycle(campaign);
+    const updatedWildcard = updated.masterDeck.find((c: CursedCard) => c.id === wildcard.id);
+    const updatedPartner = updated.masterDeck.find((c: CursedCard) => c.id === partner.id);
+
+    expect(updatedWildcard?.rewardStage).toBe(1); // Wildcard acts as Anchor
+    expect(updatedPartner?.blessed).toBe(true); // Partner becomes Blessed Hero
+  });
+
   it('triggers Starvation defeat when fewer than 28 active cards remain', () => {
-    const campaign = createCampaign('cursed-tomb', 1, false);
+    const campaign = createCampaign('cursed-tomb', 1);
     // Entomb 25 cards so only 27 active cards remain
     for (let i = 0; i < 25; i += 1) {
       campaign.masterDeck[i].attritionStage = 5;
@@ -549,7 +573,7 @@ describe('Cursed Tomb campaign mechanics', () => {
   });
 
   it('allows campaign to continue past Perfect Win with achievements updated', () => {
-    const campaign = createCampaign('cursed-tomb', 1, false);
+    const campaign = createCampaign('cursed-tomb', 1);
     campaign.currentRound.status = 'complete-victory';
 
     const updated = applyEndOfWeekLifecycle(campaign);
@@ -558,33 +582,6 @@ describe('Cursed Tomb campaign mechanics', () => {
     expect(updated.achievements.pyramidsCleared).toBe(1);
     expect(updated.achievements.roundsSurvived).toBe(1);
     expect(updated.achievements.unlockedBadges).toContain('Perfect Win');
-  });
-
-  it('sets volatilityWarning advisory flag when 4 of a rank are entombed without triggering defeat if volatileCollapse is false', () => {
-    const campaign = createCampaign('cursed-tomb', 1, false);
-    // Entomb all 4 Kings (rank 13)
-    const kings = campaign.masterDeck.filter((c) => c.rank === 13);
-    kings.forEach((k) => {
-      k.attritionStage = 5;
-    });
-
-    const updated = applyEndOfWeekLifecycle(campaign);
-    expect(updated.status).toBe('active');
-    expect(updated.volatilityWarning).toBe(true);
-  });
-
-  it('triggers Volatile Collapse defeat when 4 of a rank are entombed and volatileCollapse is enabled', () => {
-    const campaign = createCampaign('cursed-tomb', 1, true);
-    // Entomb all 4 Kings (rank 13)
-    const kings = campaign.masterDeck.filter((c) => c.rank === 13);
-    kings.forEach((k) => {
-      k.attritionStage = 5;
-    });
-
-    const updated = applyEndOfWeekLifecycle(campaign);
-    expect(updated.status).toBe('defeat');
-    expect(updated.defeatReason).toBe('volatile-collapse');
-    expect(updated.volatilityWarning).toBe(true);
   });
 
   it('locks next lower row cards face-down when parent has Red Curse and reveals them when exposed', () => {
@@ -772,7 +769,7 @@ describe('Cursed Tomb campaign mechanics', () => {
 
   describe('Blessing and Curse mutual exclusivity', () => {
     it('skips Blessing award if hero card has attritionStage === 4 (Cursed)', () => {
-      const campaign = createCampaign('cursed-tomb', 1, false);
+      const campaign = createCampaign('cursed-tomb', 1);
       campaign.currentRound.status = 'complete-victory';
       // Setup masterDeck[0] as Cursed (Stage 4) and masterDeck[1] as non-cursed
       campaign.masterDeck[0].attritionStage = 4;

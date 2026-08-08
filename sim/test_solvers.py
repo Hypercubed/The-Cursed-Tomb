@@ -23,7 +23,6 @@ BASE_FLAGS = RuleFlags(
     curses=False,
     blessings=False,
     attrition=False,
-    volatile_collapse=False,
 )
 
 
@@ -148,7 +147,6 @@ def verify_stock_vault_progress():
         curses=False,
         blessings=True,
         attrition=False,
-        volatile_collapse=False,
     )
     state = GameState(pyr, list(stock), [], [], set(), {}, 1, blessing_flags, rng)
     assert not state.progress_this_pass

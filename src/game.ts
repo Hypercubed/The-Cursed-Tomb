@@ -64,14 +64,12 @@ export interface CampaignAchievements {
 export interface CampaignState {
   mode: GameMode;
   difficulty: number | null;
-  volatileCollapse: boolean;
-  volatilityWarning?: boolean;
   masterDeck: CursedCard[];
   graveyard: CursedCard[];
   currentRound: GameState;
   roundNumber: number;
   status: 'active' | 'defeat';
-  defeatReason?: 'starvation' | 'volatile-collapse';
+  defeatReason?: 'starvation';
   achievements: CampaignAchievements;
 }
 
@@ -90,6 +88,25 @@ export function getEffectiveValueForPair(card: Card, partner: Card, mode: GameMo
     return 13;
   }
   return getFunctionalValue(card, mode);
+}
+
+export function determineHeroAndAnchor(c1: Card, c2: Card, mode: GameMode = 'standard'): { heroCard: Card; anchorCard: Card } {
+  const isWild1 = mode === 'cursed-tomb' && Boolean(c1.blessed && c1.suit === '♣');
+  const isWild2 = mode === 'cursed-tomb' && Boolean(c2.blessed && c2.suit === '♣');
+
+  if (isWild1 && !isWild2) {
+    return { heroCard: c2, anchorCard: c1 };
+  }
+  if (isWild2 && !isWild1) {
+    return { heroCard: c1, anchorCard: c2 };
+  }
+
+  const val1 = getFunctionalValue(c1, mode);
+  const val2 = getFunctionalValue(c2, mode);
+  if (val2 > val1) {
+    return { heroCard: c2, anchorCard: c1 };
+  }
+  return { heroCard: c1, anchorCard: c2 };
 }
 
 export function createDeck(): Card[] {
@@ -802,7 +819,6 @@ export function startGame(redraws: number | null, mode: GameMode = 'standard'): 
 export function createCampaign(
   mode: GameMode = 'standard',
   difficulty: number | null = 1,
-  volatileCollapse: boolean = false,
   existingMasterDeck?: CursedCard[],
   existingGraveyard?: CursedCard[],
   roundNumber: number = 1,
@@ -811,30 +827,15 @@ export function createCampaign(
   const masterDeck = existingMasterDeck ?? createDeck();
   const graveyard = existingGraveyard ?? [];
   const currentRound = startGame(difficulty, mode);
-  
+
   let status: 'active' | 'defeat' = 'active';
-  let defeatReason: 'starvation' | 'volatile-collapse' | undefined;
+  let defeatReason: 'starvation' | undefined;
 
   if (mode === 'cursed-tomb') {
     const activeCount = masterDeck.filter((c) => c.attritionStage < 5 && !graveyard.some((g) => g.id === c.id)).length;
     if (activeCount < 28) {
       status = 'defeat';
       defeatReason = 'starvation';
-    }
-  }
-
-  let volatilityWarning = false;
-  if (mode === 'cursed-tomb') {
-    for (let r = 1; r <= 13; r += 1) {
-      const entombedCount = graveyard.filter((c) => c.rank === r && c.attritionStage === 5).length;
-      if (entombedCount === 4) {
-        volatilityWarning = true;
-        if (volatileCollapse) {
-          status = 'defeat';
-          defeatReason = 'volatile-collapse';
-        }
-        break;
-      }
     }
   }
 
@@ -849,8 +850,6 @@ export function createCampaign(
   return {
     mode,
     difficulty,
-    volatileCollapse,
-    volatilityWarning,
     masterDeck,
     graveyard,
     currentRound,
@@ -886,15 +885,7 @@ export function applyEndOfWeekLifecycle(campaign: CampaignState): CampaignState 
     if (lastPair.length === 2) {
       const c1 = lastPair[0];
       const c2 = lastPair[1];
-      const val1 = getFunctionalValue(c1, mode);
-      const val2 = getFunctionalValue(c2, mode);
-
-      let heroCard = c1;
-      let anchorCard = c2;
-      if (val2 > val1) {
-        heroCard = c2;
-        anchorCard = c1;
-      }
+      const { heroCard, anchorCard } = determineHeroAndAnchor(c1, c2, mode);
 
       const hIdx = masterDeck.findIndex((c) => c.id === heroCard.id);
       if (hIdx !== -1) {
@@ -984,26 +975,12 @@ export function applyEndOfWeekLifecycle(campaign: CampaignState): CampaignState 
     defeatReason = 'starvation';
   }
 
-  let volatilityWarning = false;
-  for (let r = 1; r <= 13; r += 1) {
-    const entombedCount = graveyard.filter((c) => c.rank === r && c.attritionStage === 5).length;
-    if (entombedCount === 4) {
-      volatilityWarning = true;
-      if (campaign.volatileCollapse) {
-        status = 'defeat';
-        defeatReason = 'volatile-collapse';
-      }
-      break;
-    }
-  }
-
   return {
     ...campaign,
     masterDeck,
     graveyard,
     status,
     defeatReason,
-    volatilityWarning,
     achievements,
     currentRound: {
       ...round,
@@ -1074,15 +1051,7 @@ export function computeRoundLifecycleEffects(
     if (lastPair.length === 2) {
       const c1 = lastPair[0];
       const c2 = lastPair[1];
-      const val1 = getFunctionalValue(c1, mode);
-      const val2 = getFunctionalValue(c2, mode);
-
-      let heroCard = c1;
-      let anchorCard = c2;
-      if (val2 > val1) {
-        heroCard = c2;
-        anchorCard = c1;
-      }
+      const { heroCard, anchorCard } = determineHeroAndAnchor(c1, c2, mode);
 
       const beforeHero = beforeDeck.find((c) => c.id === heroCard.id);
       const beforeAnchor = beforeDeck.find((c) => c.id === anchorCard.id);

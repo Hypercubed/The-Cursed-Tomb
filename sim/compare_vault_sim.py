@@ -191,14 +191,6 @@ def run_campaign_compare(rng, max_redeals, flags, max_rounds, allow_pyramid_vaul
         if len(active_pool) < 28:
             return 'collapse', rounds_played
 
-        if flags.volatile_collapse:
-            entombed_by_rank = {}
-            for c in registry:
-                if c.attrition_stage >= 5:
-                    entombed_by_rank[c.rank] = entombed_by_rank.get(c.rank, 0) + 1
-            if any(count >= 4 for count in entombed_by_rank.values()):
-                return 'collapse', rounds_played
-
         outcome = play_round_compare(active_pool, rng, max_redeals, flags, allow_pyramid_vault)
         rounds_played += 1
 

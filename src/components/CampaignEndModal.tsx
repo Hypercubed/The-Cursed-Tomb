@@ -6,7 +6,7 @@ import { PlayingCard } from './PlayingCard';
 interface CampaignEndModalProps {
   isOpen: boolean;
   mode: 'defeat' | 'victory';
-  defeatReason?: 'starvation' | 'volatile-collapse';
+  defeatReason?: 'starvation';
   campaign: CampaignState | null;
   campaignStats: CampaignStats;
   roundNumber?: number;
@@ -65,11 +65,7 @@ export function CampaignEndModal({
   const hasFinalRoundMarks = hasScarred || hasCursed || hasEntombed;
 
   const subMessage = isDefeat
-    ? defeatReason === 'starvation'
-      ? 'Starvation — not enough cards remain to deal a new pyramid'
-      : defeatReason === 'volatile-collapse'
-      ? 'Volatile Collapse — an entire rank has been entombed'
-      : "The tomb's ancient curse has claimed all remaining cards"
+    ? 'Starvation — not enough cards remain to deal a new pyramid'
     : 'Perfect Win — all 52 cards cleared to the Foundation';
 
   const activeCardsCount = 52 - entombedCount;

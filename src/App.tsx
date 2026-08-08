@@ -87,7 +87,6 @@ function App() {
   });
 
   const [selectedMode, setSelectedMode] = useState<GameMode>('cursed-tomb');
-  const [volatileCollapse, setVolatileCollapse] = useState<boolean>(false);
 
   const [animatingMatchIds, setAnimatingMatchIds] = useState<string[]>([]);
   const [animatingErrorIds, setAnimatingErrorIds] = useState<string[]>([]);
@@ -135,14 +134,13 @@ function App() {
   }, [campaign, game.status, hasRecordedOutcome, selectedRedraw, selectedMode]);
 
   const handleStartCampaign = useCallback(
-    (difficulty: number | null, mode: GameMode = 'cursed-tomb', volatile: boolean = false) => {
+    (difficulty: number | null, mode: GameMode = 'cursed-tomb') => {
       setSelectedRedraw(difficulty);
       setSelectedMode(mode);
-      setVolatileCollapse(volatile);
       defaultPersistenceManager.saveSettings(difficulty);
 
       if (mode === 'cursed-tomb') {
-        const newCampaign = createCampaign(mode, difficulty, volatile);
+        const newCampaign = createCampaign(mode, difficulty);
         setCampaign(newCampaign);
         setGame(newCampaign.currentRound);
         defaultPersistenceManager.saveCampaignState(newCampaign);
@@ -704,8 +702,6 @@ function App() {
         onSelectDifficulty={setSelectedRedraw}
         selectedMode={selectedMode}
         onSelectMode={setSelectedMode}
-        volatileCollapse={volatileCollapse}
-        onToggleVolatileCollapse={setVolatileCollapse}
         onStartCampaign={handleStartCampaign}
         onOpenFullRules={() => {
           setRulesTab('core-rules');

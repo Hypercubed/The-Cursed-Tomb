@@ -28,7 +28,6 @@ BASE_FLAGS = RuleFlags(
     curses=False,
     blessings=False,
     attrition=False,
-    volatile_collapse=False,
 )
 
 REDRAW_OPTIONS = [

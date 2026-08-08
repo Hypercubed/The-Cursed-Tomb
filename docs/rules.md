@@ -1,10 +1,19 @@
-# The Cursed Tomb (Official Ruleset v0.0.11)
+---
+title: "The Cursed Tomb"
+subtitle: "Official Ruleset"
+version: "0.0.11"
+date: "2026-08-08"
+status: "draft"
+description: "A persistent, mutating tactical card game played with a standard 52-card deck and fine-tip felt markers."
+---
 
-A persistent, mutating tactical card game played with a standard 52-card deck and fine-tip felt markers (red and blue). 
+# The Cursed Tomb
+
+A persistent, mutating tactical card game played with a standard 52-card deck and fine-tip felt markers (red and blue).
 
 ---
 
-## ── 1. EXPEDITION OBJECTIVE & FAILURE CONDITIONS ──
+## 1. EXPEDITION OBJECTIVE & FAILURE CONDITIONS
 Your ultimate goal is to play as long as possible before the deck becomes unplayable.
 
 ### The Tomb Collapses (Campaign End Conditions)
@@ -15,9 +24,9 @@ The campaign ends in instant defeat if the tomb collapses. The tomb collapses th
 
 ---
 
-## ── 2. CORE DEFINITIONS & ZONE STATE TERMINOLOGY ──
+## 2. CORE DEFINITIONS & ZONE STATE TERMINOLOGY
 *   **Printed Rank:** The immutable, original value printed on the card face (A, 2–10, J, Q, K). This value never changes. The Tomb-Collapse condition and all deck auditing steps look *only* at the Printed Rank.
-*   **Functional Value:** The temporary mathematical value used during gameplay calculations. This value is dynamic, altered exclusively by Upper-Right **Scars `[ N ]`** (+1 for Red, -1 for Black).
+*   **Functional Value:** The temporary mathematical value used during gameplay calculations. This value is dynamic, altered exclusively by Upper-Left **Scars `[ N ]`** (+1 for Red, -1 for Black).
 *   **Exposed Card:** A card in the pyramid layout that has no other cards physically overlapping or underpinning it from the row below. Only exposed cards can be paired or cleared.
 *   **The Stock:** The face-down draw pile.
 *   **The Waste:** The face-up pile where cards flipped from the Stock land.
@@ -27,16 +36,23 @@ The campaign ends in instant defeat if the tomb collapses. The tomb collapses th
 
 ---
 
-## ── 3. PREPARATION & DIFFICULTY ──
+## 3. PREPARATION & DIFFICULTY
+### Components
+*   52-card deck
+*   1 or 2 fine-tip markers (red and blue recommended)
+*   Graveyard box
+*   6-sided die (optional)
+
 Before beginning the campaign, select your global difficulty setting. This dictates how many times you are allowed to cycle through the Waste Pile per game:
 
-*   **Novice (Tutorial / Sandbox Mode):** 5 Redeals allowed (6 total passes through the Stock deck). This mode provides a relaxed environment to learn the mutation behaviors.
-*   **Explorer (Easy):** 3 Redeals allowed (4 total passes through the Stock deck).
-*   **Archaeologist (Normal):** 1 Redeal allowed (2 total passes through the Stock deck). 
+*   **Novice (Tutorial / Sandbox Mode):** Infinite Redeals allowed (unlimited passes through the Stock deck). This mode provides a relaxed environment to learn the mutation behaviors.
+*   **Explorer (Easy):** 2 Redeals allowed (3 total passes through the Stock deck).
+*   **Archaeologist (Normal):** 1 Redeal allowed (2 total passes through the Stock deck).
+*   **Survivalist (Hard):** 0 Redeals allowed (1 single pass through the Stock deck).
 
 ### Tracking Redeals (Optional)
-For physical tabletop play, you may optionally track your remaining redeals using a physical counter:
-*   **Die Counter Method:** Place a standard die (d6) beside the Stock pile set to your starting redeal allowance. Decrement the die value by 1 each time you pick up the Waste pile to form a new Stock pile.
+For physical tabletop play, Explorer is the only difficulty mode that requires tracking multiple redeals. (Novice allows infinite redeals, Archaeologist allows only a single redeal, and Survivalist allows zero.) You may optionally track remaining redeals using a physical counter:
+*   **Die Counter Method:** Place a standard die (d6) beside the Stock pile set to your starting redeal allowance (2 for Explorer). Decrement the die value by 1 each time you pick up the Waste pile to form a new Stock pile.
 *   **Token Method:** Place physical tokens (coins, poker chips, or counter tokens) beside the Stock pile equal to your allowed redeals, discarding one token upon each redeal.
 
 ### Marker & Pen Selection
@@ -54,7 +70,7 @@ Ink modifications must be strictly confined to distinct visual zones:
 
 ---
 
-## ── 4. LIVE-PLAY PLAYGROUND ARCHITECTURE ──
+## 4. LIVE-PLAY PLAYGROUND ARCHITECTURE
 Deal 28 cards face-up into a standard pyramid layout consisting of 7 rows. The remaining cards form the face-down **Stock Pile**. Cards are cleared by pairing exposed cards that add up to a Functional Value of exactly **13** (e.g., A + Q, 6 + 7). Standard Kings have a value of 13 and clear themselves singly into the Foundation.
 
 ### Stock & Waste Pairing Rules
@@ -73,7 +89,7 @@ Deal 28 cards face-up into a standard pyramid layout consisting of 7 rows. The r
 
 ---
 
-## ── 5. THE ATTRITION TRACK (RANK PIP MARKS) ──
+## 5. THE ATTRITION TRACK (RANK PIP MARKS)
 When a game freezes and no legal moves remain, you lose the round. Identify all **Bottlenecks**—every card left completely exposed at the lowest remaining base tiers of the frozen pyramid. Add pen strokes directly to the **Rank Number Pip** in both corner indices (top-left and bottom-right) to progress each bottleneck card down the failure track:
 
 *   **Stage 1 `[ |7 ]` (Vulnerable):** 1st Stroke. Single vertical line drawn to the left of the rank number. No mechanical effect.
@@ -86,7 +102,7 @@ When a game freezes and no legal moves remain, you lose the round. Identify all 
 
 ---
 
-## ── 6. THE SURVIVAL REWARDS (HERO BLESSINGS & ANCHORS) ──
+## 6. THE SURVIVAL REWARDS (HERO BLESSINGS & ANCHORS)
 If you completely clear all 28 cards from the pyramid layout but have leftover cards remaining in the Stock or Waste piles, you achieve a **Pyramid Clear**. Unlocked suit blessings carry over permanently and trigger across all subsequent rounds of the campaign.
 
 **Card-Specific Legacy Unlocks:** A suit blessing applies strictly to the individual physical card it is drawn upon. While multiple separate cards in your deck can acquire the same suit blessing over the course of the campaign (creating multiple distinct Hero cards), each instance triggers independently when that specific card is cleared.
@@ -103,6 +119,7 @@ Compare the final two cards' active Functional Values:
 *   **The Lower-Value Card builds the Anchor:** Progress its defensive immunity track by one stroke in the upper-right corner margin (and bottom-left corner rotated 180°):
     *   *First Stroke `[ — ]` (Fortifying):* Draw a single bold dark horizontal line in the upper-right corner margin. No mechanical effect yet.
     *   *Second Stroke `[ + ]` (Anchored):* Cross it vertically with a bold dark stroke (`+`) in the upper-right corner margin. The card is now permanently immune to rank loss marks.
+*   **Wildcard Partner Rule:** If the final pair includes an existing **♣ Clubs Universal Wildcard** (`⊕`), the Wildcard cannot receive another blessing and **automatically becomes the Anchor** (incrementing its Anchor track `[ — ]` / `[ + ]`). Its partner card becomes the **Blessed Hero** (gaining its suit blessing illustration, unless already blessed or Stage 4 Cursed). If both cards in the final pair are Wildcards, neither can receive a blessing, and one Wildcard receives the Anchor stroke.
 
 ### B. The Solo Clear (Standalone Value 13 / King Clear)
 If the final card clearing the board is played singly (a King or any card with an active Functional Value of 13), progress its upper-right Anchor track by one stroke (`[ — ]` or `[ + ]`). No Hero's Blessing is awarded.
@@ -128,10 +145,10 @@ Mutated physical cards retain clear visual separation between corner index marks
 
 ---
 
-## ── 7. THE TIMING & CAMPAIGN RESETS ──
+## 7. THE TIMING & CAMPAIGN RESETS
 
 ### Resolution of Simultaneous End-States
-If the final match played to clear the entire deck and achieve a **Perfect Win** includes a card with a penalty effect—such as a **Black Cursed card (`⏍`)** whose partner would normally be reshuffled back into the Stock pile—**Victory takes absolute priority.** The penalty effect is bypassed, both cards move to the Foundation, and the campaign ends in victory.
+If the final match played to clear the entire deck and achieve a **Perfect Win** includes a card with a penalty effect—such as a **Black Cursed card (`⏍`)** whose partner would normally be reshuffled back into the Stock pile—**the Perfect Win takes absolute priority.** The penalty effect is bypassed, both cards move to the Foundation, and the round is successfully cleared as a Perfect Win.
 
 ### Campaign Reset Protocol
 1.  **Assemble Active Pool:** Gather all cards from the Foundation pile, remaining Stock, Waste, and the Diamond Vault. This forms your active pool. Leave all entombed `[ X ]` cards behind in the Graveyard Box.

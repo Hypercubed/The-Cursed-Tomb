@@ -7,7 +7,7 @@ Difficulty sweep: test campaign outcomes across all 4 difficulty levels:
   - survivalist (0 redeals / 1 pass)
 
 Usage:
-  python3 sweep_thresholds.py [--campaigns N] [--max-rounds R] [--deadlock-limit D] [--seed S] [--solver SOLVER] [--no-volatile]
+  python3 sweep_thresholds.py [--campaigns N] [--max-rounds R] [--deadlock-limit D] [--seed S] [--solver SOLVER]
 """
 import argparse, random, time, statistics, cursed_tomb_sim
 from multiprocessing import Pool, cpu_count
@@ -33,26 +33,25 @@ def get_stats_str(rounds_list):
     return f"{avg:5.1f} ± {std:<4.1f} rnds"
 
 def _run_sweep_worker(args):
-    camp_seed, max_redeals, volatile_collapse, max_rounds, deadlock_limit, solver_name = args
+    camp_seed, max_redeals, max_rounds, deadlock_limit, solver_name = args
     rng = random.Random(camp_seed)
-    flags = cursed_tomb_sim.RuleFlags(volatile_collapse=volatile_collapse)
+    flags = cursed_tomb_sim.RuleFlags()
     solver = create_solver(solver_name)
     return cursed_tomb_sim.run_campaign(rng, max_redeals, flags, max_rounds, deadlock_limit=deadlock_limit, solver=solver)
 
-def run_batch(n, seed, difficulty_name, max_rounds, deadlock_limit, volatile_collapse=False, solver_name="heuristic", n_workers=None):
+def run_batch(n, seed, difficulty_name, max_rounds, deadlock_limit, solver_name="heuristic", n_workers=None):
     if n_workers is None:
         n_workers = cpu_count() or 1
 
     base_rng = random.Random(seed)
     max_redeals = cursed_tomb_sim.DIFFICULTIES[difficulty_name]
     worker_args = [
-        (base_rng.randint(0, 1_000_000_000), max_redeals, volatile_collapse, max_rounds, deadlock_limit, solver_name)
+        (base_rng.randint(0, 1_000_000_000), max_redeals, max_rounds, deadlock_limit, solver_name)
         for _ in range(n)
     ]
-    
+
     rounds_by_type = {
         'starvation': [],
-        'volatile': [],
         'all_immune': [],
         'deadlock': [],
         'round_cap': []
@@ -76,8 +75,6 @@ def run_batch(n, seed, difficulty_name, max_rounds, deadlock_limit, volatile_col
 
         if k == 'collapse_starvation':
             rounds_by_type['starvation'].append(rnd)
-        elif k == 'collapse_volatile':
-            rounds_by_type['volatile'].append(rnd)
         elif k == 'all_immune_stall':
             rounds_by_type['all_immune'].append(rnd)
         elif k == 'stall_deadlock':
@@ -136,7 +133,6 @@ def parse_args():
                         help="Deadlock threshold (either float fraction of max-rounds e.g. 0.10 or int round count e.g. 30) (default: 0.10)")
     parser.add_argument("-s", "--seed", type=int, default=42, help="Random seed (default: 42)")
     parser.add_argument("--solver", choices=["greedy", "heuristic", "beam", "dfs"], default="heuristic", help="Solver strategy")
-    parser.add_argument("--volatile-collapse", action="store_true", help="Enable Volatile Collapse variant rule (default: disabled)")
     parser.add_argument("--workers", type=int, default=cpu_count(), help="Number of parallel worker processes (default: CPU cores)")
     return parser.parse_args()
 
@@ -144,22 +140,17 @@ if __name__ == '__main__':
     args = parse_args()
     
     dl_val = float(args.deadlock_limit) if '.' in args.deadlock_limit else int(args.deadlock_limit)
-    volatile_enabled = args.volatile_collapse
-    
+
     dl_desc = f"{dl_val:.0%}" if isinstance(dl_val, float) and dl_val < 1.0 else f"{dl_val} rounds"
-    print(f"Running difficulty sweep: campaigns/diff={args.campaigns}, max_rounds={args.max_rounds}, deadlock_limit={dl_desc}, volatile_collapse={volatile_enabled}, solver={args.solver}, seed={args.seed}, workers={args.workers}")
-    
+    print(f"Running difficulty sweep: campaigns/diff={args.campaigns}, max_rounds={args.max_rounds}, deadlock_limit={dl_desc}, solver={args.solver}, seed={args.seed}, workers={args.workers}")
+
     batch_results = []
     difficulties = ["novice", "explorer", "archaeologist", "survivalist"]
     for diff in difficulties:
-        d_name, max_redeals, elapsed, r_by_type, endurance_stats = run_batch(args.campaigns, args.seed, diff, args.max_rounds, dl_val, volatile_collapse=volatile_enabled, solver_name=args.solver, n_workers=args.workers)
+        d_name, max_redeals, elapsed, r_by_type, endurance_stats = run_batch(args.campaigns, args.seed, diff, args.max_rounds, dl_val, solver_name=args.solver, n_workers=args.workers)
         batch_results.append((d_name, max_redeals, elapsed, r_by_type, endurance_stats))
 
-    sample_flags = cursed_tomb_sim.RuleFlags(volatile_collapse=volatile_enabled)
-    active_end_types = ['starvation']
-    if getattr(sample_flags, 'volatile_collapse', False):
-        active_end_types.append('volatile')
-    active_end_types.extend(['deadlock', 'round_cap'])
+    active_end_types = ['starvation', 'deadlock', 'round_cap']
 
     # Print individual difficulty tables using active_end_types
     for d_name, max_redeals, elapsed, r_by_type, endurance_stats in batch_results:

@@ -6,15 +6,11 @@ TBD: To analyze the point at which a deck becomes unwinnable across a campaign u
 ## Requirements
 
 ### Requirement: Infinite campaign runner with disabled end-game conditions
-The script SHALL run campaigns where all terminal victory and collapse conditions are suppressed: no starvation collapse (fewer than 28 active cards), no volatile collapse (all 4 of a rank entombed), no perfect-win, no soft-win (rank-anchor victory), and no sealed-tomb victory. The deck SHALL still evolve: freeze attrition applies on frozen rounds, and survival rewards (blessings/anchors) apply on pyramid clears.
+The script SHALL run campaigns where all terminal victory and collapse conditions are suppressed: no starvation collapse (fewer than 28 active cards), no perfect-win, no soft-win (rank-anchor victory), and no sealed-tomb victory. The deck SHALL still evolve: freeze attrition applies on frozen rounds, and survival rewards (blessings/anchors) apply on pyramid clears.
 
 #### Scenario: Campaign continues past starvation threshold
 - **WHEN** the number of active (non-entombed) cards drops below 28
 - **THEN** the campaign SHALL continue running rather than reporting `collapse_starvation`
-
-#### Scenario: Campaign continues past volatile collapse condition
-- **WHEN** all 4 cards of a rank become entombed
-- **THEN** the campaign SHALL continue running rather than reporting `collapse_volatile`
 
 #### Scenario: Campaign continues after victory condition
 - **WHEN** a pyramid clear or perfect win is achieved

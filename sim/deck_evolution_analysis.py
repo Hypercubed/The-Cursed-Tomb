@@ -343,7 +343,6 @@ def main() -> None:
         curses=True,
         blessings=True,
         attrition=True,
-        volatile_collapse=False,
         sealed_tomb_victory=False,
         rank_anchor_victory=False,
     )

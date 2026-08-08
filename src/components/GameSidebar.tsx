@@ -3,8 +3,8 @@ import { GameMode } from '../game';
 const redrawOptions = [
   { label: 'Survivalist (Hard) — 0 Redeals', value: 0 },
   { label: 'Archaeologist (Normal) — 1 Redeal', value: 1 },
-  { label: 'Explorer (Easy) — 3 Redeals', value: 3 },
-  { label: 'Novice (Sandbox) — 5 Redeals', value: 5 },
+  { label: 'Explorer (Easy) — 2 Redeals', value: 2 },
+  { label: 'Novice (Sandbox) — ∞ Redeals', value: null as unknown as number },
 ] as const;
 
 interface GameSidebarProps {
@@ -35,8 +35,8 @@ const buttonClass =
   'appearance-none bg-transparent border border-game-border rounded-lg text-game-text text-sm cursor-pointer font-[inherit] px-4 py-2 hover:border-game-accent disabled:opacity-50 disabled:cursor-not-allowed transition-[border-color] duration-[120ms]';
 
 const getDifficultyLabel = (value: number | null) => {
-  if (value === 5 || value === null) return 'Novice (Sandbox)';
-  if (value === 3 || value === 2) return 'Explorer (Easy)';
+  if (value === null) return 'Novice (Sandbox)';
+  if (value === 2) return 'Explorer (Easy)';
   if (value === 1) return 'Archaeologist (Normal)';
   if (value === 0) return 'Survivalist (Hard)';
   return `${value} Redeal(s)`;

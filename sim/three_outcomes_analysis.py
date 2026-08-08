@@ -133,7 +133,6 @@ def run_single_campaign(args_tuple: Tuple[str, int, int, int, str, str]) -> Camp
         curses=True,
         blessings=True,
         attrition=True,
-        volatile_collapse=False,
         sealed_tomb_victory=False,
         rank_anchor_victory=False,
     )
