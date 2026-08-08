@@ -3,13 +3,12 @@
 Simulation Suite Orchestrator & RESULTS.md Updater
 ===================================================
 
-Runs Cursed Tomb simulation benchmarks across 6 parts:
+Runs Cursed Tomb simulation benchmarks across 5 parts:
   Part 1: Single-Game Win & Collapse Rates (base_game_sim.py)
   Part 2: Base-Game Campaign Rounds to Perfect Win (campaign_rounds_sim.py)
   Part 3: Full Rules Campaign (cursed_tomb_sim.py)
   Part 4: Endless Campaign Endurance Sweep (sweep_thresholds.py)
-  Part 5: FILO Vault Rule Comparison (compare_vault_sim.py)
-  Part 6: Solver Comparison (test_solvers.py)
+  Part 5: Solver Comparison (test_solvers.py)
 
 Usage:
   python3 sim/run_simulations.py [--quick | --full] [--seed 42] [--workers 4] [--parts 1 2 ...] [--update-results]
@@ -21,6 +20,7 @@ import re
 import argparse
 import subprocess
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 SIM_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(SIM_DIR)
@@ -45,11 +45,8 @@ P4_T1_SEP    = "| :------------ | :-----: | -------------------: | -------------
 P4_T2_HEADER = "| Difficulty    | Starvation | Volatile Collapse | Deadlock | Round Cap |"
 P4_T2_SEP    = "| :------------ | ---------: | ----------------: | -------: | --------: |"
 
-P5_HEADER = "| Difficulty    | Mode               | Victory Rate | Collapse Rate | Timeout Rate* | Avg Rounds |"
-P5_SEP    = "| :------------ | :----------------- | -----------: | ------------: | ------------: | ---------: |"
-
-P6_HEADER = "| Solver Policy       | Single-Game Win Rate | Wins | Losses | Execution Time* | Moves / Game |"
-P6_SEP    = "| :------------------ | -------------------: | ---: | -----: | --------------: | -----------: |"
+P5_HEADER = "| Solver Policy       | Single-Game Win Rate | Wins | Losses | Execution Time* | Moves / Game |"
+P5_SEP    = "| :------------------ | -------------------: | ---: | -----: | --------------: | -----------: |"
 
 
 def run_command(cmd, cwd=PROJECT_ROOT):
@@ -86,6 +83,27 @@ def run_part1(games, seed, solver, workers):
     return cmd, rows
 
 
+def _run_part2_diff(args):
+    label, redraw, diff, campaigns, solver, seed, workers = args
+    cmd = f"python3 sim/campaign_rounds_sim.py --campaigns {campaigns} --difficulty {diff} --max-rounds 500 --solver {solver} --seed {seed} --workers {workers}"
+    output = run_command(cmd)
+    
+    win_rate = "0.0%"
+    avg_rounds = "N/A"
+    median_rounds = "N/A"
+    
+    for line in output.splitlines():
+        if "Victories" in line and "(" in line and ")" in line:
+            win_rate = line.split("(")[1].split(")")[0]
+        elif "Avg rounds to Perfect Win" in line:
+            avg_rounds = line.split(":")[-1].strip()
+        elif "Median rounds to win" in line:
+            median_rounds = line.split(":")[-1].strip()
+            
+    row = f"| {label:<13} | {redraw:^7} | {win_rate:>26} | {avg_rounds:>18} | {median_rounds:>13} |"
+    return cmd, row
+
+
 def run_part2(campaigns, seed, solver, workers):
     print(f"--- Running Part 2: Base-Game Campaign Rounds ({campaigns} campaigns) ---", flush=True)
     diffs = [
@@ -94,27 +112,55 @@ def run_part2(campaigns, seed, solver, workers):
         ("Explorer", "3", "explorer"),
         ("Novice", "5", "novice")
     ]
-    rows = []
-    cmds = []
-    for label, redraw, diff in diffs:
-        cmd = f"python3 sim/campaign_rounds_sim.py --campaigns {campaigns} --difficulty {diff} --max-rounds 500 --solver {solver} --seed {seed} --workers {workers}"
-        cmds.append(cmd)
-        output = run_command(cmd)
-        
-        win_rate = "0.0%"
-        avg_rounds = "N/A"
-        median_rounds = "N/A"
-        
-        for line in output.splitlines():
-            if "Victories" in line and "(" in line and ")" in line:
-                win_rate = line.split("(")[1].split(")")[0]
-            elif "Avg rounds to Perfect Win" in line:
-                avg_rounds = line.split(":")[-1].strip()
-            elif "Median rounds to win" in line:
-                median_rounds = line.split(":")[-1].strip()
-                
-        rows.append(f"| {label:<13} | {redraw:^7} | {win_rate:>26} | {avg_rounds:>18} | {median_rounds:>13} |")
+    tasks = [(label, redraw, diff, campaigns, solver, seed, max(1, workers // 2)) for label, redraw, diff in diffs]
+    
+    with ThreadPoolExecutor(max_workers=min(4, workers)) as executor:
+        results = list(executor.map(_run_part2_diff, tasks))
+
+    cmds = [r[0] for r in results]
+    rows = [r[1] for r in results]
     return cmds, rows
+
+
+def _run_part3_diff(args):
+    label, redraw, diff, campaigns, solver, seed, workers = args
+    cmd = f"python3 sim/cursed_tomb_sim.py --campaigns {campaigns} --seed {seed} --difficulty {diff} --solver {solver} --volatile-collapse --max-rounds 500 --workers {workers}"
+    output = run_command(cmd)
+    
+    vic_all = "0.00%"
+    col_all = "0.00%"
+    stall = "0.00%"
+    timeout = "0.00%"
+    vic_resolved = "0.00%"
+    col_resolved = "0.00%"
+    
+    avg_win = "N/A"
+    avg_col = "N/A"
+    avg_res = "N/A"
+    
+    for line in output.splitlines():
+        line_str = line.strip()
+        if line_str.startswith("victory rate (all):"):
+            vic_all = line_str.split(":")[-1].strip()
+        elif line_str.startswith("collapse rate (all):"):
+            col_all = line_str.split(":")[-1].strip()
+        elif line_str.startswith("timeout rate (all):"):
+            timeout = line_str.split(":")[-1].strip()
+        elif line_str.startswith("victory rate:"):
+            vic_resolved = line_str.split(":")[1].split("(")[0].strip()
+        elif line_str.startswith("collapse rate:"):
+            col_resolved = line_str.split(":")[1].split("(")[0].strip()
+        elif line_str.startswith("avg rounds to win:"):
+            avg_win = line_str.split(":", 1)[-1].strip()
+        elif line_str.startswith("avg rounds to collapse:"):
+            avg_col = line_str.split(":", 1)[-1].strip()
+        elif line_str.startswith("overall avg to resolve:"):
+            avg_res = line_str.split(":", 1)[-1].strip()
+            
+    res_str = f"{vic_resolved} / {col_resolved}"
+    r1 = f"| {label:<13} | {redraw:^7} | {vic_all:>13} | {col_all:>14} | {stall:>5} | {timeout:>7} | {res_str:>30} |"
+    r2 = f"| {label:<13} | {avg_win:>22} | {avg_col:>25} | {avg_res:>26} |"
+    return r1, r2
 
 
 def run_part3(campaigns, seed, solver, workers):
@@ -125,50 +171,14 @@ def run_part3(campaigns, seed, solver, workers):
         ("Explorer", "3", "explorer"),
         ("Novice", "5", "novice")
     ]
-    
-    table1_rows = []
-    table2_rows = []
+    tasks = [(label, redraw, diff, campaigns, solver, seed, max(1, workers // 2)) for label, redraw, diff in diffs]
     cmd_pattern = f"python3 sim/cursed_tomb_sim.py --campaigns {campaigns} --seed {seed} --difficulty [difficulty] --solver {solver} --volatile-collapse --max-rounds 500 --workers {workers}"
-    
-    for label, redraw, diff in diffs:
-        cmd = f"python3 sim/cursed_tomb_sim.py --campaigns {campaigns} --seed {seed} --difficulty {diff} --solver {solver} --volatile-collapse --max-rounds 500 --workers {workers}"
-        output = run_command(cmd)
-        
-        vic_all = "0.00%"
-        col_all = "0.00%"
-        stall = "0.00%"
-        timeout = "0.00%"
-        vic_resolved = "0.00%"
-        col_resolved = "0.00%"
-        
-        avg_win = "N/A"
-        avg_col = "N/A"
-        avg_res = "N/A"
-        
-        for line in output.splitlines():
-            line_str = line.strip()
-            if line_str.startswith("victory rate (all):"):
-                vic_all = line_str.split(":")[-1].strip()
-            elif line_str.startswith("collapse rate (all):"):
-                col_all = line_str.split(":")[-1].strip()
-            elif line_str.startswith("timeout rate (all):"):
-                timeout = line_str.split(":")[-1].strip()
-            elif line_str.startswith("victory rate:"):
-                vic_resolved = line_str.split(":")[1].split("(")[0].strip()
-            elif line_str.startswith("collapse rate:"):
-                col_resolved = line_str.split(":")[1].split("(")[0].strip()
-            elif line_str.startswith("avg rounds to win:"):
-                avg_win = line_str.split(":", 1)[-1].strip()
-            elif line_str.startswith("avg rounds to collapse:"):
-                avg_col = line_str.split(":", 1)[-1].strip()
-            elif line_str.startswith("overall avg to resolve:"):
-                avg_res = line_str.split(":", 1)[-1].strip()
-                
-        res_str = f"{vic_resolved} / {col_resolved}"
-        
-        table1_rows.append(f"| {label:<13} | {redraw:^7} | {vic_all:>13} | {col_all:>14} | {stall:>5} | {timeout:>7} | {res_str:>30} |")
-        table2_rows.append(f"| {label:<13} | {avg_win:>22} | {avg_col:>25} | {avg_res:>26} |")
-        
+
+    with ThreadPoolExecutor(max_workers=min(4, workers)) as executor:
+        results = list(executor.map(_run_part3_diff, tasks))
+
+    table1_rows = [r[0] for r in results]
+    table2_rows = [r[1] for r in results]
     return cmd_pattern, table1_rows, table2_rows
 
 
@@ -254,35 +264,9 @@ def run_part4(campaigns, seed, solver, workers):
     return cmd, table1_rows, table2_rows
 
 
-def run_part5(campaigns, seed, workers):
-    print(f"--- Running Part 5: FILO Vault Rule Comparison ({campaigns} campaigns) ---", flush=True)
-    cmd = f"python3 sim/compare_vault_sim.py --campaigns {campaigns} --seed {seed} --workers {workers}"
-    output = run_command(cmd)
-    
-    rows = []
-    for line in output.splitlines():
-        if "|" in line and not line.startswith("Difficulty") and not line.startswith("-"):
-            parts = [p.strip() for p in line.split("|")]
-            if len(parts) >= 5:
-                diff = parts[0]
-                mode = parts[1]
-                vic = parts[2]
-                col = parts[3]
-                avg_rnd = parts[4]
-                
-                v_num = float(vic.rstrip('%'))
-                c_num = float(col.rstrip('%'))
-                t_num = max(0.0, 100.0 - v_num - c_num)
-                t_str = f"{t_num:.2f}%"
-                
-                rows.append(f"| {diff:<13} | {mode:<18} | {vic:>12} | {col:>13} | {t_str:>14} | {avg_rnd:>10} |")
-                
-    return cmd, rows
-
-
-def run_part6(games, redraws, seed):
-    print(f"--- Running Part 6: Solver Comparison ({games} games) ---", flush=True)
-    cmd = f"python3 sim/test_solvers.py --games {games} --redraws {redraws} --seed {seed}"
+def run_part5(games, redraws, seed, workers):
+    print(f"--- Running Part 5: Solver Comparison ({games} games) ---", flush=True)
+    cmd = f"python3 sim/test_solvers.py --games {games} --redraws {redraws} --seed {seed} --workers {workers}"
     output = run_command(cmd)
     
     rows = []
@@ -302,8 +286,22 @@ def run_part6(games, redraws, seed):
     return cmd, rows
 
 
+def replace_marked_section(content, marker_name, header, sep, rows):
+    """Replaces text between <!-- BEGIN MARKER --> and <!-- END MARKER --> with complete markdown table."""
+    start_tag = f"<!-- BEGIN {marker_name} -->"
+    end_tag = f"<!-- END {marker_name} -->"
+    
+    if start_tag in content and end_tag in content:
+        table_block = f"{start_tag}\n{header}\n{sep}\n" + "\n".join(rows) + f"\n{end_tag}"
+        pattern = re.escape(start_tag) + r".*?" + re.escape(end_tag)
+        return re.sub(pattern, table_block, content, flags=re.DOTALL)
+    else:
+        print(f"Warning: Boundary marker {start_tag} ... {end_tag} not found in {RESULTS_MD}", file=sys.stderr)
+        return content
+
+
 def update_markdown_file(results_map):
-    """Updates RESULTS.md content with new table rows."""
+    """Updates RESULTS.md content using HTML comment boundary markers."""
     if not os.path.exists(RESULTS_MD):
         print(f"Error: {RESULTS_MD} not found", file=sys.stderr)
         return
@@ -311,55 +309,24 @@ def update_markdown_file(results_map):
     with open(RESULTS_MD, "r", encoding="utf-8") as f:
         content = f.read()
 
-    # Replace Part 1 table
     if 1 in results_map:
-        rows = results_map[1]
-        pattern = r"(\| UI Redraw Setting\s+\|\s+Redraws\s+\|\s+Pyramid Clear Rate\s+\|\s+Total Victory Rate\s+\|\s+Collapse Rate\s+\|\n\| :---\s+\|\s+:---:\s+\|\s+---:\s+\|\s+---:\s+\|\s+---:\s+\|\n)(.*?)(\n\n### Observations|\n---)"
-        new_body = "\n".join(rows)
-        content = re.sub(pattern, r"\1" + new_body + r"\3", content, flags=re.DOTALL)
+        content = replace_marked_section(content, "PART 1 TABLE", P1_HEADER, P1_SEP, results_map[1])
 
-    # Replace Part 2 table
     if 2 in results_map:
-        rows = results_map[2]
-        pattern = r"(\| Difficulty\s+\|\s+Redraws\s+\|\s+Win Rate within 500 Rounds\s+\|\s+Avg Rounds to Win\s+\|\s+Median Rounds\s+\|\n\| :---\s+\|\s+:---:\s+\|\s+---:\s+\|\s+---:\s+\|\s+---:\s+\|\n)(.*?)(\n\n---)"
-        new_body = "\n".join(rows)
-        content = re.sub(pattern, r"\1" + new_body + r"\3", content, flags=re.DOTALL)
+        content = replace_marked_section(content, "PART 2 TABLE", P2_HEADER, P2_SEP, results_map[2])
 
-    # Replace Part 3 tables
     if 3 in results_map:
         r1, r2 = results_map[3]
-        pattern1 = r"(\| Difficulty\s+\|\s+Redraws\s+\|\s+Victory \(all\)\s+\|\s+Collapse \(all\)\s+\|\s+Stall\s+\|\s+Timeout\s+\|\s+Victory / Collapse of Resolved\s+\|\n\| :---\s+\|\s+:---:\s+\|\s+---:\s+\|\s+---:\s+\|\s+---:\s+\|\s+---:\s+\|\s+---:\s+\|\n)(.*?)(\n\n### Round-resolution metrics)"
-        new_body1 = "\n".join(r1)
-        content = re.sub(pattern1, r"\1" + new_body1 + r"\3", content, flags=re.DOTALL)
+        content = replace_marked_section(content, "PART 3 TABLE 1", P3_T1_HEADER, P3_T1_SEP, r1)
+        content = replace_marked_section(content, "PART 3 TABLE 2", P3_T2_HEADER, P3_T2_SEP, r2)
 
-        pattern2 = r"(\| Difficulty\s+\|\s+Avg Rounds to Win\s+\|\s+Avg Rounds to Collapse\s+\|\s+Overall Avg to Resolve\s+\|\n\| :---\s+\|\s+---:\s+\|\s+---:\s+\|\s+---:\s+\|\n)(.*?)(\n\nThe resolved-rate column)"
-        new_body2 = "\n".join(r2)
-        content = re.sub(pattern2, r"\1" + new_body2 + r"\3", content, flags=re.DOTALL)
-
-    # Replace Part 4 tables
     if 4 in results_map:
         r1, r2 = results_map[4]
-        pattern1 = r"(\| Difficulty\s+\|\s+Redraws\s+\|\s+Mean Rounds Survived\s+\|\s+Pyramids Cleared / Campaign\s+\|\s+Perfect Wins / Campaign\s+\|\s+Rank-Anchor Achievement\s+\|\n\| :---\s+\|\s+:---:\s+\|\s+---:\s+\|\s+---:\s+\|\s+---:\s+\|\s+---:\s+\|\n)(.*?)(\n\n### End-type rates)"
-        new_body1 = "\n".join(r1)
-        content = re.sub(pattern1, r"\1" + new_body1 + r"\3", content, flags=re.DOTALL)
+        content = replace_marked_section(content, "PART 4 TABLE 1", P4_T1_HEADER, P4_T1_SEP, r1)
+        content = replace_marked_section(content, "PART 4 TABLE 2", P4_T2_HEADER, P4_T2_SEP, r2)
 
-        pattern2 = r"(\| Difficulty\s+\|\s+Starvation\s+\|\s+Volatile Collapse\s+\|\s+Deadlock\s+\|\s+Round Cap\s+\|\n\| :---\s+\|\s+---:\s+\|\s+---:\s+\|\s+---:\s+\|\s+---:\s+\|\n)(.*?)(\n\n---)"
-        new_body2 = "\n".join(r2)
-        content = re.sub(pattern2, r"\1" + new_body2 + r"\3", content, flags=re.DOTALL)
-
-    # Replace Part 5 table
     if 5 in results_map:
-        rows = results_map[5]
-        pattern = r"(\| Difficulty\s+\|\s+Mode\s+\|\s+Victory Rate\s+\|\s+Collapse Rate\s+\|\s+Timeout Rate\*\s+\|\s+Avg Rounds\s+\|\n\| :---\s+\|\s+:---\s+\|\s+---:\s+\|\s+---:\s+\|\s+---:\s+\|\s+---:\s+\|\n)(.*?)(\n\n\\\* `compare_vault_sim.py`)"
-        new_body = "\n".join(rows)
-        content = re.sub(pattern, r"\1" + new_body + r"\3", content, flags=re.DOTALL)
-
-    # Replace Part 6 table
-    if 6 in results_map:
-        rows = results_map[6]
-        pattern = r"(\| Solver Policy\s+\|\s+Single-Game Win Rate\s+\|\s+Wins\s+\|\s+Losses\s+\|\s+Execution Time\*\s+\|\s+Moves / Game\s+\|\n\| :---\s+\|\s+---:\s+\|\s+---:\s+\|\s+---:\s+\|\s+---:\s+\|\s+---:\s+\|\n)(.*?)(\n\n\\\* Execution time)"
-        new_body = "\n".join(rows)
-        content = re.sub(pattern, r"\1" + new_body + r"\3", content, flags=re.DOTALL)
+        content = replace_marked_section(content, "PART 5 TABLE", P5_HEADER, P5_SEP, results_map[5])
 
     with open(RESULTS_MD, "w", encoding="utf-8") as f:
         f.write(content)
@@ -382,20 +349,19 @@ def main():
     group.add_argument("--full", action="store_true", help="Run full benchmark simulations (default)")
     parser.add_argument("--seed", type=int, default=42, help="Random seed (default 42)")
     parser.add_argument("--workers", type=int, default=4, help="Worker processes (default 4)")
-    parser.add_argument("--parts", nargs="+", type=int, choices=[1, 2, 3, 4, 5, 6], help="Parts to run (default all)")
+    parser.add_argument("--parts", nargs="+", type=int, choices=[1, 2, 3, 4, 5], help="Parts to run (default all)")
     parser.add_argument("--update-results", action="store_true", help="Update sim/RESULTS.md file")
     
     args = parser.parse_args()
     
     quick_mode = args.quick
-    parts_to_run = set(args.parts) if args.parts else {1, 2, 3, 4, 5, 6}
+    parts_to_run = set(args.parts) if args.parts else {1, 2, 3, 4, 5}
     
     p1_games = 100 if quick_mode else 10000
     p2_camps = 20 if quick_mode else 1000
     p3_camps = 20 if quick_mode else 1000
     p4_camps = 20 if quick_mode else 1000
-    p5_camps = 20 if quick_mode else 1000
-    p6_games = 20 if quick_mode else 50
+    p5_games = 20 if quick_mode else 50
     
     print("========================================================================")
     print(f"  Cursed Tomb Simulation Runner (Mode: {'QUICK' if quick_mode else 'FULL'})")
@@ -427,14 +393,9 @@ def main():
         print_table_with_headers("Part 4 Results (End-Type Rates):", P4_T2_HEADER, P4_T2_SEP, r4_t2)
 
     if 5 in parts_to_run:
-        cmd5, rows5 = run_part5(p5_camps, args.seed, args.workers)
+        cmd5, rows5 = run_part5(p5_games, 3, args.seed, args.workers)
         results_map[5] = rows5
         print_table_with_headers("Part 5 Results:", P5_HEADER, P5_SEP, rows5)
-
-    if 6 in parts_to_run:
-        cmd6, rows6 = run_part6(p6_games, 3, args.seed)
-        results_map[6] = rows6
-        print_table_with_headers("Part 6 Results:", P6_HEADER, P6_SEP, rows6)
 
     if args.update_results:
         update_markdown_file(results_map)
