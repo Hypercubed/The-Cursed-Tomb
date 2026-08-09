@@ -33,6 +33,7 @@ import {
 } from './game';
 import { useAutoplay } from './hooks/useAutoplay';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
+import { useDebugVisible } from './hooks/useDebugVisible';
 import { forceWin, forceLoss } from './solver';
 import { GameShell } from './components/GameShell';
 import { GameSidebar } from './components/GameSidebar';
@@ -195,6 +196,8 @@ function App() {
     setSpeedMs,
     setStrategy,
   } = useAutoplay(game, setGame, handleStart);
+
+  const { visible: debugVisible } = useDebugVisible();
 
   const handleRetireCampaign = useCallback(() => {
     if (!campaign) return;
@@ -549,7 +552,7 @@ function App() {
 
   return (
     <>
-      {import.meta.env.VITE_SHOW_DEBUG === 'true' && (
+      {debugVisible && (
         <DebugPanel
           game={game}
           isPlaying={isPlaying}

@@ -16,5 +16,6 @@ __pycache__
 .windsurf
 .kiro
 .devin
+.kilocode
 
 docs/*.pdf

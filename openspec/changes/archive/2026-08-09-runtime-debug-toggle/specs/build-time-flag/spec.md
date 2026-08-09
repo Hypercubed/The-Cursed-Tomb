@@ -1,7 +1,4 @@
-# Purpose
-Controls debug UI visibility via environment variables, allowing debug tools to be excluded from production builds.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Build-time debug visibility toggle
 The application SHALL support a Vite environment variable `VITE_SHOW_DEBUG` that controls the default visibility of the DebugPanel, with runtime override via `localStorage` and a console API. The DebugPanel component SHALL always be included in the bundle regardless of the flag value.
@@ -22,6 +19,8 @@ The application SHALL support a Vite environment variable `VITE_SHOW_DEBUG` that
 #### Scenario: Flag is documented for contributors
 - **WHEN** a contributor clones the repository
 - **THEN** a `.env.example` file at the project root SHALL be present documenting `VITE_SHOW_DEBUG=true` as the default development value and noting that it controls default visibility (override at runtime via `tombDebug`)
+
+## ADDED Requirements
 
 ### Requirement: Runtime debug visibility override
 The system SHALL allow the user to enable or disable the DebugPanel at runtime in a running instance, with the choice persisted in `localStorage` under key `tomb:showDebug`, resolved with precedence `localStorage` over `VITE_SHOW_DEBUG` default, and exposed via a global `window.tombDebug` console API that updates visibility immediately without requiring a reload.
