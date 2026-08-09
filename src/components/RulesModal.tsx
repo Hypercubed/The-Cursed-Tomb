@@ -420,6 +420,25 @@ export function RulesModal({ isOpen, onClose, initialTab = 'core-rules' }: Rules
                   </div>
                 </div>
               </section>
+
+              {/* License Notice — matches docs/LICENSE + PDF p.2 colophon */}
+              <section className="bg-[#18130e]/60 border border-[#2d2319] p-3 rounded-lg flex flex-col gap-2" aria-label="License notice">
+                <h4 className="text-[11px] font-semibold text-game-muted font-display tracking-wider uppercase m-0 flex items-center gap-1.5">
+                  <span>©</span> License — CC BY-SA 4.0
+                </h4>
+                <p className="m-0 text-[11px] leading-relaxed text-game-muted">
+                  © 2026 Jayson Harshbarger. The Cursed Tomb original rulebook text on this tab (and{' '}
+                  <span className="text-game-text">Parts II &amp; III</span> of the offline PDF) is licensed under{' '}
+                  <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener noreferrer" className="text-amber-300 hover:text-amber-200 underline underline-offset-2">CC BY-SA 4.0</a>
+                  {' '}— you may share and adapt it for any purpose, even commercially, with credit, a link to the license, and derivatives under the same license.{' '}
+                  <a href="https://creativecommons.org/licenses/by-sa/4.0/legalcode" target="_blank" rel="noopener noreferrer" className="text-amber-300/80 hover:text-amber-200 underline underline-offset-2">Legal code</a>
+                  {' · '}SPDX: CC-BY-SA-4.0 · Full text in <code className="text-[10px] bg-[#120e0a] px-1 py-0.5 rounded border border-[#251e16]">docs/LICENSE</code>.
+                </p>
+                <p className="m-0 text-[11px] leading-relaxed text-game-muted/80">
+                  <strong className="text-game-muted font-semibold">Standard Pyramid</strong> rules (the “Standard Pyramid” tab / PDF Part I) are public domain — no copyright over the game; explanatory text waived via{' '}
+                  <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener noreferrer" className="text-amber-300/70 hover:text-amber-200 underline underline-offset-2">CC0 1.0</a> (no attribution required).
+                </p>
+              </section>
             </div>
           )}
 

@@ -131,7 +131,7 @@ def verify_redeal_order():
     state.apply_move(Move('redeal', ()))
     redealt_stock_ids = [f"{c.rank}{c.suit}" for c in state.stock]
     assert initial_stock_ids == redealt_stock_ids, f"Redeal order mismatch: {initial_stock_ids} vs {redealt_stock_ids}"
-    print("✓ Verification: Simulation redeal preserves exact card draw order across passes")
+    print("[OK] Verification: Simulation redeal preserves exact card draw order across passes")
 
 
 def verify_stock_vault_progress():
@@ -185,7 +185,7 @@ def verify_stock_vault_progress():
     assert state_waste.vault[0] == waste_diamond
     assert state_waste.progress_this_pass
 
-    print("✓ Verification: Explicit stock and waste vaulting candidate moves set pass progress and enable redealing")
+    print("[OK] Verification: Explicit stock and waste vaulting candidate moves set pass progress and enable redealing")
 
 
 def main():

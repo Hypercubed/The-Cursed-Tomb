@@ -12,7 +12,7 @@ Simulated with [`cursed_tomb_sim.py`](./cursed_tomb_sim.py), [`test_solvers.py`]
 
 ## Part 1 — Single-Game Win & Round Loss Rates
 
-> **Command:** `python3 sim/base_game_sim.py --games 10000 --seed 42 --solver heuristic --workers 4`
+> **Command:** `python sim/base_game_sim.py --games 10000 --seed 42 --solver heuristic --workers 4`
 
 Each game is one round of Pyramid Solitaire. A **Pyramid Clear** means all 28 pyramid cards were cleared. A **Total Victory** means all 52 cards (pyramid and stock/waste) were cleared in that round. A **Round Loss** (or **Freeze**) means the player ran out of legal moves with no draws or redeals remaining.
 
@@ -39,10 +39,10 @@ Each game is one round of Pyramid Solitaire. A **Pyramid Clear** means all 28 py
 
 > **Commands:**
 > ```bash
-> python3 sim/campaign_rounds_sim.py --campaigns 1000 --difficulty survivalist --max-rounds 500 --solver heuristic --seed 42 --workers 4
-> python3 sim/campaign_rounds_sim.py --campaigns 1000 --difficulty archaeologist --max-rounds 500 --solver heuristic --seed 42 --workers 4
-> python3 sim/campaign_rounds_sim.py --campaigns 1000 --difficulty explorer --max-rounds 500 --solver heuristic --seed 42 --workers 4
-> python3 sim/campaign_rounds_sim.py --campaigns 1000 --difficulty novice --max-rounds 500 --solver heuristic --seed 42 --workers 4
+> python sim/campaign_rounds_sim.py --campaigns 1000 --difficulty survivalist --max-rounds 500 --solver heuristic --seed 42 --workers 4
+> python sim/campaign_rounds_sim.py --campaigns 1000 --difficulty archaeologist --max-rounds 500 --solver heuristic --seed 42 --workers 4
+> python sim/campaign_rounds_sim.py --campaigns 1000 --difficulty explorer --max-rounds 500 --solver heuristic --seed 42 --workers 4
+> python sim/campaign_rounds_sim.py --campaigns 1000 --difficulty novice --max-rounds 500 --solver heuristic --seed 42 --workers 4
 > ```
 
 The base-game campaign has no attrition, so the tomb cannot starve or collapse. Each campaign continues until a Perfect Win clears all 52 cards in one round or the 500-round safety cap is reached.
@@ -64,7 +64,7 @@ The base-game campaign has no attrition, so the tomb cannot starve or collapse. 
 
 > **Command pattern:**
 > ```bash
-> python3 sim/cursed_tomb_sim.py --campaigns 1000 --seed 42 --difficulty [difficulty] --solver heuristic --max-rounds 500 --workers 4
+> python sim/cursed_tomb_sim.py --campaigns 1000 --seed 42 --difficulty [difficulty] --solver heuristic --max-rounds 500 --workers 4
 > ```
 
 This section enables scars, curses, blessings, and attrition. The Diamond Vault uses FILO semantics throughout the core simulator. A campaign can end in:
@@ -102,7 +102,7 @@ The resolved-rate column excludes stalls and timeouts; the all-outcome columns i
 
 ## Part 4 — Endless Campaign Endurance Sweep
 
-> **Command:** `python3 sim/sweep_thresholds.py --campaigns 1000 --max-rounds 300 --solver heuristic --seed 42 --workers 4`
+> **Command:** `python sim/sweep_thresholds.py --campaigns 1000 --max-rounds 300 --solver heuristic --seed 42 --workers 4`
 
 The deadlock threshold is 10% of the 300-round cap (30 rounds).
 
@@ -132,7 +132,7 @@ The deadlock threshold is 10% of the 300-round cap (30 rounds).
 
 ## Part 5 — Solver Comparison
 
-> **Command:** `python3 sim/test_solvers.py --games 50 --redraws 3 --seed 42`
+> **Command:** `python sim/test_solvers.py --games 50 --redraws 3 --seed 42`
 
 Comparative benchmark across identical deck seeds at Explorer difficulty (3 redraws):
 
@@ -153,15 +153,15 @@ Comparative benchmark across identical deck seeds at Explorer difficulty (3 redr
 
 | Script                                               | Purpose                                 | Reproducible command                                                                                                                                  |
 | :--------------------------------------------------- | :-------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`base_game_sim.py`](./base_game_sim.py)             | Part 1: single-game win/collapse rates  | `python3 sim/base_game_sim.py --games 10000 --seed 42 --solver heuristic --workers 4`                                                                 |
-| [`campaign_rounds_sim.py`](./campaign_rounds_sim.py) | Part 2: base-game rounds to Perfect Win | `python3 sim/campaign_rounds_sim.py --campaigns 1000 --difficulty explorer --max-rounds 500 --solver heuristic --seed 42 --workers 4`                 |
-| [`cursed_tomb_sim.py`](./cursed_tomb_sim.py)         | Part 3: full-rules campaign runner      | `python3 sim/cursed_tomb_sim.py --campaigns 1000 --seed 42 --difficulty explorer --solver heuristic --max-rounds 500 --workers 4` |
-| [`sweep_thresholds.py`](./sweep_thresholds.py)       | Part 4: cross-difficulty endurance sweep| `python3 sim/sweep_thresholds.py --campaigns 1000 --max-rounds 300 --solver heuristic --seed 42 --workers 4`                                          |
-| [`test_solvers.py`](./test_solvers.py)               | Part 5: solver benchmark comparison     | `python3 sim/test_solvers.py --games 50 --redraws 3 --seed 42`                                                                                        |
+| [`base_game_sim.py`](./base_game_sim.py)             | Part 1: single-game win/collapse rates  | `python sim/base_game_sim.py --games 10000 --seed 42 --solver heuristic --workers 4`                                                                 |
+| [`campaign_rounds_sim.py`](./campaign_rounds_sim.py) | Part 2: base-game rounds to Perfect Win | `python sim/campaign_rounds_sim.py --campaigns 1000 --difficulty explorer --max-rounds 500 --solver heuristic --seed 42 --workers 4`                 |
+| [`cursed_tomb_sim.py`](./cursed_tomb_sim.py)         | Part 3: full-rules campaign runner      | `python sim/cursed_tomb_sim.py --campaigns 1000 --seed 42 --difficulty explorer --solver heuristic --max-rounds 500 --workers 4` |
+| [`sweep_thresholds.py`](./sweep_thresholds.py)       | Part 4: cross-difficulty endurance sweep| `python sim/sweep_thresholds.py --campaigns 1000 --max-rounds 300 --solver heuristic --seed 42 --workers 4`                                          |
+| [`test_solvers.py`](./test_solvers.py)               | Part 5: solver benchmark comparison     | `python sim/test_solvers.py --games 50 --redraws 3 --seed 42`                                                                                        |
 
 ### Validation
 
 ```bash
-python3 -m py_compile sim/cursed_tomb_sim.py sim/compare_vault_sim.py sim/base_game_sim.py sim/campaign_rounds_sim.py sim/sweep_thresholds.py sim/test_solvers.py
-python3 sim/test_solvers.py
+python -m py_compile sim/cursed_tomb_sim.py sim/compare_vault_sim.py sim/base_game_sim.py sim/campaign_rounds_sim.py sim/sweep_thresholds.py sim/test_solvers.py
+python sim/test_solvers.py
 ```

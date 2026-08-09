@@ -19,3 +19,7 @@ __pycache__
 .kilocode
 
 docs/*.pdf
+
+# Python / uv
+.venv/
+uv.lock.bak

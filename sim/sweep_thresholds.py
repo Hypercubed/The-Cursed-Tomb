@@ -7,7 +7,7 @@ Difficulty sweep: test campaign outcomes across all 4 difficulty levels:
   - survivalist (0 redeals / 1 pass)
 
 Usage:
-  python3 sweep_thresholds.py [--campaigns N] [--max-rounds R] [--deadlock-limit D] [--seed S] [--solver SOLVER]
+  python sim/sweep_thresholds.py [--campaigns N] [--max-rounds R] [--deadlock-limit D] [--seed S] [--solver SOLVER]
 """
 import argparse, random, time, statistics, cursed_tomb_sim
 from multiprocessing import Pool, cpu_count

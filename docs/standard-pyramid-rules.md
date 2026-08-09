@@ -5,7 +5,19 @@ version: "1.0"
 date: "2026-08-08"
 status: "stable"
 description: "Classic Pyramid Solitaire rules that form the foundation for The Cursed Tomb campaign mechanics."
+license: "CC0-1.0"
+spdx: "CC0-1.0"
 ---
+
+<!--
+SPDX-License-Identifier: CC0-1.0
+No copyright is claimed over the underlying game of Pyramid Solitaire,
+which is in the public domain. To the extent copyright exists in this
+summary text, it is waived under CC0 1.0 Universal
+(https://creativecommons.org/publicdomain/zero/1.0/).
+See docs/LICENSE for details. Part I of the PDF rulebook (this document)
+is therefore public domain / CC0, unlike Parts II & III which are CC BY-SA 4.0.
+-->
 
 # Standard Pyramid Solitaire Rules
 

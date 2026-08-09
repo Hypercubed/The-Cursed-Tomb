@@ -29,6 +29,8 @@
 
 - [Node.js](https://nodejs.org/) v18 or later
 - npm (bundled with Node.js)
+- [Python](https://www.python.org/) 3.10+ (for PDF rulebook & simulations)
+- [uv](https://docs.astral.sh/uv/getting-started/installation/) (recommended Python runner; fallback `python -m pip` works)
 
 ### Install & Run
 
@@ -54,6 +56,40 @@ The production bundle is output to `./dist/`.
 
 ```bash
 npm test
+```
+
+### Build the PDF Rulebook
+
+```bash
+# one-time: install Python deps (uv recommended)
+uv sync
+
+# build PDF
+uv run python scripts/make_rules_pdf.py
+# — or —
+npm run pdf
+# standalone (no install needed if uv is present):
+uv run --script scripts/make_rules_pdf.py
+
+# fallback without uv:
+python -m pip install fpdf2 Pillow
+python scripts/make_rules_pdf.py
+```
+
+### Run Simulations
+
+```bash
+uv sync
+uv run python sim/run_simulations.py --quick --workers 4
+# — or —
+npm run sim:quick
+
+# per-script examples
+uv run python sim/cursed_tomb_sim.py --campaigns 20 --workers 4
+uv run python sim/base_game_sim.py --games 100 --workers 4
+
+# fallback without uv:
+python sim/run_simulations.py --quick --workers 4
 ```
 
 ---
@@ -112,4 +148,24 @@ the-cursed-tomb/
 
 ## 📜 License
 
-This project is private. No license is granted for redistribution or reuse without explicit permission.
+**Code** — All source code, scripts, simulations, configuration, and other
+files outside `docs/` (including `src/`, `sim/`, `scripts/`, `public/`) are
+licensed under the **MIT License** — see [`LICENSE`](LICENSE).
+Copyright (c) 2026 Jayson Harshbarger.
+
+**Rules & rulebook text** — Original game rules in `docs/` (`rules.md`,
+`example-of-play.md`, and Parts II & III of any PDF generated from them)
+are licensed under
+**Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)** —
+see [`docs/LICENSE`](docs/LICENSE).
+Copyright (c) 2026 Jayson Harshbarger. `standard-pyramid-rules.md` (Part I —
+classic Pyramid Solitaire summary) is **public domain / CC0 1.0**: no copyright
+claimed over the underlying game, explanatory text waived via CC0 — see that
+file's header and `docs/LICENSE`.
+Human-readable deed: <https://creativecommons.org/licenses/by-sa/4.0/> ·
+Legal code: <https://creativecommons.org/licenses/by-sa/4.0/legalcode>
+
+> As the copyright holder, Jayson Harshbarger retains the right to distribute
+> the same material under additional or different terms (for example, in a
+> commercial digital release such as Google Play). The CC BY-SA license governs
+> what *others* may do with the rulebook; it does not restrict the author.

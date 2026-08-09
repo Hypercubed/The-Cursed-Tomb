@@ -30,6 +30,31 @@ export function GameShell({ header, sidebar, children, gameStatus }: GameShellPr
           <main className="order-1 lg:order-none min-w-0">{children}</main>
         </div>
       </div>
+      <footer className="mt-6 border-t border-[#2d2319] py-2.5 text-center text-xs font-mono relative z-10 px-2">
+        <a
+          href="https://github.com/Hypercubed/The-Cursed-Tomb"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="View source on GitHub — Hypercubed/The-Cursed-Tomb"
+          className="inline-flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 text-amber-300/70 hover:text-amber-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0d0a07] rounded-sm px-1 py-0.5 max-w-full"
+        >
+          <svg
+            aria-hidden="true"
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="currentColor"
+            className="shrink-0"
+          >
+            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+          </svg>
+          <span>Hypercubed/The-Cursed-Tomb</span>
+          <span aria-hidden="true" className="text-amber-500/30">
+            𓋹
+          </span>
+          <span>View source on GitHub</span>
+        </a>
+      </footer>
     </div>
   );
 }

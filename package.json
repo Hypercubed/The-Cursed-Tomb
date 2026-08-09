@@ -2,12 +2,16 @@
   "name": "pyramid-solitaire-game",
   "private": true,
   "version": "0.1.0",
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "pdf": "uv run python scripts/make_rules_pdf.py",
+    "sim": "uv run python sim/run_simulations.py",
+    "sim:quick": "uv run python sim/run_simulations.py --quick --workers 4"
   },
   "dependencies": {
     "react": "^18.3.1",

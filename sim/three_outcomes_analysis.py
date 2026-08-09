@@ -19,7 +19,7 @@ Also tracks:
 - Pyramid Clears (28 pyramid cards cleared)
 
 Usage:
-  python3 sim/three_outcomes_analysis.py [options]
+  python sim/three_outcomes_analysis.py [options]
 """
 
 from __future__ import annotations

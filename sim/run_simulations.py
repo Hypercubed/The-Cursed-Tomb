@@ -11,7 +11,7 @@ Runs Cursed Tomb simulation benchmarks across 5 parts:
   Part 5: Solver Comparison (test_solvers.py)
 
 Usage:
-  python3 sim/run_simulations.py [--quick | --full] [--seed 42] [--workers 4] [--parts 1 2 ...] [--update-results]
+  python sim/run_simulations.py [--quick | --full] [--seed 42] [--workers 4] [--parts 1 2 ...] [--update-results]
 """
 
 import sys
@@ -50,17 +50,23 @@ P5_SEP    = "| :------------------ | -------------------: | ---: | -----: | ----
 
 
 def run_command(cmd, cwd=PROJECT_ROOT):
-    """Executes command and returns stdout text."""
-    res = subprocess.run(cmd, shell=True, capture_output=True, text=True, cwd=cwd)
+    """Executes command and returns stdout text. `cmd` may be str or list."""
+    use_shell = isinstance(cmd, str)
+    env = {**os.environ, "PYTHONIOENCODING": "utf-8", "PYTHONUTF8": "1"}
+    res = subprocess.run(cmd, shell=use_shell, capture_output=True, text=True, cwd=cwd, encoding="utf-8", env=env)
     if res.returncode != 0:
         print(f"Error running command: {cmd}\n{res.stderr}", file=sys.stderr)
         sys.exit(res.returncode)
     return res.stdout
 
 
+def _python_cmd(script_relative: str, extra_args: str) -> list[str]:
+    return [sys.executable, script_relative] + extra_args.split()
+
+
 def run_part1(games, seed, solver, workers):
     print(f"--- Running Part 1: Single-Game Win & Collapse Rates ({games} games) ---", flush=True)
-    cmd = f"python3 sim/base_game_sim.py --games {games} --seed {seed} --solver {solver} --workers {workers}"
+    cmd = [sys.executable, "sim/base_game_sim.py", "--games", str(games), "--seed", str(seed), "--solver", solver, "--workers", str(workers)]
     output = run_command(cmd)
     
     rows = []
@@ -85,7 +91,7 @@ def run_part1(games, seed, solver, workers):
 
 def _run_part2_diff(args):
     label, redraw, diff, campaigns, solver, seed, workers = args
-    cmd = f"python3 sim/campaign_rounds_sim.py --campaigns {campaigns} --difficulty {diff} --max-rounds 500 --solver {solver} --seed {seed} --workers {workers}"
+    cmd = [sys.executable, "sim/campaign_rounds_sim.py", "--campaigns", str(campaigns), "--difficulty", diff, "--max-rounds", "500", "--solver", solver, "--seed", str(seed), "--workers", str(workers)]
     output = run_command(cmd)
     
     win_rate = "0.0%"
@@ -124,7 +130,7 @@ def run_part2(campaigns, seed, solver, workers):
 
 def _run_part3_diff(args):
     label, redraw, diff, campaigns, solver, seed, workers = args
-    cmd = f"python3 sim/cursed_tomb_sim.py --campaigns {campaigns} --seed {seed} --difficulty {diff} --solver {solver} --max-rounds 500 --workers {workers}"
+    cmd = [sys.executable, "sim/cursed_tomb_sim.py", "--campaigns", str(campaigns), "--seed", str(seed), "--difficulty", diff, "--solver", solver, "--max-rounds", "500", "--workers", str(workers)]
     output = run_command(cmd)
     
     vic_all = "0.00%"
@@ -172,7 +178,7 @@ def run_part3(campaigns, seed, solver, workers):
         ("Novice", "5", "novice")
     ]
     tasks = [(label, redraw, diff, campaigns, solver, seed, max(1, workers // 2)) for label, redraw, diff in diffs]
-    cmd_pattern = f"python3 sim/cursed_tomb_sim.py --campaigns {campaigns} --seed {seed} --difficulty [difficulty] --solver {solver} --max-rounds 500 --workers {workers}"
+    cmd_pattern = f"{sys.executable} sim/cursed_tomb_sim.py --campaigns {campaigns} --seed {seed} --difficulty [difficulty] --solver {solver} --max-rounds 500 --workers {workers}"
 
     with ThreadPoolExecutor(max_workers=min(4, workers)) as executor:
         results = list(executor.map(_run_part3_diff, tasks))
@@ -184,7 +190,7 @@ def run_part3(campaigns, seed, solver, workers):
 
 def run_part4(campaigns, seed, solver, workers):
     print(f"--- Running Part 4: Endless Campaign Endurance Sweep ({campaigns} campaigns) ---", flush=True)
-    cmd = f"python3 sim/sweep_thresholds.py --campaigns {campaigns} --max-rounds 300 --solver {solver} --seed {seed} --workers {workers}"
+    cmd = [sys.executable, "sim/sweep_thresholds.py", "--campaigns", str(campaigns), "--max-rounds", "300", "--solver", solver, "--seed", str(seed), "--workers", str(workers)]
     output = run_command(cmd)
     
     table1_rows = []
@@ -256,7 +262,7 @@ def run_part4(campaigns, seed, solver, workers):
 
 def run_part5(games, redraws, seed, workers):
     print(f"--- Running Part 5: Solver Comparison ({games} games) ---", flush=True)
-    cmd = f"python3 sim/test_solvers.py --games {games} --redraws {redraws} --seed {seed} --workers {workers}"
+    cmd = [sys.executable, "sim/test_solvers.py", "--games", str(games), "--redraws", str(redraws), "--seed", str(seed), "--workers", str(workers)]
     output = run_command(cmd)
     
     rows = []

@@ -8,7 +8,7 @@ to analyze how quickly and how frequently persistent card degradation (scars, cu
 entombment) creates structurally unwinnable deck configurations.
 
 Usage:
-  python3 sim/deck_evolution_analysis.py [options]
+  python sim/deck_evolution_analysis.py [options]
 """
 
 from __future__ import annotations

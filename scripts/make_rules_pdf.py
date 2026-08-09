@@ -2,19 +2,39 @@
 """
 Generate a combined, print-ready PDF rulebook for The Cursed Tomb.
 
-Combines `docs/standard-pyramid-rules.md`, `docs/rules.md` (official ruleset v0.0.11),
+Combines `docs/standard-pyramid-rules.md`, `docs/rules.md` (official ruleset — version from docs/rules.md frontmatter),
 and `docs/example-of-play.md` into a single styled PDF rendered with fpdf2:
 
   * Cover page with a drawn playing-card motif
+  * Copyright & Licenses page (inside front cover) with CC BY-SA 4.0 (Parts II & III) and CC0 1.0 (Part I) — no code license
   * Table of contents with page numbers (two-pass render)
   * Part I — Standard Pyramid Solitaire / Part II — Official Ruleset / Part III — Example of Play
   * Running headers, page footers, styled code blocks and tables
+
+Licensing for the generated PDF
+-------------------------------
+This PDF is an offline rulebook, not the application.
+Parts II & III (docs/rules.md, docs/example-of-play.md) are
+``CC-BY-SA-4.0`` — Copyright (c) 2026 Jayson Harshbarger.
+Part I (docs/standard-pyramid-rules.md — classic Pyramid Solitaire)
+is ``CC0-1.0`` / public domain.  Source-code licensing (MIT) is not
+described inside this PDF; see the repository root ``LICENSE`` and
+``docs/LICENSE`` for the full split.
+SPDX-License-Identifier for this script: MIT.
 
 Fonts used (all system-installed except Noto Sans Symbols):
   * FreeSans family (regular/bold/oblique/bold-oblique)  — body text
   * DejaVu Sans Mono (regular/bold)                       — code
   * Noto Sans Symbols                                     — fallback for ⏍
 """
+
+# /// script
+# dependencies = ["fpdf2>=2.7", "Pillow>=10", "pyyaml>=6"]
+# requires-python = ">=3.10"
+# ///
+
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Jayson Harshbarger
 
 from __future__ import annotations
 
@@ -26,6 +46,8 @@ import urllib.request
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import List, Optional, Tuple
+
+import yaml
 
 from fpdf import FPDF, XPos, YPos
 from PIL import Image, ImageDraw, ImageFont
@@ -40,6 +62,10 @@ NOTO_URL = (
     "NotoSansSymbols/NotoSansSymbols-Regular.ttf"
 )
 
+WIN_FONT_DIR = Path("C:/Windows/Fonts")
+
+# Candidate lists: Linux path first, then Windows fallback (DejaVu/Arial).
+# FreeSans is not shipped on Windows — DejaVu Sans is used as the metric-compatible fallback.
 SYSTEM_FONTS = {
     "FreeSans": "/usr/share/fonts/truetype/freefont/FreeSans.ttf",
     "FreeSans-B": "/usr/share/fonts/truetype/freefont/FreeSansBold.ttf",
@@ -48,6 +74,12 @@ SYSTEM_FONTS = {
     "Mono": "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf",
     "Mono-B": "/usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.ttf",
 }
+
+def _resolve_font(*candidates: str) -> str | None:
+    for c in candidates:
+        if c and os.path.exists(c):
+            return c
+    return None
 
 # Palette ---------------------------------------------------------------
 INK = (38, 36, 31)            # body text
@@ -80,8 +112,14 @@ LINE_H = 5.5
 # a code span appears it is replaced by a small illustration of the actual
 # mark as it would be drawn on the card's corner index.
 
-DEJAVU_SANS = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
-DEJAVU_SANS_BOLD = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+DEJAVU_SANS = _resolve_font(
+    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+    str(WIN_FONT_DIR / "DejaVuSans.ttf"),
+) or "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
+DEJAVU_SANS_BOLD = _resolve_font(
+    "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+    str(WIN_FONT_DIR / "DejaVuSans-Bold.ttf"),
+) or "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 
 CHIP_DPI = 16          # render resolution: px per mm
 CHIP_H_MM = 4.8        # chip height in mm (fits a 5.5 mm body line)
@@ -447,9 +485,119 @@ def parse_blocks(md_text: str) -> List[Block]:
     return blocks
 
 
+_FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---\n", re.DOTALL)
+
+
+def parse_frontmatter(text: str) -> tuple[dict, str]:
+    """Extract YAML frontmatter dict and remaining body.
+
+    Returns (frontmatter_dict, body_without_frontmatter). If no frontmatter
+    is present, returns ({}, original_text).
+    Raises SystemExit with a clear message on YAML parse errors.
+    """
+    m = _FRONTMATTER_RE.match(text)
+    if not m:
+        return {}, text
+    raw = m.group(1)
+    try:
+        data = yaml.safe_load(raw) or {}
+    except yaml.YAMLError as exc:
+        raise SystemExit(f"Invalid YAML frontmatter: {exc}") from exc
+    if not isinstance(data, dict):
+        raise SystemExit(f"Invalid YAML frontmatter: expected mapping, got {type(data).__name__}")
+    return data, text[m.end():]
+
+
 def strip_frontmatter(text: str) -> str:
-    m = re.match(r"^---\n.*?\n---\n", text, re.DOTALL)
-    return text[m.end():] if m else text
+    _, body = parse_frontmatter(text)
+    return body
+
+
+def strip_doc(text: str) -> str:
+    """Strip YAML frontmatter and leading SPDX HTML comments from doc sources.
+
+    The CC BY-SA SPDX markers are HTML comments for web/GitHub but should
+    not render as visible paragraphs in the PDF.
+    """
+    text = strip_frontmatter(text)
+    # Remove any <!-- ... --> comment blocks (including SPDX headers)
+    text = re.sub(r"<!--.*?-->\s*\n*", "", text, flags=re.DOTALL)
+    return text.lstrip()
+
+
+# ---------------------------------------------------------------------------
+# Ruleset version — single source of truth: docs/rules.md frontmatter
+# ---------------------------------------------------------------------------
+
+import datetime as _dt
+
+
+@dataclass(frozen=True)
+class RulesMeta:
+    """Parsed from the --rules markdown frontmatter (docs/rules.md by default)."""
+
+    version: str  # e.g. "0.0.11"
+    date: _dt.date  # e.g. date(2026, 8, 8)
+    status: str  # e.g. "draft"
+    title: str = ""  # optional, from frontmatter "title"
+
+
+_MONTHS = [
+    "", "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December",
+]
+
+
+def format_human_date(d: _dt.date) -> str:
+    """Format a date as 'August 8, 2026' (no platform-dependent strftime)."""
+    return f"{_MONTHS[d.month]} {d.day}, {d.year}"
+
+
+def get_rules_meta(rules_path: Path) -> RulesMeta:
+    """Read and validate frontmatter from the ruleset markdown file.
+
+    `rules_path` is the file supplied via --rules (defaults to docs/rules.md).
+    Raises SystemExit with a clear message if the file is missing, has no
+    frontmatter, or lacks a valid version/date.
+    """
+    if not rules_path.exists():
+        raise SystemExit(f"Rules file not found: {rules_path}")
+    text = rules_path.read_text(encoding="utf-8")
+    fm, _ = parse_frontmatter(text)
+    if not fm:
+        raise SystemExit(
+            f"Missing YAML frontmatter in {rules_path} — expected a leading '---' block "
+            f"with at least 'version' and 'date'.\n"
+            f"Example:\n---\nversion: \"0.0.11\"\ndate: \"2026-08-08\"\nstatus: \"draft\"\n---"
+        )
+    raw_version = fm.get("version")
+    if raw_version is None or str(raw_version).strip() == "":
+        raise SystemExit(f"Missing required 'version' in YAML frontmatter of {rules_path}")
+    version = str(raw_version).strip().strip('"').strip("'")
+    if not re.match(r"^\d+\.\d+\.\d+$", version):
+        raise SystemExit(
+            f"Invalid 'version' in {rules_path} frontmatter: {version!r} — "
+            f"expected semver like '0.0.11'"
+        )
+    raw_date = fm.get("date")
+    if raw_date is None or str(raw_date).strip() == "":
+        raise SystemExit(f"Missing required 'date' in YAML frontmatter of {rules_path}")
+    if isinstance(raw_date, _dt.datetime):
+        date_val = raw_date.date()
+    elif isinstance(raw_date, _dt.date):
+        date_val = raw_date
+    else:
+        ds = str(raw_date).strip().strip('"').strip("'")
+        try:
+            date_val = _dt.date.fromisoformat(ds)
+        except ValueError:
+            raise SystemExit(
+                f"Invalid 'date' in {rules_path} frontmatter: {raw_date!r} — "
+                f"expected ISO date like '2026-08-08'"
+            ) from None
+    status = str(fm.get("status", "draft")).strip().strip('"').strip("'") or "draft"
+    title = str(fm.get("title", "")).strip().strip('"').strip("'")
+    return RulesMeta(version=version, date=date_val, status=status, title=title)
 
 
 # ---------------------------------------------------------------------------
@@ -457,12 +605,13 @@ def strip_frontmatter(text: str) -> str:
 # ---------------------------------------------------------------------------
 
 class RulebookPDF(FPDF):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, rules_meta: Optional["RulesMeta"] = None, **kwargs):
         super().__init__(format="LETTER", unit="mm", *args, **kwargs)
         self.section_title = ""
         self._show_header = False
         self._show_footer = False
         self.toc_pages: List[Tuple[str, int]] = []  # (heading, pass-A page)
+        self.rules_meta: Optional["RulesMeta"] = rules_meta
 
     # -- callbacks --------------------------------------------------------
     def header(self):
@@ -474,7 +623,8 @@ class RulebookPDF(FPDF):
         self.set_xy(ML, 11)
         self.cell(CONTENT_W / 2, 4, left[:64], align="L")
         self.set_xy(ML + CONTENT_W / 2, 11)
-        self.cell(CONTENT_W / 2, 4, "THE CURSED TOMB · RULESET v0.0.11", align="R")
+        ver = self.rules_meta.version if self.rules_meta else "?"
+        self.cell(CONTENT_W / 2, 4, f"THE CURSED TOMB \u00b7 RULESET v{ver}", align="R")
         self.set_draw_color(*LEADER)
         self.set_line_width(0.25)
         self.line(ML, 17.5, PAGE_W - MR, 17.5)
@@ -904,8 +1054,157 @@ def render_blocks(pdf: RulebookPDF, blocks: List[Block], record_toc: bool) -> No
 
 
 # ---------------------------------------------------------------------------
-# Cover + TOC
+# Cover + Licenses + TOC
 # ---------------------------------------------------------------------------
+
+def _license_box(pdf: RulebookPDF, title: str,
+                 body_lines: list, box_fill) -> None:
+    """Draw a bordered box with title + wrapped paragraphs.
+
+    Measures content height first (without drawing), draws the background
+    rect, then renders text on top — avoids fpdf paint-order issues.
+    """
+    box_pad = 3.5
+    inner_w = CONTENT_W - 2 * box_pad
+    # Estimate height by laying out into a throwaway measurement.
+    # Simple: sum of line counts * line_h + padding.
+    # Use pdf.get_string_width for wrapping via multi_cell line count.
+    y0 = pdf.get_y()
+    # Draw placeholder background — we know roughly, so draw after measuring.
+    # Measure: create a temp pdf-less calc using calc_lines helper indirectly:
+    # just draw background generously and fix border after. Easiest:
+    # reserve y, draw rects later by buffering text positions.
+    # Instead: pre-render to measure height by calling multi_cell on a clone.
+    # Simpler practical approach: draw fill rect *before* text with a
+    # conservative estimated height, then extend if needed.
+    # We'll do a two-phase: first compute heights without drawing to screen
+    # by using pdf's string-width calc.
+    def para_h(text: str, size: float, lh: float) -> float:
+        lh_mm = lh  # line_h passed by caller
+        # Count wrapped lines
+        w = inner_w
+        pdf.set_font_style("", size)
+        lines = 1
+        remaining = w
+        for word in text.split(" "):
+            ww = pdf.get_string_width(word + " ")
+            if ww > remaining and word:
+                lines += 1
+                remaining = w - ww
+            else:
+                remaining -= ww
+            if word.count("\n"):
+                # new paragraph inside text — rough: add lines
+                lines += word.count("\n")
+        return lines * lh_mm + 0.6
+
+    # Build height estimate
+    h = box_pad  # top pad
+    h += 5.5  # title
+    for txt, sz, lh in body_lines:
+        # txt may contain \n => split
+        for para in txt.split("\n"):
+            if para.strip() == "":
+                h += lh * 0.5
+            else:
+                h += para_h(para, sz, lh) + 1.0
+    h += box_pad  # bottom pad
+    # Ensure we fit on page; if not, start new page
+    if y0 + h > PAGE_H - MB:
+        pdf.new_page()
+        y0 = pdf.get_y()
+    # Now draw background + border BEFORE text
+    pdf.set_fill_color(*box_fill)
+    pdf.set_draw_color(*GRID)
+    pdf.set_line_width(0.25)
+    pdf.rect(ML, y0, CONTENT_W, h, "DF")
+    # Render text on top
+    y = y0 + box_pad
+    pdf.set_font_style("B", 9.5)
+    pdf.set_text_color(*DARK)
+    pdf.set_xy(ML + box_pad, y)
+    pdf.cell(inner_w, 5, title, align="L")
+    y += 5.5
+    for txt, sz, lh in body_lines:
+        is_italic = (sz <= 8.0)
+        pdf.set_font_style("I" if is_italic else "", sz)
+        pdf.set_text_color(*GRAY if is_italic else INK)
+        for para in txt.split("\n"):
+            if para.strip() == "":
+                y += lh * 0.5
+                continue
+            pdf.set_xy(ML + box_pad, y)
+            # Draw this para; after multi_cell, y advances to next line
+            pdf.multi_cell(inner_w, lh, para, align="L",
+                           new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+            y = pdf.get_y() + 0.3
+        y += 0.2
+    pdf.set_y(y0 + h + 3)
+
+
+def render_license_page(pdf: RulebookPDF) -> None:
+    """Inside-front-cover colophon with the dual-license split (p. 2)."""
+    pdf._show_header = False
+    pdf._show_footer = False
+    pdf.add_page()
+    pdf.set_y(MT + 2)
+
+    # Title
+    pdf.set_font_style("B", 13)
+    pdf.set_text_color(*DARK)
+    pdf.set_xy(ML, pdf.get_y())
+    pdf.cell(CONTENT_W, 7, "Copyright & Licenses", align="L")
+    pdf.set_draw_color(*CRIMSON)
+    pdf.set_line_width(0.5)
+    y_rule = pdf.get_y() + 8.5
+    pdf.line(ML, y_rule, ML + 24, y_rule)
+    pdf.set_y(y_rule + 5)
+
+    # Copyright line
+    pdf.set_font_style("", 9.5)
+    pdf.set_text_color(*INK)
+    pdf.set_xy(ML, pdf.get_y())
+    pdf.multi_cell(CONTENT_W, 5.0,
+        "\u00A9 2026 Jayson Harshbarger.  All rights retained except as licensed below.",
+        align="L", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+    pdf.set_y(pdf.get_y() + 2)
+
+    _license_box(pdf,
+        "This Rulebook  \u2014  CC BY-SA 4.0  (Parts II & III)  ·  Part I: CC0",
+        [
+            ("Parts II & III of this PDF (Official Ruleset from docs/rules.md and "
+             "Example of Play from docs/example-of-play.md) are licensed under "
+             "Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0).",
+             8.5, 4.4),
+            ("Part I (Standard Pyramid Solitaire, from docs/standard-pyramid-rules.md) "
+             "is public domain — no copyright claimed over the underlying game; "
+             "explanatory text waived via CC0 1.0 "
+             "(https://creativecommons.org/publicdomain/zero/1.0/). No attribution required for Part I.",
+             7.5, 4.0),
+            ("CC BY-SA deed:  https://creativecommons.org/licenses/by-sa/4.0/\n"
+             "CC BY-SA legal code:  https://creativecommons.org/licenses/by-sa/4.0/legalcode\n"
+             "CC0 deed:  https://creativecommons.org/publicdomain/zero/1.0/",
+             8.0, 4.2),
+            ("SPDX: CC-BY-SA-4.0 (Parts II & III)  ·  CC0-1.0 (Part I)  ·  Full texts in docs/LICENSE.",
+             8.0, 4.2),
+            ("You are free to share and adapt the CC BY-SA parts for any purpose, even "
+             "commercially, provided you credit Jayson Harshbarger, link to the "
+             "license, and distribute derivatives under the same license.",
+             7.5, 4.0),
+        ],
+        QUOTE_BG)
+
+    # Footer small print
+    pdf.set_font_style("I", 7.0)
+    pdf.set_text_color(*GRAY)
+    pdf.set_xy(ML, pdf.get_y())
+    pdf.multi_cell(CONTENT_W, 3.8,
+        "Fonts: Cinzel via Google Fonts (OFL) is not covered by the above licenses. "
+        "This page is page 2 (inside front cover); the cover itself is intentionally "
+        "left free of license clutter for artwork. "
+        "PDF metadata also carries the CC BY-SA 4.0 declaration.",
+        align="L", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+
 
 def render_cover(pdf: RulebookPDF) -> None:
     pdf._show_header = False
@@ -942,7 +1241,15 @@ def render_cover(pdf: RulebookPDF) -> None:
     pdf.set_text_color(*GRAY)
     pdf.set_font_style("", 9)
     pdf.set_y(88)
-    pdf.cell(PAGE_W, 5, "Ruleset v0.0.11  ·  August 8, 2026  ·  Status: Draft", align="C")
+    if pdf.rules_meta:
+        cover_line = (
+            f"Ruleset v{pdf.rules_meta.version}  \u00b7  "
+            f"{format_human_date(pdf.rules_meta.date)}  \u00b7  "
+            f"Status: {pdf.rules_meta.status.title()}"
+        )
+    else:
+        cover_line = "Ruleset  \u00b7  Status: Draft"
+    pdf.cell(PAGE_W, 5, cover_line, align="C")
 
     # -- drawn playing card motif -----------------------------------------
     cw, ch, cx = 52, 74, (PAGE_W - 52) / 2
@@ -1041,6 +1348,7 @@ def build_document(pdf: RulebookPDF, parts, record_toc: bool, with_toc_page: boo
     pdf._show_header = False
     pdf._show_footer = False
     render_cover(pdf)
+    render_license_page(pdf)
     pdf._show_header = True
     pdf._show_footer = True
     if with_toc_page:
@@ -1057,7 +1365,8 @@ def build_document(pdf: RulebookPDF, parts, record_toc: bool, with_toc_page: boo
         if idx == 0:
             subtitle = "Classic Pyramid Solitaire Foundation"
         elif idx == 1:
-            subtitle = "Ruleset v0.0.11"
+            ver = pdf.rules_meta.version if pdf.rules_meta else "?"
+            subtitle = f"Ruleset v{ver}"
         else:
             subtitle = "Companion to the Official Ruleset"
         render_part_divider(
@@ -1078,18 +1387,42 @@ def ensure_noto_font() -> Path:
 
 
 def setup_fonts(pdf: RulebookPDF) -> None:
-    faces = [
-        ("FreeSans", "", "/usr/share/fonts/truetype/freefont/FreeSans.ttf"),
-        ("FreeSans", "B", "/usr/share/fonts/truetype/freefont/FreeSansBold.ttf"),
-        ("FreeSans", "I", "/usr/share/fonts/truetype/freefont/FreeSansOblique.ttf"),
-        ("FreeSans", "BI", "/usr/share/fonts/truetype/freefont/FreeSansBoldOblique.ttf"),
-        ("Mono", "", "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf"),
-        ("Mono", "B", "/usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.ttf"),
+    families: list[tuple[str, str, list[str]]] = [
+        ("FreeSans", "", [
+            "/usr/share/fonts/truetype/freefont/FreeSans.ttf",
+            str(WIN_FONT_DIR / "DejaVuSans.ttf"),
+            str(WIN_FONT_DIR / "arial.ttf"),
+        ]),
+        ("FreeSans", "B", [
+            "/usr/share/fonts/truetype/freefont/FreeSansBold.ttf",
+            str(WIN_FONT_DIR / "DejaVuSans-Bold.ttf"),
+            str(WIN_FONT_DIR / "arialbd.ttf"),
+        ]),
+        ("FreeSans", "I", [
+            "/usr/share/fonts/truetype/freefont/FreeSansOblique.ttf",
+            str(WIN_FONT_DIR / "DejaVuSans-Oblique.ttf"),
+            str(WIN_FONT_DIR / "ariali.ttf"),
+        ]),
+        ("FreeSans", "BI", [
+            "/usr/share/fonts/truetype/freefont/FreeSansBoldOblique.ttf",
+            str(WIN_FONT_DIR / "DejaVuSans-BoldOblique.ttf"),
+            str(WIN_FONT_DIR / "arialbi.ttf"),
+        ]),
+        ("Mono", "", [
+            "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf",
+            str(WIN_FONT_DIR / "DejaVuSansMono.ttf"),
+        ]),
+        ("Mono", "B", [
+            "/usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.ttf",
+            str(WIN_FONT_DIR / "DejaVuSansMono-Bold.ttf"),
+        ]),
     ]
-    for family, style, path in faces:
-        if not os.path.exists(path):
-            raise SystemExit(f"Missing system font: {path}\nInstall the 'fonts-freefont-ttf' "
-                             f"and 'fonts-dejavu-core' packages, or edit the faces table.")
+    for family, style, candidates in families:
+        path = _resolve_font(*candidates)
+        if not path:
+            raise SystemExit(f"Missing system font for {family} {style!r}: tried {candidates}\n"
+                             f"Install 'fonts-freefont-ttf' and 'fonts-dejavu-core' (Linux) "
+                             f"or ensure DejaVu/Arial fonts are in C:\\Windows\\Fonts.")
         pdf.add_font(family, style, path)
     noto = ensure_noto_font()
     pdf.add_font("NotoSym", "", str(noto))
@@ -1100,11 +1433,12 @@ def configure(pdf: RulebookPDF) -> None:
     setup_fonts(pdf)
     pdf.set_margins(ML, MT, MR)
     pdf.set_auto_page_break(True, MB)
-    pdf.set_title("The Cursed Tomb — Complete Rulebook (v0.0.11)")
-    pdf.set_author("The Cursed Tomb Project")
+    ver = pdf.rules_meta.version if pdf.rules_meta else "?"
+    pdf.set_title(f"The Cursed Tomb \u2014 Complete Rulebook (v{ver})")
+    pdf.set_author("Jayson Harshbarger")
     pdf.set_subject("Standard Pyramid Solitaire, Cursed Tomb ruleset, and example of play")
-    pdf.set_keywords("cursed tomb, pyramid solitaire, card game, ruleset, campaign, standard rules")
-    pdf.set_creator("The Cursed Tomb Project")
+    pdf.set_keywords("cursed tomb, pyramid solitaire, card game, ruleset, campaign, standard rules, CC BY-SA 4.0, CC0")
+    pdf.set_creator("The Cursed Tomb — Offline Rulebook (CC BY-SA 4.0 Parts II & III, CC0 Part I)")
 
 
 def main() -> int:
@@ -1115,9 +1449,12 @@ def main() -> int:
     ap.add_argument("--output", default="docs/cursed-tomb-rulebook.pdf")
     args = ap.parse_args()
 
-    rules_md = strip_frontmatter(Path(args.rules).read_text(encoding="utf-8"))
-    standard_md = strip_frontmatter(Path(args.standard).read_text(encoding="utf-8"))
-    example_md = Path(args.example).read_text(encoding="utf-8")
+    # Single source of truth: version/date/status from --rules frontmatter
+    rules_meta = get_rules_meta(Path(args.rules))
+
+    rules_md = strip_doc(Path(args.rules).read_text(encoding="utf-8"))
+    standard_md = strip_doc(Path(args.standard).read_text(encoding="utf-8"))
+    example_md = strip_doc(Path(args.example).read_text(encoding="utf-8"))
     parts = [
         ("Part I — Standard Pyramid Solitaire", parse_blocks(standard_md)),
         ("Part II — The Official Ruleset", parse_blocks(rules_md)),
@@ -1127,14 +1464,14 @@ def main() -> int:
     # Pass A: render once to learn heading page numbers.
     # A placeholder TOC page keeps pass A structurally identical to pass B,
     # so the recorded page numbers are exact.
-    pdf_a = RulebookPDF()
+    pdf_a = RulebookPDF(rules_meta=rules_meta)
     configure(pdf_a)
     build_document(pdf_a, parts, record_toc=True, with_toc_page=True, toc_entries=[])
     pass_a_pages = getattr(pdf_a, "pages_count", pdf_a.page) or pdf_a.page
     toc_entries = list(pdf_a.toc_pages)
 
     # Pass B: final render with cover + TOC + content.
-    pdf = RulebookPDF()
+    pdf = RulebookPDF(rules_meta=rules_meta)
     configure(pdf)
     build_document(pdf, parts, record_toc=False, with_toc_page=True, toc_entries=toc_entries)
 

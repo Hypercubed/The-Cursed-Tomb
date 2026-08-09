@@ -5,7 +5,17 @@ version: "0.0.11"
 date: "2026-08-08"
 status: "draft"
 description: "A persistent, mutating tactical card game played with a standard 52-card deck and fine-tip felt markers."
+license: "CC-BY-SA-4.0"
+copyright: "Copyright (c) 2026 Jayson Harshbarger"
+spdx: "CC-BY-SA-4.0"
 ---
+
+<!--
+SPDX-License-Identifier: CC-BY-SA-4.0
+Copyright (c) 2026 Jayson Harshbarger
+Licensed under Creative Commons Attribution-ShareAlike 4.0 International.
+See docs/LICENSE or https://creativecommons.org/licenses/by-sa/4.0/
+-->
 
 # The Cursed Tomb
 
