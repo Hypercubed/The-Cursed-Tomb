@@ -53,8 +53,8 @@ Full CC0 legal code: https://creativecommons.org/publicdomain/zero/1.0/legalcode
 ## Relationship to code license
 
 Source code, scripts, simulations, configuration, and other files outside
-`docs/` (including `src/`, `sim/`, `scripts/`, `public/`, and repository
-configuration) are licensed separately under the MIT License — see the
+`docs/` (including `src/`, `sim/`, `public/`, and repository
+configuration) and `docs/scripts/` are licensed separately under the MIT License — see the
 repository root `LICENSE` file. That MIT license does **not** apply to the
 rulebook text in `docs/`.
 

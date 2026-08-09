@@ -209,7 +209,3 @@ After each round (clear or freeze):
 | Giant `X` | Entire face | Red | Entombed → Graveyard (§5 Stage 5) |
 
 Face-down cards from Red Curses are temporary — flip face-up the moment they become exposed. Vault cards never enter Waste/Stock cycles until the round ends.
-
----
-
-*Try replaying the scripted shuffle above solo once, then start a real campaign at **Novice (Infinite Redeals)** to learn the mutation rhythm before moving to Archaeologist. For the digital implementation, see the web game's **📖 Expedition Rules** and **Card Anatomy** tabs — they render these same zones with digital ink styling.*

@@ -1194,17 +1194,6 @@ def render_license_page(pdf: RulebookPDF) -> None:
         ],
         QUOTE_BG)
 
-    # Footer small print
-    pdf.set_font_style("I", 7.0)
-    pdf.set_text_color(*GRAY)
-    pdf.set_xy(ML, pdf.get_y())
-    pdf.multi_cell(CONTENT_W, 3.8,
-        "Fonts: Cinzel via Google Fonts (OFL) is not covered by the above licenses. "
-        "This page is page 2 (inside front cover); the cover itself is intentionally "
-        "left free of license clutter for artwork. "
-        "PDF metadata also carries the CC BY-SA 4.0 declaration.",
-        align="L", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-
 
 def render_cover(pdf: RulebookPDF) -> None:
     pdf._show_header = False

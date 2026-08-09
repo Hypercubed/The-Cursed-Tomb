@@ -65,15 +65,15 @@ npm test
 uv sync
 
 # build PDF
-uv run python scripts/make_rules_pdf.py
+uv run python docs/scripts/make_rules_pdf.py
 # — or —
 npm run pdf
 # standalone (no install needed if uv is present):
-uv run --script scripts/make_rules_pdf.py
+uv run --script docs/scripts/make_rules_pdf.py
 
 # fallback without uv:
 python -m pip install fpdf2 Pillow
-python scripts/make_rules_pdf.py
+python docs/scripts/make_rules_pdf.py
 ```
 
 ### Run Simulations
@@ -149,7 +149,7 @@ the-cursed-tomb/
 ## 📜 License
 
 **Code** — All source code, scripts, simulations, configuration, and other
-files outside `docs/` (including `src/`, `sim/`, `scripts/`, `public/`) are
+files outside `docs/` (including `src/`, `sim/`, `public/`) and `docs/scripts/` are
 licensed under the **MIT License** — see [`LICENSE`](LICENSE).
 Copyright (c) 2026 Jayson Harshbarger.
 

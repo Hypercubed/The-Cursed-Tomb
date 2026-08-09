@@ -23,7 +23,7 @@ A persistent, mutating tactical card game played with a standard 52-card deck an
 
 ---
 
-## 1. EXPEDITION OBJECTIVE & FAILURE CONDITIONS
+## 1. Expedition Objective & Failure Conditions
 Your ultimate goal is to play as long as possible before the deck becomes unplayable.
 
 ### The Tomb Collapses (Campaign End Conditions)
@@ -33,7 +33,7 @@ The campaign ends in instant defeat if the tomb collapses. The tomb collapses th
 
 ---
 
-## 2. CORE DEFINITIONS & ZONE STATE TERMINOLOGY
+## 2. Core Definitions & Zone State Terminology
 *   **Printed Rank:** The immutable, original value printed on the card face (A, 2–10, J, Q, K). This value never changes. The Tomb-Collapse condition and all deck auditing steps look *only* at the Printed Rank.
 *   **Functional Value:** The temporary mathematical value used during gameplay calculations. This value is dynamic, altered exclusively by Upper-Left **Scars `[ N ]`** (+1 for Red, -1 for Black).
 *   **Exposed Card:** A card in the pyramid layout that has no other cards physically overlapping or underpinning it from the row below. Only exposed cards can be paired or cleared.
@@ -45,7 +45,7 @@ The campaign ends in instant defeat if the tomb collapses. The tomb collapses th
 
 ---
 
-## 3. PREPARATION & DIFFICULTY
+## 3. Preparation & Difficulty
 ### Components
 *   52-card deck
 *   1 or 2 fine-tip markers (red and blue recommended)
@@ -79,7 +79,7 @@ Ink modifications must be strictly confined to distinct visual zones:
 
 ---
 
-## 4. LIVE-PLAY PLAYGROUND ARCHITECTURE
+## 4. Live-Play Playground Architecture
 Deal 28 cards face-up into a standard pyramid layout consisting of 7 rows. The remaining cards form the face-down **Stock Pile**. Cards are cleared by pairing exposed cards that add up to a Functional Value of exactly **13** (e.g., A + Q, 6 + 7). Standard Kings have a value of 13 and clear themselves singly into the Foundation.
 
 ### Stock & Waste Pairing Rules
@@ -98,7 +98,7 @@ Deal 28 cards face-up into a standard pyramid layout consisting of 7 rows. The r
 
 ---
 
-## 5. THE ATTRITION TRACK (RANK PIP MARKS)
+## 5. The Attrition Track (Rank Pip Marks)
 When a game freezes and no legal moves remain, you lose the round. Identify all **Bottlenecks**—every card left completely exposed at the lowest remaining base tiers of the frozen pyramid. Add pen strokes directly to the **Rank Number Pip** in both corner indices (top-left and bottom-right) to progress each bottleneck card down the failure track:
 
 *   **Stage 1 `[ |7 ]` (Vulnerable):** 1st Stroke. Single vertical line drawn to the left of the rank number. No mechanical effect.
@@ -111,7 +111,7 @@ When a game freezes and no legal moves remain, you lose the round. Identify all 
 
 ---
 
-## 6. THE SURVIVAL REWARDS (HERO BLESSINGS & ANCHORS)
+## 6. The Survival Rewards (Hero Blessings & Anchors)
 If you completely clear all 28 cards from the pyramid layout but have leftover cards remaining in the Stock or Waste piles, you achieve a **Pyramid Clear**. Unlocked suit blessings carry over permanently and trigger across all subsequent rounds of the campaign.
 
 **Card-Specific Legacy Unlocks:** A suit blessing applies strictly to the individual physical card it is drawn upon. While multiple separate cards in your deck can acquire the same suit blessing over the course of the campaign (creating multiple distinct Hero cards), each instance triggers independently when that specific card is cleared.
@@ -154,7 +154,7 @@ Mutated physical cards retain clear visual separation between corner index marks
 
 ---
 
-## 7. THE TIMING & CAMPAIGN RESETS
+## 7. The Timing & Campaign Resets
 
 ### Resolution of Simultaneous End-States
 If the final match played to clear the entire deck and achieve a **Perfect Win** includes a card with a penalty effect—such as a **Black Cursed card (`⏍`)** whose partner would normally be reshuffled back into the Stock pile—**the Perfect Win takes absolute priority.** The penalty effect is bypassed, both cards move to the Foundation, and the round is successfully cleared as a Perfect Win.

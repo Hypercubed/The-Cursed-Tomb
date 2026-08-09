@@ -535,13 +535,21 @@ export function findNextPerfectMove(state: GameState): GameState | null {
   }
 
   const completePath = solveBoard(state, 'complete');
-  if (completePath && completePath.length > 0) {
+  if (completePath && completePath.length > 0 && completePath[0] !== state) {
     return completePath[0];
   }
 
   const partialPath = solveBoard(state, 'partial');
-  if (partialPath && partialPath.length > 0) {
+  if (partialPath && partialPath.length > 0 && partialPath[0] !== state) {
     return partialPath[0];
+  }
+
+  // Pyramid already cleared yields a same-state "partial" path when no complete
+  // win exists. Fall through to heuristic play to exhaust remaining stock/vault
+  // for a Complete Victory or resign to Partial Victory, instead of stalling
+  // on the "Pyramid Explored!" banner.
+  if (isPyramidCleared(state)) {
+    return findNextSmartMove(state);
   }
 
   return findNextSmartMove(state);

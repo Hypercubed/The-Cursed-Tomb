@@ -73,18 +73,44 @@ export function useAutoplay(
         steps < maxSteps
       ) {
         const nextState = findNextMove(gameRef.current, strategyRef.current);
-        if (!nextState || nextState === gameRef.current) break;
+        // No-op same-state return from perfect solver when pyramid is already
+        // cleared (solveBoard target 'partial' => [state]) must not stall on
+        // the banner. Greedy/Smart correctly yields a draw/cycle/resign, but
+        // after the solver fix this branch also must not spin forever: fall
+        // through to terminal-handling instead of tight-looping.
+        if (!nextState) {
+          if (gameRef.current.status === 'in-progress') {
+            // Treat as terminal — cannot advance further, outer retry will
+            // convert via checkForWin/resign inside solver; push to next round.
+            break;
+          }
+          break;
+        }
+        if (nextState === gameRef.current) {
+          break;
+        }
 
         gameRef.current = nextState;
         setGame(nextState);
         setMoveCount((prev) => prev + 1);
         steps += 1;
 
+        // If that move resolved the game (complete-victory / partial-victory /
+        // pyramid-collapse), exit cleanly so interval/outer handler can start
+        // the next round rather than continuing to probe a terminal state.
+        if (nextState.status !== 'in-progress') break;
+
         // Yield to browser event loop every few moves to keep UI 60fps and allow cancellation
         if (steps % 3 === 0) {
           await new Promise((resolve) => setTimeout(resolve, 0));
         }
       }
+
+      // Reached loop bound while still in-progress with no actionable nextState
+      // but pyramid cleared → we have exhausted stock while banner is up; signal
+      // terminal handling to the interval caller by leaving status as-is and
+      // letting the next tick / caller advance rounds. The critical path is
+      // that we never return a same-state move that would spin.
     } finally {
       isThinkingRef.current = false;
       setIsThinking(false);
