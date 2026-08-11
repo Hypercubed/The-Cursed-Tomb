@@ -1181,7 +1181,8 @@ def render_license_page(pdf: RulebookPDF) -> None:
              "explanatory text waived via CC0 1.0 "
              "(https://creativecommons.org/publicdomain/zero/1.0/). No attribution required for Part I.",
              7.5, 4.0),
-            ("CC BY-SA deed:  https://creativecommons.org/licenses/by-sa/4.0/\n"
+            ("Repository:  https://github.com/Hypercubed/The-Cursed-Tomb\n"
+             "CC BY-SA deed:  https://creativecommons.org/licenses/by-sa/4.0/\n"
              "CC BY-SA legal code:  https://creativecommons.org/licenses/by-sa/4.0/legalcode\n"
              "CC0 deed:  https://creativecommons.org/publicdomain/zero/1.0/",
              8.0, 4.2),
@@ -1279,6 +1280,11 @@ def render_cover(pdf: RulebookPDF) -> None:
     pdf.set_font_style("", 8)
     pdf.set_y(224)
     pdf.cell(PAGE_W, 5, "Print on US Letter · Single-sided recommended", align="C")
+
+    pdf.set_text_color(*CRIMSON)
+    pdf.set_font_style("", 8.5)
+    pdf.set_y(231)
+    pdf.cell(PAGE_W, 5, "https://github.com/Hypercubed/The-Cursed-Tomb", align="C", link="https://github.com/Hypercubed/The-Cursed-Tomb")
 
 
 def render_toc(pdf: RulebookPDF, toc: List[Tuple[str, List[Tuple[str, int]]]]) -> None:

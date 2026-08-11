@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 """
-Deck Evolution & Unwinnable Solvability Analysis
-=================================================
-Simulates Cursed Tomb campaigns with all terminal victory and collapse conditions
-disabled. Tracks per-round deck solvability using multi-probe Monte Carlo sampling
-to analyze how quickly and how frequently persistent card degradation (scars, curses,
-entombment) creates structurally unwinnable deck configurations.
+Deck Evolution & Unwinnable Solvability Analysis CLI
+=====================================================
+Simulates Cursed Tomb campaigns with collapse starvation (<28 active cards)
+as the sole terminal condition. Tracks per-round deck composition and empirical
+solvability using multi-probe Monte Carlo sampling.
 
 Usage:
   python sim/deck_evolution_analysis.py [options]
@@ -14,35 +13,59 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import os
 import random
-import statistics
+import sys
+import subprocess
 import time
-from dataclasses import dataclass
+from pathlib import Path
 from multiprocessing import Pool, cpu_count
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Dict, List, Tuple, Any
 
-import cursed_tomb_sim
-from cursed_tomb_sim import (
-    CardState,
-    RuleFlags,
-    DIFFICULTIES,
-    RANKS,
-    SUITS,
-    N_PYR,
-    play_round,
-    _apply_survival_reward,
-)
+# Auto-switch to .venv python if matplotlib is missing in current environment
+try:
+    import matplotlib
+except ImportError:
+    repo_root = Path(__file__).resolve().parent.parent
+    venv_python = repo_root / ".venv" / "bin" / "python"
+    if venv_python.exists() and sys.executable != str(venv_python):
+        sys.exit(subprocess.call([str(venv_python)] + sys.argv))
 
 try:
-    from solvers import GreedySolver, HeuristicSolver, BeamSearchSolver, DFSSolver
+    import cursed_tomb_sim
+    from cursed_tomb_sim import RuleFlags, DIFFICULTIES
 except ImportError:
-    from .solvers import GreedySolver, HeuristicSolver, BeamSearchSolver, DFSSolver
+    from . import cursed_tomb_sim
+    from .cursed_tomb_sim import RuleFlags, DIFFICULTIES
+
+try:
+    from deck_evolution_core import (
+        run_collapse_campaign,
+        aggregate_results,
+        write_aggregated_csv,
+        write_per_campaign_csv,
+        plot_evolution,
+        print_round_table,
+        print_ascii_chart,
+        print_summary,
+    )
+except ImportError:
+    from .deck_evolution_core import (
+        run_collapse_campaign,
+        aggregate_results,
+        write_aggregated_csv,
+        write_per_campaign_csv,
+        plot_evolution,
+        print_round_table,
+        print_ascii_chart,
+        print_summary,
+    )
 
 
 def _run_deck_evolution_worker(args: Tuple[int, int, RuleFlags, int, str, str, int, int]) -> Dict[str, Any]:
     camp_seed, max_redeals, flags, max_rounds, solver_name, probe_solver_name, n_probes, sample_interval = args
     camp_rng = random.Random(camp_seed)
-    return run_infinite_campaign(
+    return run_collapse_campaign(
         rng=camp_rng,
         max_redeals=max_redeals,
         flags=flags,
@@ -54,262 +77,6 @@ def _run_deck_evolution_worker(args: Tuple[int, int, RuleFlags, int, str, str, i
     )
 
 
-def create_solver(solver_name: str):
-    """Factory helper to instantiate solver by strategy name."""
-    s = solver_name.lower()
-    if s == 'greedy':
-        return GreedySolver()
-    elif s == 'heuristic':
-        return HeuristicSolver()
-    elif s == 'beam':
-        return BeamSearchSolver()
-    elif s == 'dfs':
-        return DFSSolver()
-    raise ValueError(f"Unknown solver: {solver_name}")
-
-
-def snapshot_deck(registry: List[CardState]) -> List[Tuple[int, int, bool, int, bool]]:
-    """Capture a snapshot of all card states without mutating the original."""
-    return [(c.attrition_stage, c.reward_stage, c.blessed, c.anchor_absorption, c.temp_immune) for c in registry]
-
-
-def restore_deck(registry: List[CardState], snapshot: List[Tuple[int, int, bool, int, bool]]) -> None:
-    """Restore card state from a snapshot."""
-    for c, snap in zip(registry, snapshot):
-        c.attrition_stage, c.reward_stage, c.blessed, c.anchor_absorption, c.temp_immune = snap
-
-
-def copy_card(card: CardState) -> CardState:
-    """Return a fresh independent copy of a CardState object."""
-    return CardState(
-        rank=card.rank,
-        suit=card.suit,
-        attrition_stage=card.attrition_stage,
-        reward_stage=card.reward_stage,
-        blessed=card.blessed,
-        temp_immune=card.temp_immune,
-        anchor_absorption=card.anchor_absorption,
-    )
-
-
-def probe_solvability(
-    active_cards: List[CardState],
-    rng: random.Random,
-    max_redeals: int,
-    flags: RuleFlags,
-    n_probes: int,
-    probe_solver_name: str,
-    full_registry: Optional[List[CardState]] = None,
-) -> Tuple[int, int]:
-    """
-    Probe empirical winnability of the current active card pool by running n_probes
-    independent random shuffles using independent CardState copies. Does NOT mutate
-    the live campaign's card state.
-    """
-    if len(active_cards) < N_PYR:
-        return (0, n_probes)
-
-    if full_registry is not None:
-        snap_before = snapshot_deck(full_registry)
-    else:
-        snap_before = snapshot_deck(active_cards)
-
-    wins = 0
-
-    for _ in range(n_probes):
-        probe_pool = [copy_card(c) for c in active_cards]
-        probe_solver = create_solver(probe_solver_name)
-        probe_seed = rng.randint(0, 1_000_000_000)
-        probe_rng = random.Random(probe_seed)
-
-        outcome = play_round(
-            pool=probe_pool,
-            rng=probe_rng,
-            max_redeals=max_redeals,
-            flags=flags,
-            solver=probe_solver,
-        )
-
-        if outcome.kind in ("perfect_win", "pyramid_clear"):
-            wins += 1
-
-    if full_registry is not None:
-        restore_deck(full_registry, snap_before)
-    else:
-        restore_deck(active_cards, snap_before)
-
-    return (wins, n_probes)
-
-
-def run_infinite_campaign(
-    rng: random.Random,
-    max_redeals: int,
-    flags: RuleFlags,
-    max_rounds: int,
-    solver_name: str,
-    probe_solver_name: str,
-    n_probes: int,
-    sample_interval: int,
-) -> Dict[str, Any]:
-    """Run single campaign tracking per-round solvability across max_rounds."""
-    registry = [CardState(r, s) for s in SUITS for r in RANKS]
-    round_records = []
-    first_unwinnable_round = None
-
-    for round_num in range(1, max_rounds + 1):
-        active_cards = [c for c in registry if c.attrition_stage < 5]
-        active_count = len(active_cards)
-
-        if round_num == 1 or (round_num % sample_interval == 0):
-            wins, total_probes = probe_solvability(
-                active_cards=active_cards,
-                rng=rng,
-                max_redeals=max_redeals,
-                flags=flags,
-                n_probes=n_probes,
-                probe_solver_name=probe_solver_name,
-                full_registry=registry,
-            )
-            solvability_ratio = wins / total_probes if total_probes > 0 else 0.0
-            is_unwinnable = wins == 0
-
-            if is_unwinnable and first_unwinnable_round is None:
-                first_unwinnable_round = round_num
-
-            round_records.append(
-                {
-                    "round": round_num,
-                    "active_cards": active_count,
-                    "solvability_ratio": solvability_ratio,
-                    "probe_wins": wins,
-                    "total_probes": total_probes,
-                    "is_unwinnable": is_unwinnable,
-                }
-            )
-
-        if active_count >= N_PYR:
-            solver = create_solver(solver_name)
-            outcome = play_round(
-                pool=active_cards,
-                rng=rng,
-                max_redeals=max_redeals,
-                flags=flags,
-                solver=solver,
-                full_registry=registry,
-            )
-            if outcome.kind in ("perfect_win", "pyramid_clear"):
-                _apply_survival_reward(outcome.last_clear_type, outcome.last_clear_cards, flags)
-
-    return {
-        "first_unwinnable_round": first_unwinnable_round,
-        "round_records": round_records,
-    }
-
-
-def aggregate_results(
-    all_campaigns: List[Dict[str, Any]], max_rounds: int, sample_interval: int
-) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
-    """Aggregate per-round stats and overall summary statistics across all campaigns."""
-    total_campaigns = len(all_campaigns)
-    sampled_rounds = [1] + [r for r in range(sample_interval, max_rounds + 1) if r % sample_interval == 0 and r != 1]
-    sampled_rounds = sorted(list(set(sampled_rounds)))
-
-    round_buckets: Dict[int, List[Dict[str, Any]]] = {r: [] for r in sampled_rounds}
-
-    for camp in all_campaigns:
-        for rec in camp["round_records"]:
-            r = rec["round"]
-            if r in round_buckets:
-                round_buckets[r].append(rec)
-
-    aggregated_rounds = []
-    for r in sampled_rounds:
-        recs = round_buckets[r]
-        if not recs:
-            continue
-        unwinnable_count = sum(1 for rec in recs if rec["is_unwinnable"])
-        unwinnable_pct = (unwinnable_count / total_campaigns) * 100.0
-        avg_active = statistics.mean(rec["active_cards"] for rec in recs)
-        avg_solvability = statistics.mean(rec["solvability_ratio"] for rec in recs)
-
-        aggregated_rounds.append(
-            {
-                "round": r,
-                "unwinnable_count": unwinnable_count,
-                "unwinnable_pct": unwinnable_pct,
-                "avg_active": avg_active,
-                "avg_solvability": avg_solvability,
-            }
-        )
-
-    first_unwinnable_rounds = [
-        camp["first_unwinnable_round"] for camp in all_campaigns if camp["first_unwinnable_round"] is not None
-    ]
-    ever_unwinnable_count = len(first_unwinnable_rounds)
-    ever_unwinnable_pct = (ever_unwinnable_count / total_campaigns) * 100.0
-
-    summary_stats = {
-        "total_campaigns": total_campaigns,
-        "ever_unwinnable_count": ever_unwinnable_count,
-        "ever_unwinnable_pct": ever_unwinnable_pct,
-        "mean_first_unwinnable": statistics.mean(first_unwinnable_rounds) if first_unwinnable_rounds else None,
-        "median_first_unwinnable": statistics.median(first_unwinnable_rounds) if first_unwinnable_rounds else None,
-        "min_first_unwinnable": min(first_unwinnable_rounds) if first_unwinnable_rounds else None,
-        "max_first_unwinnable": max(first_unwinnable_rounds) if first_unwinnable_rounds else None,
-    }
-
-    return (aggregated_rounds, summary_stats)
-
-
-def print_round_table(aggregated_rounds: List[Dict[str, Any]], total_campaigns: int) -> None:
-    """Print tabular per-round breakdown of unwinnable rate & average active cards."""
-    print(f"\nPer-Round Unwinnable Solvability Breakdown ({total_campaigns} campaigns)")
-    print("-" * 78)
-    print(f"{'Round':<8} | {'Unwinnable %':<15} | {'Unwinnable Count':<18} | {'Avg Active Cards':<18} | {'Avg Solvability':<15}")
-    print("-" * 78)
-
-    for row in aggregated_rounds:
-        print(
-            f"{row['round']:<8} | {row['unwinnable_pct']:>13.1f}% | {row['unwinnable_count']:>10}/{total_campaigns:<6} | {row['avg_active']:>17.1f} | {row['avg_solvability']:>14.2%}"
-        )
-    print("-" * 78)
-
-
-def print_ascii_chart(aggregated_rounds: List[Dict[str, Any]], max_rounds: int) -> None:
-    """Print ASCII progress chart tracking Unwinnable % over campaign rounds."""
-    print("\nUnwinnable Deck % Over Campaign Rounds (ASCII Visual)")
-    print("-" * 78)
-
-    chart_width = 40
-    for row in aggregated_rounds:
-        pct = row["unwinnable_pct"]
-        filled = int(round((pct / 100.0) * chart_width))
-        bar = "█" * filled + "░" * (chart_width - filled)
-        print(f" Round {row['round']:>3}: [{bar}] {pct:>5.1f}%")
-
-    print("-" * 78)
-
-
-def print_summary(summary: Dict[str, Any], args: argparse.Namespace, seed_label: str) -> None:
-    """Print summary statistics for deck evolution solvability."""
-    print("\nSummary Statistics — Deck Evolution & Unwinnability")
-    print("=" * 78)
-    print(f" Difficulty Setting:       {args.difficulty}")
-    print(f" Total Campaigns Analyzed: {summary['total_campaigns']}")
-    print(f" Random Seed:             {seed_label}")
-    print(f" Campaigns Ever Unwinnable:{summary['ever_unwinnable_count']}/{summary['total_campaigns']} ({summary['ever_unwinnable_pct']:.1f}%)")
-
-    if summary["mean_first_unwinnable"] is not None:
-        print(f" Mean Round 1st Unwinnable:{summary['mean_first_unwinnable']:.1f}")
-        print(f" Median Round 1st Unwinnable:{summary['median_first_unwinnable']:.1f}")
-        print(f" Earliest Unwinnable Round: {summary['min_first_unwinnable']}")
-        print(f" Latest Unwinnable Round:   {summary['max_first_unwinnable']}")
-    else:
-        print(" Mean Round 1st Unwinnable: N/A (No campaigns became unwinnable)")
-
-    print("=" * 78 + "\n")
-
-
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Run Cursed Tomb deck evolution & unwinnable solvability analysis."
@@ -319,8 +86,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("-p", "--probes", type=int, default=50, help="Number of random shuffles per oracle call (default: 50)")
     parser.add_argument("-i", "--sample-interval", type=int, default=1, help="Sampling interval in rounds (default: 1)")
     parser.add_argument("-d", "--difficulty", choices=list(DIFFICULTIES.keys()), default="archaeologist", help="Difficulty level (default: archaeologist)")
-    parser.add_argument("--solver", choices=["greedy", "heuristic", "beam", "dfs"], default="heuristic", help="Campaign solver strategy (default: heuristic)")
+    parser.add_argument("--solver", choices=["greedy", "heuristic", "beam", "dfs"], default="greedy", help="Campaign solver strategy (default: greedy)")
     parser.add_argument("--probe-solver", choices=["greedy", "heuristic", "beam", "dfs"], default="greedy", help="Oracle probe solver strategy (default: greedy)")
+    parser.add_argument("--csv", type=str, default=None, help="Output CSV path for aggregated round statistics")
+    parser.add_argument("--csv-per-campaign", type=str, default=None, help="Output CSV path for detailed per-campaign statistics")
+    parser.add_argument("--plot", type=str, default=None, help="Output PNG path for deck evolution plot")
+    parser.add_argument("--plot-dir", type=str, default=None, help="Output directory for deck evolution plot")
     parser.add_argument("-s", "--seed", type=int, default=None, help="Random seed for reproducibility (default: None - random seed generated)")
     parser.add_argument("-v", "--verbose", action="store_true", help="Print per-campaign round-of-first-unwinnable")
     parser.add_argument("--workers", type=int, default=cpu_count(), help="Number of parallel worker processes (default: CPU cores)")
@@ -330,7 +101,6 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
 
-    # Generate random seed if --seed is not explicitly provided
     if args.seed is None:
         actual_seed = random.randint(0, 1_000_000_000)
         seed_label = f"{actual_seed} (Randomly Generated)"
@@ -380,7 +150,7 @@ def main() -> None:
         for _ in range(args.campaigns)
     ]
 
-    all_campaign_results = []
+    all_campaign_results: List[Dict[str, Any]] = []
     t0 = time.time()
 
     if n_workers > 1 and args.campaigns >= 2:
@@ -406,6 +176,23 @@ def main() -> None:
     print_round_table(aggregated, args.campaigns)
     print_ascii_chart(aggregated, args.max_rounds)
     print_summary(summary_stats, args, seed_label)
+
+    if args.csv:
+        write_aggregated_csv(args.csv, aggregated)
+        print(f"Aggregated CSV written to: {args.csv}")
+
+    if args.csv_per_campaign:
+        write_per_campaign_csv(args.csv_per_campaign, all_campaign_results)
+        print(f"Per-campaign CSV written to: {args.csv_per_campaign}")
+
+    plot_path = args.plot
+    if not plot_path and args.plot_dir:
+        plot_path = os.path.join(args.plot_dir, "deck_evolution.png")
+
+    if plot_path:
+        plot_evolution(aggregated, output_path=plot_path)
+        print(f"Plot written to: {plot_path}")
+
 
 if __name__ == "__main__":
     main()
