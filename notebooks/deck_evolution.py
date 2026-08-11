@@ -20,12 +20,15 @@ except ImportError:
     if venv_python.exists() and sys.executable != str(venv_python):
         sys.exit(subprocess.call([str(venv_python)] + sys.argv))
 
-# Ensure repository root is in Python path
+# Ensure repository root and sim directory are in Python path
 repo_root = Path.cwd().resolve()
 if repo_root.name == "notebooks":
     repo_root = repo_root.parent
 if str(repo_root) not in sys.path:
     sys.path.insert(0, str(repo_root))
+sim_dir = str(repo_root / "sim")
+if sim_dir not in sys.path:
+    sys.path.insert(0, sim_dir)
 
 from sim.deck_evolution_core import (
     run_collapse_campaign,
@@ -45,7 +48,7 @@ def main():
         scars=True, curses=True, blessings=True, attrition=True,
         sealed_tomb_victory=False, rank_anchor_victory=False
     )
-    rng = random.Random(42)
+    rng = random.Random()
 
     print("Simulating 10 campaigns (max 30 rounds, 10 probes/round)...")
     results = [

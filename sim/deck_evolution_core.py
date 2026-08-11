@@ -403,12 +403,17 @@ def plot_evolution(
     output_path: Optional[str] = None,
     title_suffix: str = "",
     show: bool = False,
+    show_active: bool = True,
+    show_composition: bool = True,
+    show_solvability: bool = True,
 ) -> Any:
     """
-    Generate 3-panel time-series plot of deck active count, composition, and solvability vs round.
+    Generate time-series plot of deck active count, composition, and solvability vs round.
     
     Accepts either a single aggregated_rounds list or a list of run dicts:
     [{"label": "archaeologist/greedy", "data": aggregated_rounds}, ...]
+    
+    Individual chart panels can be toggled via show_active, show_composition, and show_solvability.
     
     Handles missing matplotlib gracefully by printing a warning to stderr.
     """
@@ -426,54 +431,74 @@ def plot_evolution(
     else:
         runs = runs_or_aggregated
 
-    fig, axes = plt.subplots(3, 1, figsize=(10, 10), sharex=True)
-    ax1, ax2, ax3 = axes
+    panels = []
+    if show_active:
+        panels.append("active")
+    if show_composition:
+        panels.append("composition")
+    if show_solvability:
+        panels.append("solvability")
 
-    # Panel 1: Active Cards
-    ax1.axhline(y=28, color='red', linestyle='--', alpha=0.7, label='Collapse Starvation (28)')
-    for run in runs:
-        data = run["data"]
-        label = run.get("label", "Run")
-        rounds = [r["round"] for r in data]
-        active = [r["mean_active"] for r in data]
-        ax1.plot(rounds, active, label=f"{label} - Active Cards", marker='o', markersize=3)
-    ax1.set_ylabel("Active Cards")
-    ax1.set_title("Active Card Count Over Campaign Rounds")
-    ax1.grid(True, linestyle=':', alpha=0.6)
-    ax1.legend(loc='best', fontsize='small')
+    if not panels:
+        print("No charts selected to display.")
+        return None
 
-    # Panel 2: Deck Composition
-    for run in runs:
-        data = run["data"]
-        label = run.get("label", "Run")
-        rounds = [r["round"] for r in data]
-        blessed = [r["mean_blessed"] for r in data]
-        cursed = [r["mean_cursed"] for r in data]
-        anchored = [r["mean_anchored"] for r in data]
-        ax2.plot(rounds, blessed, label=f"{label} - Blessed", color='green', linestyle='-')
-        ax2.plot(rounds, cursed, label=f"{label} - Cursed", color='purple', linestyle='--')
-        ax2.plot(rounds, anchored, label=f"{label} - Anchored", color='blue', linestyle=':')
-    ax2.set_ylabel("Mean Card Count")
-    ax2.set_title("Deck Composition Statistics (Blessed, Cursed, Anchored)")
-    ax2.grid(True, linestyle=':', alpha=0.6)
-    ax2.legend(loc='best', fontsize='small')
+    fig, axes = plt.subplots(len(panels), 1, figsize=(10, 3.5 * len(panels)), sharex=len(panels) > 1)
+    if len(panels) == 1:
+        axes = [axes]
 
-    # Panel 3: Solvability & Unwinnable Rate
-    for run in runs:
-        data = run["data"]
-        label = run.get("label", "Run")
-        rounds = [r["round"] for r in data]
-        win_rate = [r["mean_probe_win_rate"] * 100.0 for r in data]
-        unwinnable_pct = [r["unwinnable_pct"] for r in data]
-        ax3.plot(rounds, win_rate, label=f"{label} - Probe Win Rate %", color='tab:blue', linestyle='-')
-        ax3.plot(rounds, unwinnable_pct, label=f"{label} - Unwinnable %", color='tab:orange', linestyle='--')
-    ax3.set_xlabel("Round")
-    ax3.set_ylabel("Percentage (%)")
-    ax3.set_ylim(-5, 105)
-    ax3.set_title("Empirical Solvability & Unwinnable Rate vs Round")
-    ax3.grid(True, linestyle=':', alpha=0.6)
-    ax3.legend(loc='best', fontsize='small')
+    ax_idx = 0
+    if show_active:
+        ax = axes[ax_idx]
+        ax_idx += 1
+        ax.axhline(y=28, color='red', linestyle='--', alpha=0.7, label='Collapse Starvation (28)')
+        for run in runs:
+            data = run["data"]
+            label = run.get("label", "Run")
+            rounds = [r["round"] for r in data]
+            active = [r["mean_active"] for r in data]
+            ax.plot(rounds, active, label=f"{label} - Active Cards", marker='o', markersize=3)
+        ax.set_ylabel("Active Cards")
+        ax.set_title("Active Card Count Over Campaign Rounds")
+        ax.grid(True, linestyle=':', alpha=0.6)
+        ax.legend(loc='best', fontsize='small')
 
+    if show_composition:
+        ax = axes[ax_idx]
+        ax_idx += 1
+        for run in runs:
+            data = run["data"]
+            label = run.get("label", "Run")
+            rounds = [r["round"] for r in data]
+            blessed = [r["mean_blessed"] for r in data]
+            cursed = [r["mean_cursed"] for r in data]
+            anchored = [r["mean_anchored"] for r in data]
+            ax.plot(rounds, blessed, label=f"{label} - Blessed", color='green', linestyle='-')
+            ax.plot(rounds, cursed, label=f"{label} - Cursed", color='purple', linestyle='--')
+            ax.plot(rounds, anchored, label=f"{label} - Anchored", color='blue', linestyle=':')
+        ax.set_ylabel("Mean Card Count")
+        ax.set_title("Deck Composition Statistics (Blessed, Cursed, Anchored)")
+        ax.grid(True, linestyle=':', alpha=0.6)
+        ax.legend(loc='best', fontsize='small')
+
+    if show_solvability:
+        ax = axes[ax_idx]
+        ax_idx += 1
+        for run in runs:
+            data = run["data"]
+            label = run.get("label", "Run")
+            rounds = [r["round"] for r in data]
+            win_rate = [r["mean_probe_win_rate"] * 100.0 for r in data]
+            unwinnable_pct = [r["unwinnable_pct"] for r in data]
+            ax.plot(rounds, win_rate, label=f"{label} - Probe Win Rate %", color='tab:blue', linestyle='-')
+            ax.plot(rounds, unwinnable_pct, label=f"{label} - Unwinnable %", color='tab:orange', linestyle='--')
+        ax.set_ylabel("Percentage (%)")
+        ax.set_ylim(-5, 105)
+        ax.set_title("Empirical Solvability & Unwinnable Rate vs Round")
+        ax.grid(True, linestyle=':', alpha=0.6)
+        ax.legend(loc='best', fontsize='small')
+
+    axes[-1].set_xlabel("Round")
     plt.tight_layout()
 
     if output_path:

@@ -85,7 +85,10 @@ class HeuristicSolver(BaseSolver):
                 if top_v.functional_value(state.flags) == 13:
                     score -= 2.0
                 else:
-                    from cursed_tomb_sim import exposed_slots, pair_sum
+                    try:
+                        from cursed_tomb_sim import exposed_slots, pair_sum
+                    except ImportError:
+                        from ..cursed_tomb_sim import exposed_slots, pair_sum
                     exp = exposed_slots(state.removed, state.locks)
                     for a in exp:
                         if pair_sum(state.pyr[a], top_v, state.flags) == 13:
