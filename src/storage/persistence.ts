@@ -159,7 +159,7 @@ export class PersistenceManager {
         return {
           ...campaign,
           masterDeck: Array.isArray(campaign.masterDeck)
-            ? campaign.masterDeck.map((c: any) => ({ ...c, removed: false, faceDown: false, selected: false }))
+            ? campaign.masterDeck.map((c: any) => ({ ...c, removed: false, faceDown: false, selected: false, anchorAbsorption: c.anchorAbsorption ?? 0 }))
             : [],
           currentRound: this.sanitizeLoadedGameState(campaign.currentRound),
           achievements: campaign.achievements ?? {

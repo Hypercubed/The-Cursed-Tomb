@@ -91,6 +91,7 @@ export function PyramidBoard({
                   suit={card.suit}
                   attritionStage={card.attritionStage}
                   rewardStage={card.rewardStage}
+                  anchorAbsorption={card.anchorAbsorption}
                   blessed={card.blessed}
                   faceDown={card.faceDown}
                   removed={card.removed}

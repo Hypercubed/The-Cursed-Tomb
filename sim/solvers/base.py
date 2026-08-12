@@ -28,6 +28,10 @@ class BaseSolver(ABC):
     def __init__(self, name: str = "BaseSolver"):
         self.name = name
 
+    def reset(self) -> None:
+        """Reset solver state between rounds/games."""
+        pass
+
     @abstractmethod
     def select_move(self, state: GameState, legal_moves: List[Move]) -> Optional[Move]:
         """Selects a Move from legal_moves given the current GameState.

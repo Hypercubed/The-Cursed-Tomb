@@ -314,6 +314,7 @@ export function RoundSummaryModal({
                           rank={card.rank}
                           suit={card.suit}
                           rewardStage={card.rewardStage}
+                          anchorAbsorption={card.anchorAbsorption}
                           disabled={true}
                         />
                         <div className="flex flex-col gap-0.5 text-xs">
@@ -322,7 +323,7 @@ export function RoundSummaryModal({
                           </span>
                           <span className="text-[11px] text-blue-300/80 leading-tight">
                             {card.rewardStage === 2
-                              ? 'Permanently immune to upper-right attrition scar marks!'
+                              ? 'Absorbs up to 4 freeze attrition hits with corner quadrant marks before shield breaks!'
                               : 'First defensive stroke applied. One more to achieve full Anchor immunity.'}
                           </span>
                         </div>

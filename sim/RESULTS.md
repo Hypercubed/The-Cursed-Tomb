@@ -1,12 +1,13 @@
 # Base Game & Solver Simulation Results
 
 **The Cursed Tomb** — Pyramid Solitaire & Campaign Simulator Suite  
-Simulated with [`cursed_tomb_sim.py`](./cursed_tomb_sim.py), [`test_solvers.py`](./test_solvers.py), and supporting scripts.
+Simulated with [`cursed_tomb_sim.py`](./cursed_tomb_sim.py), [`test_solvers.py`](./test_solvers.py), and supporting scripts under the official ruleset including Anchor Absorption (max 4 freeze absorptions per anchor shield).
 
 > **Default solver strategy:** Domain-aware `HeuristicSolver` (multi-factor evaluation: exposed count, row depth, red-curse priority, waste preservation, and blessing synergies).
-> **Base-game mechanics:** scars, curses, blessings, and attrition are disabled, matching the standard web-game mode.
+> **Anchor Absorption mechanic:** Anchors absorb up to 4 freeze attrition hits before exhausting (`reward_stage` drops to 0), resuming standard attrition without wiping prior scars.
+> **Base-game mechanics:** scars, curses, blessings, and attrition are disabled in Parts 1 & 2, matching standard mode.
 > **Vault mechanics:** the Diamond Vault is a multi-card FILO stack. Cards are pushed onto the top; only the top card is playable, and clearing it exposes the card beneath.
-> **Seed:** 42 for reproducible runs. Reported commands use four worker processes unless noted otherwise.
+> **Seed:** 42 for reproducible runs. Reported commands use worker processes.
 
 ---
 
@@ -21,10 +22,10 @@ Each game is one round of Pyramid Solitaire. A **Pyramid Clear** means all 28 py
 <!-- BEGIN PART 1 TABLE -->
 | UI Redraw Setting        | Redraws | Pyramid Clear Rate | Total Victory Rate | Round Loss Rate |
 | :----------------------- | :-----: | -----------------: | -----------------: | --------------: |
-| 0 redraws (Survivalist)  |    0    |              1.17% |              0.28% |          98.83% |
-| 1 redraw  (Archaeologist) |    1    |             14.91% |              3.58% |          85.09% |
-| 3 redraws (Explorer)     |    3    |             34.37% |              6.79% |          65.63% |
-| 5 redraws (Novice)       |    5    |             34.57% |              6.81% |          65.43% |
+| 0 redraws (Survivalist)  |    0    |              1.17% |              0.28% |        98.83% |
+| 1 redraw  (Archaeologist) |    1    |             14.91% |              3.58% |        85.09% |
+| 3 redraws (Explorer)     |    3    |             34.37% |              6.79% |        65.63% |
+| 5 redraws (Novice)       |    5    |             34.57% |              6.81% |        65.43% |
 <!-- END PART 1 TABLE -->
 
 ### Observations
@@ -67,7 +68,7 @@ The base-game campaign has no attrition, so the tomb cannot starve or collapse. 
 > python sim/cursed_tomb_sim.py --campaigns 1000 --seed 42 --difficulty [difficulty] --solver heuristic --max-rounds 500 --workers 4
 > ```
 
-This section enables scars, curses, blessings, and attrition. The Diamond Vault uses FILO semantics throughout the core simulator. A campaign can end in:
+This section enables scars, curses, blessings, attrition, and **Anchor Absorption** (`anchor_absorption = True`). A campaign can end in:
 
 - **Victory:** Perfect Win clears all 52 cards in one round.
 - **Collapse:** Starvation.
@@ -80,9 +81,9 @@ This section enables scars, curses, blessings, and attrition. The Diamond Vault 
 | Difficulty    | Redraws | Victory (all) | Collapse (all) | Stall | Timeout | Victory / Collapse of Resolved |
 | :------------ | :-----: | ------------: | -------------: | ----: | ------: | -----------------------------: |
 | Survivalist   |    0    |         2.70% |         97.30% | 0.00% |   0.00% |                 2.70% / 97.30% |
-| Archaeologist |    1    |        42.70% |         51.30% | 0.00% |   4.10% |                45.43% / 54.57% |
-| Explorer      |    3    |        55.50% |         17.70% | 0.00% |  17.90% |                75.82% / 24.18% |
-| Novice        |    5    |        55.50% |         17.50% | 0.00% |  18.10% |                76.03% / 23.97% |
+| Archaeologist |    1    |        42.70% |         51.30% | 0.00% |   5.00% |                45.43% / 54.57% |
+| Explorer      |    3    |        55.70% |         18.80% | 0.00% |  23.50% |                74.77% / 25.23% |
+| Novice        |    5    |        55.70% |         18.60% | 0.00% |  23.70% |                74.97% / 25.03% |
 <!-- END PART 3 TABLE 1 -->
 
 ### Round-resolution metrics
@@ -90,13 +91,11 @@ This section enables scars, curses, blessings, and attrition. The Diamond Vault 
 <!-- BEGIN PART 3 TABLE 2 -->
 | Difficulty    |     Avg Rounds to Win |    Avg Rounds to Collapse |     Overall Avg to Resolve |
 | :------------ | --------------------: | ------------------------: | -------------------------: |
-| Survivalist   | 5.9 ± 3.3 (median 5.0) | 108.3 ± 17.0 (median 107.0) | 105.5 ± 23.6 (median 106.0) |
-| Archaeologist | 9.2 ± 7.6 (median 8.0) | 197.3 ± 74.6 (median 178.0) | 111.9 ± 108.8 (median 123.0) |
-| Explorer      | 7.8 ± 12.1 (median 5.0) | 281.9 ± 94.8 (median 267.0) |  74.0 ± 126.8 (median 8.0) |
-| Novice        | 7.7 ± 12.1 (median 5.0) | 281.8 ± 94.7 (median 267.0) |  73.4 ± 126.3 (median 8.0) |
+| Survivalist   | 5.9 ± 3.3 (median 5.0) | 114.0 ± 15.9 (median 113.0) | 111.1 ± 23.5 (median 112.0) |
+| Archaeologist | 9.2 ± 7.6 (median 8.0) | 205.3 ± 72.8 (median 184.0) | 116.2 ± 111.6 (median 135.0) |
+| Explorer      | 8.7 ± 20.7 (median 5.0) | 301.4 ± 100.7 (median 288.5) |  82.6 ± 138.1 (median 8.0) |
+| Novice        | 8.7 ± 20.7 (median 5.0) | 301.7 ± 101.0 (median 286.0) |  82.0 ± 137.9 (median 8.0) |
 <!-- END PART 3 TABLE 2 -->
-
-The resolved-rate column excludes stalls and timeouts; the all-outcome columns include every campaign and therefore sum to 100% when combined with Stall and Timeout.
 
 ---
 
@@ -104,17 +103,15 @@ The resolved-rate column excludes stalls and timeouts; the all-outcome columns i
 
 > **Command:** `python sim/sweep_thresholds.py --campaigns 1000 --max-rounds 300 --solver heuristic --seed 42 --workers 4`
 
-The deadlock threshold is 10% of the 300-round cap (30 rounds).
-
 **Sample size:** 1,000 campaigns per setting; maximum 300 rounds per campaign
 
 <!-- BEGIN PART 4 TABLE 1 -->
 | Difficulty    | Redraws | Mean Rounds Survived | Pyramids Cleared / Campaign | Perfect Wins / Campaign | Rank-Anchor Achievement |
 | :------------ | :-----: | -------------------: | --------------------------: | ----------------------: | ----------------------: |
 | Survivalist   |    0    |         111.1 ± 23.5 |                        0.2 |                     0.0 |                    0.0% |
-| Archaeologist |    1    |        122.8 ± 108.2 |                        8.2 |                     0.4 |                    0.0% |
-| Explorer      |    3    |        126.0 ± 135.4 |                       27.9 |                     0.6 |                    0.2% |
-| Novice        |    5    |        126.1 ± 135.5 |                       28.4 |                     0.6 |                    0.2% |
+| Archaeologist |    1    |        123.0 ± 108.4 |                        8.2 |                     0.4 |                    0.0% |
+| Explorer      |    3    |        127.9 ± 137.3 |                       28.1 |                     0.6 |                    0.2% |
+| Novice        |    5    |        127.9 ± 137.4 |                       28.6 |                     0.6 |                    0.2% |
 <!-- END PART 4 TABLE 1 -->
 
 ### End-type rates
@@ -122,10 +119,10 @@ The deadlock threshold is 10% of the 300-round cap (30 rounds).
 <!-- BEGIN PART 4 TABLE 2 -->
 | Difficulty    | Starvation | Deadlock | Round Cap |
 | :------------ | ---------: | -------: | --------: |
-| Survivalist   |     100.0% |     0.0% |      0.0% |
-| Archaeologist |      45.4% |     1.6% |     10.3% |
-| Explorer      |       9.9% |     8.1% |     26.5% |
-| Novice        |       9.9% |     8.1% |     26.5% |
+| Survivalist   |      97.3% |     0.0% |      0.0% |
+| Archaeologist |      45.3% |     0.9% |     11.1% |
+| Explorer      |       9.9% |     3.3% |     31.2% |
+| Novice        |       9.9% |     3.3% |     31.2% |
 <!-- END PART 4 TABLE 2 -->
 
 ---
@@ -134,18 +131,14 @@ The deadlock threshold is 10% of the 300-round cap (30 rounds).
 
 > **Command:** `python sim/test_solvers.py --games 50 --redraws 3 --seed 42`
 
-Comparative benchmark across identical deck seeds at Explorer difficulty (3 redraws):
-
 <!-- BEGIN PART 5 TABLE -->
 | Solver Policy       | Single-Game Win Rate | Wins | Losses | Execution Time* | Moves / Game |
 | :------------------ | -------------------: | ---: | -----: | --------------: | -----------: |
-| Greedy             |                34.0% |   17 |     33 |           0.02s |         50.1 |
-| Heuristic          |                34.0% |   17 |     33 |           0.01s |         49.9 |
-| BeamSearch (D3,B4) |                42.0% |   21 |     29 |           0.15s |         49.0 |
-| DFS (Max 3k nodes) |                46.0% |   23 |     27 |           0.40s |         49.4 |
+| Greedy             |                34.0% |   17 |     33 |           0.22s |         50.1 |
+| Heuristic          |                34.0% |   17 |     33 |           0.21s |         49.9 |
+| BeamSearch (D3,B4) |                42.0% |   21 |     29 |           0.42s |         49.0 |
+| DFS (Max 3k nodes) |                46.0% |   23 |     27 |           0.66s |         49.4 |
 <!-- END PART 5 TABLE -->
-
-\* Execution time is machine-dependent; the reported values are from the recorded run.
 
 ---
 
@@ -158,10 +151,3 @@ Comparative benchmark across identical deck seeds at Explorer difficulty (3 redr
 | [`cursed_tomb_sim.py`](./cursed_tomb_sim.py)         | Part 3: full-rules campaign runner      | `python sim/cursed_tomb_sim.py --campaigns 1000 --seed 42 --difficulty explorer --solver heuristic --max-rounds 500 --workers 4` |
 | [`sweep_thresholds.py`](./sweep_thresholds.py)       | Part 4: cross-difficulty endurance sweep| `python sim/sweep_thresholds.py --campaigns 1000 --max-rounds 300 --solver heuristic --seed 42 --workers 4`                                          |
 | [`test_solvers.py`](./test_solvers.py)               | Part 5: solver benchmark comparison     | `python sim/test_solvers.py --games 50 --redraws 3 --seed 42`                                                                                        |
-
-### Validation
-
-```bash
-python -m py_compile sim/cursed_tomb_sim.py sim/compare_vault_sim.py sim/base_game_sim.py sim/campaign_rounds_sim.py sim/sweep_thresholds.py sim/test_solvers.py
-python sim/test_solvers.py
-```

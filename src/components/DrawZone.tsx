@@ -66,6 +66,7 @@ export function DrawZone({
               suit={topStock.suit}
               attritionStage={topStock.attritionStage}
               rewardStage={topStock.rewardStage}
+              anchorAbsorption={topStock.anchorAbsorption}
               blessed={topStock.blessed}
               faceDown={topStock.faceDown}
               selected={topStock.id === selectedCardId}
@@ -116,6 +117,7 @@ export function DrawZone({
               suit={topDiscard.suit}
               attritionStage={topDiscard.attritionStage}
               rewardStage={topDiscard.rewardStage}
+              anchorAbsorption={topDiscard.anchorAbsorption}
               blessed={topDiscard.blessed}
               faceDown={topDiscard.faceDown}
               selected={topDiscard.id === selectedCardId}
@@ -165,6 +167,7 @@ export function DrawZone({
                 suit={vaultCards[vaultCards.length - 1].suit}
                 attritionStage={vaultCards[vaultCards.length - 1].attritionStage}
                 rewardStage={vaultCards[vaultCards.length - 1].rewardStage}
+                anchorAbsorption={vaultCards[vaultCards.length - 1].anchorAbsorption}
                 blessed={vaultCards[vaultCards.length - 1].blessed}
                 faceDown={vaultCards[vaultCards.length - 1].faceDown}
                 selected={vaultCards[vaultCards.length - 1].id === selectedCardId}

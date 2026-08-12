@@ -61,3 +61,12 @@ The simulation engine and solver policies SHALL evaluate moving an exposed Bless
 #### Scenario: Candidate move generator exposes stock and waste vault options
 - **WHEN** the top card of the Stock pile is a Blessed Diamond card, OR the top card of the Waste pile is a Blessed Diamond card
 - **THEN** the simulation move generator SHALL generate explicit `vault_stock` and/or `vault_waste` candidate move options for evaluation by active solver policies (`GreedySolver`, `HeuristicSolver`, `BeamSearchSolver`, `DFSSolver`)
+
+---
+
+### Requirement: Anchor Absorption Simulation Default
+The Python simulation suite (`RuleFlags`) SHALL enable `anchor_absorption = True` by default with `anchor_max_absorption = 4` to reflect the core game rules.
+
+#### Scenario: Simulation flags default to enabled Anchor Absorption
+- **WHEN** a `RuleFlags` instance is initialized without explicit overrides
+- **THEN** `anchor_absorption` SHALL be `True` AND `anchor_max_absorption` SHALL be `4`

@@ -281,14 +281,37 @@ function SuitPip({
   );
 }
 
+interface PlayingCardProps {
+  rank: number;
+  suit: string;
+  attritionStage?: number;
+  rewardStage?: number;
+  anchorAbsorption?: number;
+  blessed?: boolean;
+  faceDown?: boolean;
+  functionalValue?: number;
+  removed?: boolean;
+  selected?: boolean;
+  blocked?: boolean;
+  disabled?: boolean;
+  animatingMatch?: boolean;
+  animatingError?: boolean;
+  animatingCollapse?: boolean;
+  style?: React.CSSProperties;
+  onClick?: () => void;
+  seed?: string | number;
+}
+
 function AnchorBadge({
   rewardStage,
+  anchorAbsorption = 0,
   suit = '♥',
   rank = 1,
   className = '',
   seed,
 }: {
   rewardStage: number;
+  anchorAbsorption?: number;
   suit?: string;
   rank?: number;
   className?: string;
@@ -299,7 +322,9 @@ function AnchorBadge({
   const isFortifying = rewardStage === 1;
   const badgeTitle = isFortifying
     ? 'Fortifying Anchor [—]: 1st stroke towards permanent Anchor immunity'
-    : 'Anchored Card [+]: Permanently immune to failure track degradation';
+    : anchorAbsorption > 0
+    ? `Anchored Card [+]: Absorbed ${anchorAbsorption}/4 freeze attrition hits`
+    : 'Anchored Card [+]: Immune to failure track degradation (absorbs up to 4 freeze hits)';
 
   const anchorTransform = getHandDrawnTransform(suit, rank, 'anchor', seed);
 
@@ -334,7 +359,7 @@ function AnchorBadge({
           </svg>
         )}
 
-        {/* Stage 2: Anchored Cross (+) Pen Strokes */}
+        {/* Stage 2: Anchored Cross (+) Pen Strokes & Red Absorption Corner Marks */}
         {rewardStage >= 2 && (
           <svg
             aria-hidden="true"
@@ -345,6 +370,7 @@ function AnchorBadge({
               transform={`translate(${anchorTransform.translateX}, ${anchorTransform.translateY}) rotate(${anchorTransform.rotateDeg} 50 50) scale(${anchorTransform.scale})`}
               style={{ transformOrigin: '50px 50px' }}
             >
+              {/* Blue Anchor Cross (+) */}
               <path
                 d="M 8 51 Q 50 47 92 53"
                 stroke="#1d4ed8"
@@ -363,6 +389,48 @@ function AnchorBadge({
                 filter="url(#ink-bleed)"
                 className="drop-shadow-[0_0_2px_rgba(37,99,235,0.4)]"
               />
+
+              {/* Red Absorption Corner Marks in 4 Quadrants around (+) */}
+              {anchorAbsorption >= 1 && (
+                <circle
+                  cx="20"
+                  cy="20"
+                  r="9"
+                  fill="#dc2626"
+                  filter="url(#ink-bleed)"
+                  className="drop-shadow-[0_0_2px_rgba(220,38,38,0.6)]"
+                />
+              )}
+              {anchorAbsorption >= 2 && (
+                <circle
+                  cx="80"
+                  cy="20"
+                  r="9"
+                  fill="#dc2626"
+                  filter="url(#ink-bleed)"
+                  className="drop-shadow-[0_0_2px_rgba(220,38,38,0.6)]"
+                />
+              )}
+              {anchorAbsorption >= 3 && (
+                <circle
+                  cx="20"
+                  cy="80"
+                  r="9"
+                  fill="#dc2626"
+                  filter="url(#ink-bleed)"
+                  className="drop-shadow-[0_0_2px_rgba(220,38,38,0.6)]"
+                />
+              )}
+              {anchorAbsorption >= 4 && (
+                <circle
+                  cx="80"
+                  cy="80"
+                  r="9"
+                  fill="#dc2626"
+                  filter="url(#ink-bleed)"
+                  className="drop-shadow-[0_0_2px_rgba(220,38,38,0.6)]"
+                />
+              )}
             </g>
           </svg>
         )}
@@ -428,6 +496,7 @@ export function PlayingCard({
   suit,
   attritionStage = 0,
   rewardStage = 0,
+  anchorAbsorption = 0,
   blessed = false,
   faceDown = false,
   functionalValue,
@@ -534,7 +603,7 @@ export function PlayingCard({
           seed={seed}
           blessed={blessed}
         />
-        <AnchorBadge rewardStage={rewardStage} suit={suit} rank={rank} seed={seed} />
+        <AnchorBadge rewardStage={rewardStage} anchorAbsorption={anchorAbsorption} suit={suit} rank={rank} seed={seed} />
       </div>
 
       {/* Centre row: Suit pip always shown; illustration overlaid on top when applicable */}

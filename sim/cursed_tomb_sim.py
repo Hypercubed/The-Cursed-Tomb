@@ -69,7 +69,7 @@ class RuleFlags:
     blessings: bool = True          # Hero's Blessing unlocks + all 4 suit blessing effects
     attrition: bool = True          # failure track progresses at all on freeze
     max_attrition_stage: int = 5    # stage at which a card is considered entombed (default 5)
-    anchor_absorption: bool = False # Anchored cards absorb 4 marks before anchor exhausts (disabled)
+    anchor_absorption: bool = True # Anchored cards absorb 4 marks before anchor exhausts (enabled by default)
     anchor_max_absorption: int = 4  # Number of absorbed marks on + before exhaustion (default 4)
     sealed_tomb_victory: bool = False# Sealed Tomb Win: < 28 living (un-anchored) cards remain (disabled)
     rank_anchor_victory: bool = True # Soft Win: at least 1 card of each printed rank (13 total) is Anchored
@@ -198,6 +198,11 @@ class GameState:
         self.last_clear_cards = None
 
     def clone(self) -> GameState:
+        rng_clone = None
+        if self.rng is not None:
+            rng_clone = random.Random()
+            rng_clone.setstate(self.rng.getstate())
+
         st = GameState(
             pyr=list(self.pyr),
             stock=list(self.stock),
@@ -207,7 +212,7 @@ class GameState:
             locks={k: set(v) for k, v in self.locks.items()},
             redeals_left=self.redeals_left,
             flags=self.flags,
-            rng=self.rng,
+            rng=rng_clone,
             max_moves=self.max_moves,
         )
         st.moves_played = self.moves_played
@@ -463,7 +468,6 @@ class GameState:
                     card.anchor_absorption += 1
                     if card.anchor_absorption >= self.flags.anchor_max_absorption:
                         card.reward_stage = 0
-                        card.attrition_stage = 0
                     continue
             if card.is_anchored():
                 continue
@@ -496,6 +500,8 @@ def play_round(pool, rng, max_redeals, flags, max_moves=300, full_registry=None,
 
     if solver is None:
         solver = HeuristicSolver()
+    else:
+        solver.reset()
 
     while True:
         terminal, kind = state.is_terminal()

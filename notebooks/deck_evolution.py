@@ -42,23 +42,48 @@ from sim.deck_evolution_core import (
 )
 
 
+import argparse
+
 def main():
+    parser = argparse.ArgumentParser(description="Run deck evolution analysis script.")
+    parser.add_argument("-s", "--solver", choices=["greedy", "heuristic", "beam", "dfs"], default="greedy", help="Campaign solver strategy (default: greedy)")
+    parser.add_argument("-p", "--probe-solver", choices=["greedy", "heuristic", "beam", "dfs"], default="greedy", help="Probe solver strategy (default: greedy)")
+    parser.add_argument("--no-scars", action="store_true", help="Disable Scars rule")
+    parser.add_argument("--no-curses", action="store_true", help="Disable Curses rule")
+    parser.add_argument("--no-blessings", action="store_true", help="Disable Blessings rule")
+    parser.add_argument("--no-attrition", action="store_true", help="Disable Attrition rule")
+    parser.add_argument("--anchor-absorption", action="store_true", help="Enable Anchor Absorption mechanic")
+    args = parser.parse_args()
+
     print("=== Cursed Tomb Deck Evolution Analysis ===")
     flags = RuleFlags(
-        scars=True, curses=True, blessings=True, attrition=True,
-        sealed_tomb_victory=False, rank_anchor_victory=False
+        scars=not args.no_scars,
+        curses=not args.no_curses,
+        blessings=not args.no_blessings,
+        attrition=not args.no_attrition,
+        anchor_absorption=args.anchor_absorption,
+        sealed_tomb_victory=False,
+        rank_anchor_victory=False,
     )
     rng = random.Random()
 
-    print("Simulating 10 campaigns (max 30 rounds, 10 probes/round)...")
+    rule_parts = []
+    if args.no_scars: rule_parts.append('no-scars')
+    if args.no_curses: rule_parts.append('no-curses')
+    if args.no_blessings: rule_parts.append('no-blessings')
+    if args.no_attrition: rule_parts.append('no-attrition')
+    if args.anchor_absorption: rule_parts.append('anchor-abs')
+    rule_tag = f", {','.join(rule_parts)}" if rule_parts else ""
+
+    print(f"Simulating 10 campaigns (max 30 rounds, 10 probes/round, solver={args.solver}, probe_solver={args.probe_solver}{rule_tag})...")
     results = [
         run_collapse_campaign(
             rng=rng,
             max_redeals=DIFFICULTIES['archaeologist'],
             flags=flags,
             max_rounds=500,
-            solver_name='greedy',
-            probe_solver_name='greedy',
+            solver_name=args.solver,
+            probe_solver_name=args.probe_solver,
             n_probes=10,
             sample_interval=1,
         )
@@ -66,7 +91,7 @@ def main():
     ]
 
     agg, summary = aggregate_results(results, max_rounds=30, sample_interval=1)
-    runs = [{"label": "archaeologist/greedy #1", "data": agg}]
+    runs = [{"label": f"archaeologist/{args.solver} (p:{args.probe_solver}{rule_tag}) #1", "data": agg}]
 
     print("\nSummary Results:")
     for k, v in summary.items():

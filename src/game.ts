@@ -17,6 +17,7 @@ export interface Card {
   faceDown?: boolean;
   spadesRevealed?: boolean;
   tempImmune?: boolean;
+  anchorAbsorption?: number;
 }
 
 export type CursedCard = Card;
@@ -124,6 +125,7 @@ export function createDeck(): Card[] {
         blessed: false,
         faceDown: false,
         tempImmune: false,
+        anchorAbsorption: 0,
       });
     }
   }
@@ -875,7 +877,19 @@ export function applyEndOfWeekLifecycle(campaign: CampaignState): CampaignState 
       const idx = masterDeck.findIndex((c) => c.id === bCard.id);
       if (idx !== -1) {
         const target = masterDeck[idx];
-        if (target.rewardStage !== 2 && !bCard.tempImmune) {
+        if (bCard.tempImmune) continue;
+        if (target.rewardStage === 2) {
+          const currentAbs = target.anchorAbsorption ?? 0;
+          if (currentAbs < 4) {
+            const nextAbs = currentAbs + 1;
+            target.anchorAbsorption = nextAbs;
+            if (nextAbs >= 4) {
+              target.rewardStage = 0;
+            }
+            continue;
+          }
+        }
+        if (target.attritionStage < 5) {
           target.attritionStage = Math.min(5, target.attritionStage + 1) as AttritionStage;
         }
       }
@@ -897,7 +911,12 @@ export function applyEndOfWeekLifecycle(campaign: CampaignState): CampaignState 
       const aIdx = masterDeck.findIndex((c) => c.id === anchorCard.id);
       if (aIdx !== -1) {
         if (masterDeck[aIdx].attritionStage < 5) {
-          masterDeck[aIdx].rewardStage = Math.min(2, masterDeck[aIdx].rewardStage + 1) as RewardStage;
+          const prevStage = masterDeck[aIdx].rewardStage;
+          const nextStage = Math.min(2, prevStage + 1) as RewardStage;
+          masterDeck[aIdx].rewardStage = nextStage;
+          if (nextStage === 2 && prevStage < 2) {
+            masterDeck[aIdx].anchorAbsorption = 0;
+          }
         }
       }
     } else if (lastPair.length === 1) {
@@ -905,7 +924,12 @@ export function applyEndOfWeekLifecycle(campaign: CampaignState): CampaignState 
       const kIdx = masterDeck.findIndex((c) => c.id === kCard.id);
       if (kIdx !== -1) {
         if (masterDeck[kIdx].attritionStage < 5) {
-          masterDeck[kIdx].rewardStage = Math.min(2, masterDeck[kIdx].rewardStage + 1) as RewardStage;
+          const prevStage = masterDeck[kIdx].rewardStage;
+          const nextStage = Math.min(2, prevStage + 1) as RewardStage;
+          masterDeck[kIdx].rewardStage = nextStage;
+          if (nextStage === 2 && prevStage < 2) {
+            masterDeck[kIdx].anchorAbsorption = 0;
+          }
         }
       }
     }

@@ -255,7 +255,7 @@ export function MatchedCardsModal({
                       <span className="font-mono font-bold">—</span> Fortifying
                     </span>
                     <span className="flex items-center gap-1 text-blue-400 font-medium">
-                      <span className="font-mono font-bold">+</span> Anchored
+                      <span className="font-mono font-bold">+</span> Anchored (red corner dots = absorbed hits)
                     </span>
                     <span className="flex items-center gap-1 text-red-400 font-medium" aria-label="Cursed legend">
                       <span className="inline-flex items-center gap-0.5" aria-label="Cursed suit illustrations">
@@ -320,6 +320,7 @@ export function MatchedCardsModal({
 
                       const isBlessed = Boolean(cursedCard?.blessed);
                       const rewardStage = cursedCard?.rewardStage ?? 0;
+                      const anchorAbsorption = cursedCard?.anchorAbsorption ?? 0;
                       const attritionStage = cursedCard?.attritionStage ?? 0;
                       const isCursed = !isBlessed && attritionStage === 4;
                       const isEntombed = attritionStage === 5;
@@ -333,7 +334,7 @@ export function MatchedCardsModal({
                         else statusParts.push('Blessed Hero (◯)');
                       }
                       if (rewardStage === 1) statusParts.push('Fortifying Anchor (─)');
-                      if (rewardStage === 2) statusParts.push('Anchored (✢)');
+                      if (rewardStage === 2) statusParts.push(anchorAbsorption > 0 ? `Anchored (✢) (${anchorAbsorption}/4 Freeze Hits Absorbed)` : 'Anchored (✢)');
                       if (attritionStage === 1) statusParts.push(`Scar 1 (|${rLabel})`);
                       if (attritionStage === 2) statusParts.push(`Scar 2 (|${rLabel}|)`);
                       if (attritionStage === 3) statusParts.push(`Scar 3 (|${rLabel}\\|)`);
@@ -374,9 +375,13 @@ export function MatchedCardsModal({
                                 </svg>
                               )}
                               {rewardStage >= 2 && (
-                                <svg className="w-2.5 h-2.5" viewBox="0 0 100 100">
+                                <svg className="w-2.5 h-2.5 overflow-visible" viewBox="0 0 100 100">
                                   <line x1="10" y1="50" x2="90" y2="50" stroke="#3b82f6" strokeWidth="24" strokeLinecap="round" />
                                   <line x1="50" y1="10" x2="50" y2="90" stroke="#3b82f6" strokeWidth="24" strokeLinecap="round" />
+                                  {anchorAbsorption >= 1 && <circle cx="20" cy="20" r="14" fill="#dc2626" />}
+                                  {anchorAbsorption >= 2 && <circle cx="80" cy="20" r="14" fill="#dc2626" />}
+                                  {anchorAbsorption >= 3 && <circle cx="20" cy="80" r="14" fill="#dc2626" />}
+                                  {anchorAbsorption >= 4 && <circle cx="80" cy="80" r="14" fill="#dc2626" />}
                                 </svg>
                               )}
                             </div>

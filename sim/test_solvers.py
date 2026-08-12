@@ -188,10 +188,49 @@ def verify_stock_vault_progress():
     print("[OK] Verification: Explicit stock and waste vaulting candidate moves set pass progress and enable redealing")
 
 
+def verify_anchor_absorption():
+    rng = random.Random(42)
+    flags = RuleFlags(
+        attrition=True,
+        anchor_absorption=True,
+        anchor_max_absorption=4,
+        max_attrition_stage=5,
+    )
+    # Test card anchored at attrition_stage = 3 (scarred) placed in an exposed slot (index 21)
+    scarred_card = CardState('7', 'S', attrition_stage=3, reward_stage=2, anchor_absorption=0)
+    normal_card = CardState('8', 'C', attrition_stage=0, reward_stage=0)
+    pyr = [normal_card] * 21 + [scarred_card] + [normal_card] * 6
+    state = GameState(pyr, [], [], [], set(), {}, 0, flags, rng)
+
+    # Hits 1..3: Absorbed, attrition remains 3, anchor remains active (reward_stage=2)
+    for expected_count in range(1, 4):
+        state.apply_freeze_attrition()
+        assert scarred_card.anchor_absorption == expected_count
+        assert scarred_card.reward_stage == 2
+        assert scarred_card.attrition_stage == 3
+
+    # Hit 4: 4th hit absorbed, anchor breaks (reward_stage=0), BUT attrition_stage MUST REMAIN 3 (not reset to 0)
+    state.apply_freeze_attrition()
+    assert scarred_card.anchor_absorption == 4
+    assert scarred_card.reward_stage == 0
+    assert scarred_card.attrition_stage == 3, f"Expected attrition_stage to remain 3, but got {scarred_card.attrition_stage}"
+
+    # Hit 5: Attrition resumes from stage 3 -> 4 (Curse)
+    state.apply_freeze_attrition()
+    assert scarred_card.attrition_stage == 4
+
+    # Hit 6: Attrition resumes from stage 4 -> 5 (Entombed)
+    state.apply_freeze_attrition()
+    assert scarred_card.attrition_stage == 5
+
+    print("[OK] Verification: Anchor absorption shields up to 4 hits and resumes attrition from existing stage upon exhaustion")
+
+
 def main():
     args = parse_args()
     verify_redeal_order()
     verify_stock_vault_progress()
+    verify_anchor_absorption()
     run_benchmark(n_games=args.games, seed=args.seed, max_redeals=args.redraws, n_workers=args.workers)
 
 

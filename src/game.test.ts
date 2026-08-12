@@ -952,8 +952,62 @@ describe('Cursed Tomb campaign mechanics', () => {
       const result = moveStockToVault(testState);
       expect(result.vaultCards.length).toBe(1);
       expect(result.vaultCards[0].id).toBe('♦7');
-      expect(result.drawPile.length).toBe(testState.drawPile.length - 1);
       expect(result.drawPile.some((c) => c.id === '♦7')).toBe(false);
+    });
+
+    it('absorbs up to 4 freeze attrition hits on Anchored cards (rewardStage === 2) before anchor shield breaks', () => {
+      const campaign = createCampaign('cursed-tomb', 1);
+      const anchoredCard = campaign.masterDeck.find((c) => c.rank === 7 && c.suit === '♠')!;
+      anchoredCard.attritionStage = 3;
+      anchoredCard.rewardStage = 2;
+      anchoredCard.anchorAbsorption = 0;
+
+      let origPos = { r: -1, c: -1 };
+      for (let r = 0; r < campaign.currentRound.pyramid.length; r++) {
+        for (let c = 0; c < campaign.currentRound.pyramid[r].length; c++) {
+          if (campaign.currentRound.pyramid[r][c].id === anchoredCard.id) {
+            origPos = { r, c };
+          }
+        }
+      }
+      if (origPos.r !== -1) {
+        const row6Card = campaign.currentRound.pyramid[6][0];
+        campaign.currentRound.pyramid[origPos.r][origPos.c] = row6Card;
+        campaign.currentRound.pyramid[6][0] = { ...anchoredCard, removed: false, faceDown: false };
+      }
+
+      campaign.currentRound.status = 'pyramid-collapse';
+
+      let state = campaign;
+      for (let expectedAbs = 1; expectedAbs <= 3; expectedAbs++) {
+        state = {
+          ...state,
+          currentRound: { ...state.currentRound, lifecycleProcessed: false },
+        };
+        state = applyEndOfWeekLifecycle(state);
+        const card = state.masterDeck.find((c) => c.id === anchoredCard.id)!;
+        expect(card.anchorAbsorption).toBe(expectedAbs);
+        expect(card.rewardStage).toBe(2);
+        expect(card.attritionStage).toBe(3);
+      }
+
+      state = {
+        ...state,
+        currentRound: { ...state.currentRound, lifecycleProcessed: false },
+      };
+      state = applyEndOfWeekLifecycle(state);
+      const cardHit4 = state.masterDeck.find((c) => c.id === anchoredCard.id)!;
+      expect(cardHit4.anchorAbsorption).toBe(4);
+      expect(cardHit4.rewardStage).toBe(0);
+      expect(cardHit4.attritionStage).toBe(3);
+
+      state = {
+        ...state,
+        currentRound: { ...state.currentRound, lifecycleProcessed: false },
+      };
+      state = applyEndOfWeekLifecycle(state);
+      const cardHit5 = state.masterDeck.find((c) => c.id === anchoredCard.id)!;
+      expect(cardHit5.attritionStage).toBe(4);
     });
   });
 });

@@ -93,7 +93,7 @@ Deal 28 cards face-up into a standard pyramid layout consisting of 7 rows. The r
 4.  **Mutual Exclusivity Rule:** The recommended center-face illustration (Blessing or Curse) is drawn on the card face. A card carries EITHER a Blessing illustration OR a Curse illustration, never both.
     - If a Blessed card advances to Stage 4 Attrition, it receives the Stage 4 rank marking (`|X|` over rank digit) and can advance to Stage 5 Entombed on a subsequent attrition mark, but its **Curse trap mechanics (Red face-down deals / Black weight partner reshuffle) and Curse illustration are skipped**. The card retains its Blessing illustration.
     - If a Stage 4 Cursed card is cleared as the higher-value Hero card at round end, the **Blessing award is skipped**.
-5.  **Retrospective Anchor Rules:** An Anchor `[ + ]` drawn in the card's upper-right corner stops *future* degradation. If a card already has a Scar or Curse, those ink marks remain active; the Anchor simply blocks the card from progressing to Stage 5 (Entombed).
+5.  **Retrospective Anchor Rules & Absorption Shield:** An Anchor `[ + ]` drawn in Cobalt Blue ink in the card's upper-right corner acts as a defensive shield absorbing up to 4 round-freeze attrition hits. To physically record each absorbed freeze hit, draw a **Scarlet Red gel pen mark (dot or small tick)** in one of the 4 outer corner quadrants surrounding the blue `+` cross (top-left, top-right, bottom-left, bottom-right). On absorbing the 4th freeze hit (when all 4 corner quadrants contain red marks), the Anchor shield exhausts (returning to un-anchored status), after which the card resumes taking freeze attrition towards entombment. If a card already has a Scar or Curse, those ink marks remain active and are preserved when the Anchor shield exhausts.
 6.  **180° Symmetry:** (Optional) For physical deck play, all pen strokes are marked symmetrically (scars, curses, and blessings in top-left/bottom-right corners; anchors in top-right/bottom-left corners) so cards remain readable when rotated.
 
 ---
@@ -107,7 +107,7 @@ When a game freezes and no legal moves remain, you lose the round. Identify all 
 *   **Stage 4: The Curse `[ |7X| 8 ]` (The Trap/Weight):** 4th Stroke. Forward slash `/` drawn directly across the rank number from bottom-left to top-right (crossing the backslash to form an `X` overlapping the rank digit). Enforces the structural rules defined in Section 4 with the modified functional value written to the right.
 *   **Stage 5: Entombed:** Draw a giant dark `X` across the entire face of the card to deface it completely. The card is permanently destroyed and removed from the active deck pool for the remainder of the campaign, then placed into the Graveyard Box.
 
-*Immunity Exception:* If a card possesses a completed **Anchor `[ + ]`** in its upper-right corner, ignore this penalty phase entirely.
+*Immunity Exception:* If a card possesses a completed **Anchor `[ + ]`** in its upper-right corner, it absorbs 1 freeze hit instead of advancing an Attrition Stage (drawn as a Scarlet Red mark in one of the 4 outer corner quadrants of the blue `+` cross, up to 4 absorbed hits total before the Anchor shield exhausts).
 
 ---
 

@@ -85,20 +85,33 @@ class DFSSolver(BaseSolver):
             return True, win_sequence, nodes_explored
         return False, [], nodes_explored
 
+    def _find_matching_legal_move(self, move: Move, legal_moves: List[Move]) -> Optional[Move]:
+        for lm in legal_moves:
+            if lm.kind == move.kind and lm.payload == move.payload:
+                return lm
+        return None
+
     def select_move(self, state: GameState, legal_moves: List[Move]) -> Optional[Move]:
         if not legal_moves:
             return None
 
-        if self.cached_winning_path:
-            return self.cached_winning_path.pop(0)
+        while self.cached_winning_path:
+            candidate = self.cached_winning_path.pop(0)
+            matched = self._find_matching_legal_move(candidate, legal_moves)
+            if matched is not None:
+                return matched
+            # Cached move is no longer legal for live state; clear path
+            self.cached_winning_path.clear()
 
         if not self.searched_this_game:
             self.searched_this_game = True
             is_winnable, win_sequence, nodes = self.solve(state)
             if is_winnable and win_sequence:
-                self.cached_winning_path = win_sequence[1:]
-                return win_sequence[0]
-            else:
-                self.is_unsolvable = True
+                first_move = win_sequence[0]
+                matched = self._find_matching_legal_move(first_move, legal_moves)
+                if matched is not None:
+                    self.cached_winning_path = win_sequence[1:]
+                    return matched
+            self.is_unsolvable = True
 
         return self.fallback_solver.select_move(state, legal_moves)
