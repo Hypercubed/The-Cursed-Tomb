@@ -746,11 +746,12 @@ export function RulesModal({ isOpen, onClose, initialTab = 'core-rules' }: Rules
                     suit="♦"
                     attritionStage={3}
                     rewardStage={2}
+                    anchorAbsorption={2}
                     blessed={true}
                     functionalValue={8}
                   />
                 </div>
-                <span className="text-xs text-game-muted mt-3 font-medium">Anatomy of a Blessed & Scarred Hero Card (Real SVG Ink Overlays)</span>
+                <span className="text-xs text-game-muted mt-3 font-medium">Anatomy of a Blessed, Scarred & Anchored Hero Card (with 2/4 Red Absorption Corner Marks)</span>
               </div>
 
               {/* Zone Descriptions */}
@@ -770,7 +771,7 @@ export function RulesModal({ isOpen, onClose, initialTab = 'core-rules' }: Rules
                 <div className="bg-[#18130e] p-3 rounded border border-[#251e16] space-y-1.5">
                   <strong className="text-amber-300 block font-display">Top-Right Margin Zone</strong>
                   <p className="m-0 text-game-muted leading-relaxed">
-                    Reserved exclusively for defensive Immunity Anchors (<code className="text-amber-200 font-mono">—</code> for Fortifying, <code className="text-amber-200 font-mono">+</code> for Anchored). Each absorbed freeze hit is marked as a scarlet red dot in one of the 4 outer corner quadrants surrounding the blue <code className="text-amber-200 font-mono">+</code> cross. Once all 4 red corners are filled, the shield breaks.
+                    Reserved exclusively for defensive Immunity Anchors (<code className="text-amber-200 font-mono">—</code> for Fortifying, <code className="text-amber-200 font-mono">+</code> for Anchored). Each absorbed freeze hit is recorded as a scarlet red dot in one of the 4 outer corner quadrants surrounding the blue <code className="text-amber-200 font-mono">+</code> cross (shown above with 2/4 red dots). Once all 4 red corners are filled, the shield breaks.
                   </p>
                 </div>
               </div>

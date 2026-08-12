@@ -37,4 +37,13 @@ describe('RulesModal component definition', () => {
     expect(screen.getByText(/0\/4/)).toBeDefined();
     expect(screen.getByText(/4\/4/)).toBeDefined();
   });
+
+  it('renders Card Anatomy tab with absorption marks in diagram and margin zone notes', () => {
+    render(<RulesModal isOpen={true} onClose={() => {}} initialTab="card-anatomy" />);
+
+    expect(
+      screen.getByText('Anatomy of a Blessed, Scarred & Anchored Hero Card (with 2/4 Red Absorption Corner Marks)')
+    ).toBeDefined();
+    expect(screen.getByText(/shown above with 2\/4 red dots/)).toBeDefined();
+  });
 });
