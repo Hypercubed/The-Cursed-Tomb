@@ -354,6 +354,10 @@ export function RulesModal({ isOpen, onClose, initialTab = 'core-rules' }: Rules
                     <strong className="text-blue-300 block mb-1">4. Blessing & Curse Mutual Exclusivity</strong>
                     Cards possess a single visual identity: either a Blessing drawing OR a Curse drawing, never both. Blessed cards taking Stage 4 Attrition retain their Blessing drawing and skip Curse trap mechanics. Cursed cards cleared as Heroes skip Blessing awards.
                   </div>
+                  <div className="bg-[#18130e] p-3 rounded border border-[#251e16]">
+                    <strong className="text-blue-300 block mb-1">5. Retrospective Anchor Rules & Absorption Shield</strong>
+                    An Anchor <code className="text-amber-200 font-mono">[ + ]</code> drawn in Cobalt Blue ink in the card's upper-right corner acts as a defensive shield absorbing up to 4 round-freeze attrition hits. Each absorbed freeze hit is recorded as a scarlet red mark (dot or small tick) in one of the 4 outer corner quadrants surrounding the blue <code className="text-amber-200 font-mono">+</code> cross. On absorbing the 4th freeze hit, the Anchor shield exhausts (returning to un-anchored status), after which the card resumes taking freeze attrition toward entombment. Pre-existing Scars and Curses remain active and are preserved when the Anchor shield exhausts.
+                  </div>
                 </div>
               </section>
 
@@ -388,34 +392,84 @@ export function RulesModal({ isOpen, onClose, initialTab = 'core-rules' }: Rules
                       <span className="text-[10px] text-game-muted font-medium">Stage 5: Graveyard Box</span>
                     </div>
                   </div>
+                  <div className="bg-[#18130e] p-3 rounded border border-blue-900/30 mt-3 space-y-1">
+                    <span className="font-semibold text-blue-300 font-display uppercase tracking-wide block">
+                      Immunity Exception (Anchor Absorption)
+                    </span>
+                    <p className="m-0 text-game-muted leading-relaxed">
+                      If a card possesses a completed <strong className="text-amber-200 font-mono">Anchor [ + ]</strong> in its upper-right corner, it absorbs freeze hits with scarlet red quadrant marks (up to 4 absorbed hits) instead of advancing Attrition stages.
+                    </p>
+                  </div>
                 </div>
               </section>
 
               {/* Section 6 */}
               <section className="bg-[#120e0a] border border-[#2d2319] p-4 rounded-lg">
                 <h3 className="text-sm font-semibold text-game-accent font-display tracking-wider uppercase m-0 pb-2 border-b border-[#251e16] flex items-center gap-2">
-                  <span>── 6.</span> Survival Rewards (Suit Pip Blessings & Anchors)
+                  <span>── 6.</span> Survival Rewards (Hero Blessings & Anchors)
                 </h3>
-                <div className="mt-3 space-y-2 text-xs">
+                <div className="mt-3 space-y-3 text-xs leading-relaxed">
                   <p className="m-0 text-game-muted">
-                    When you completely clear all 28 pyramid cards, the final two matching cards award legacy suit blessings (with hand-drawn center face illustrations) and anchor immunities:
+                    When you completely clear all 28 pyramid cards, the final card play used to dismantle the board awards legacy unlocks:
                   </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
-                    <div className="bg-[#18130e] p-2.5 rounded border border-[#251e16]">
-                      <strong className="text-red-400 font-display block mb-0.5">♥ Hearts (Stock Reshuffle) — ∩ Tomb Archway</strong>
-                      Clearing this card immediately shuffles all cards in the Waste pile back into the Stock draw pile without consuming a redeal.
+
+                  {/* Subsection A: Final Pair Clear */}
+                  <div className="space-y-2">
+                    <strong className="text-amber-300 font-display block">A. The Final Pair Clear</strong>
+                    <div className="bg-[#18130e] p-3 rounded border border-[#251e16] space-y-2">
+                      <p className="m-0 text-game-text">
+                        <strong className="text-amber-400">1. Higher-Value Card (Blessed Hero):</strong> Receives its suit-specific blessing illustration drawn on the center card face:
+                      </p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pl-2">
+                        <div className="bg-[#120e0a] p-2 rounded border border-[#251e16]">
+                          <strong className="text-red-400 font-display block mb-0.5">♥ Hearts (Stock Reshuffle) — ∩ Tomb Archway</strong>
+                          Shuffles Waste pile back into Stock without consuming a redeal.
+                        </div>
+                        <div className="bg-[#120e0a] p-2 rounded border border-[#251e16]">
+                          <strong className="text-cyan-300 font-display block mb-0.5">♦ Diamonds (The Vault) — □ Vault Box</strong>
+                          Freely vault exposed Diamonds into a FILO stack without using a turn.
+                        </div>
+                        <div className="bg-[#120e0a] p-2 rounded border border-[#251e16]">
+                          <strong className="text-indigo-300 font-display block mb-0.5">♠ Spades (The Tunnel) — Tunnel Shovel</strong>
+                          Move 1 exposed pyramid card directly to Waste.
+                        </div>
+                        <div className="bg-[#120e0a] p-2 rounded border border-[#251e16]">
+                          <strong className="text-emerald-300 font-display block mb-0.5">♣ Clubs (Universal Wildcard) — ⊕ Sun Cross</strong>
+                          Cross out rank digit (<RealRankMark rank="7" isSunCross={true} color="blue" />). Pairs legally with ANY exposed card.
+                        </div>
+                      </div>
+
+                      <p className="m-0 text-game-text pt-1">
+                        <strong className="text-blue-300">2. Lower-Value Card (Anchor Progression):</strong> Progresses its upper-right defensive Anchor track by 1 stroke:
+                      </p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pl-2">
+                        <div className="bg-[#120e0a] p-2 rounded border border-[#251e16]">
+                          <strong className="text-amber-200 font-mono block mb-0.5">1st Stroke [ — ] (Fortifying)</strong>
+                          Single horizontal line in upper-right corner margin.
+                        </div>
+                        <div className="bg-[#120e0a] p-2 rounded border border-[#251e16]">
+                          <strong className="text-amber-200 font-mono block mb-0.5">2nd Stroke [ + ] (Anchored)</strong>
+                          Crossed vertically (<code className="text-amber-200 font-mono">+</code>). Card gains 4-hit absorption immunity.
+                        </div>
+                      </div>
+
+                      <div className="bg-[#120e0a] p-2.5 rounded border border-emerald-900/30 text-game-muted">
+                        <strong className="text-emerald-400 block mb-0.5">♣ Wildcard Partner Rule</strong>
+                        If the final pair contains an existing ♣ Clubs Universal Wildcard, the Wildcard automatically takes the Anchor stroke (<code className="text-amber-200 font-mono">[ — ]</code> → <code className="text-amber-200 font-mono">[ + ]</code>), while its partner receives the Hero Blessing.
+                      </div>
                     </div>
-                    <div className="bg-[#18130e] p-2.5 rounded border border-[#251e16]">
-                      <strong className="text-cyan-300 font-display block mb-0.5">♦ Diamonds (The Vault) — □ Vault Box</strong>
-                      Multiple exposed Blessed Diamond cards can be moved into the Vault for free without consuming a turn. They form a FILO stack: only the most recently vaulted (top) card can be paired.
-                    </div>
-                    <div className="bg-[#18130e] p-2.5 rounded border border-[#251e16]">
-                      <strong className="text-indigo-300 font-display block mb-0.5">♠ Spades (The Tunnel) — Tunnel Shovel</strong>
-                      Clearing this card allows you to select 1 exposed pyramid card and move it directly to the Waste pile.
-                    </div>
-                    <div className="bg-[#18130e] p-2.5 rounded border border-[#251e16]">
-                      <strong className="text-emerald-300 font-display block mb-0.5">♣ Clubs (Universal Wildcard) — ⊕ Sun Cross</strong>
-                      Cross out rank digit in blue ink (<RealRankMark rank="7" isSunCross={true} color="blue" />). Can pair legally with ANY exposed card regardless of value sum.
+                  </div>
+
+                  {/* Subsection B: Solo Clear */}
+                  <div className="space-y-2">
+                    <strong className="text-amber-300 font-display block">B. The Solo Clear (King / Value 13)</strong>
+                    <div className="bg-[#18130e] p-3 rounded border border-[#251e16] space-y-1.5">
+                      <p className="m-0 text-game-text">
+                        If the final card clearing the pyramid is played singly (a King or card with active Functional Value 13), it progresses its upper-right Anchor track by 1 stroke (<code className="text-amber-200 font-mono">[ — ]</code> or <code className="text-amber-200 font-mono">[ + ]</code>). No Hero Blessing is awarded.
+                      </p>
+                      <p className="m-0 text-game-muted text-[11px]">
+                        <em>Anchor Progression for Mutated Cards:</em> Active cards accumulate Anchor strokes (<code className="text-amber-200 font-mono">[ — ]</code> and <code className="text-amber-200 font-mono">[ + ]</code>) at all active attrition stages (including Stage 3 Scarred and Stage 4 Cursed cards) up until Stage 5 Entombment.
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -649,6 +703,23 @@ export function RulesModal({ isOpen, onClose, initialTab = 'core-rules' }: Rules
                   <p className="m-0 text-game-muted leading-relaxed">
                     When a round ends in defeat (pyramid freeze), the game engine automatically scans the layout, identifies exposed bottleneck cards, applies failure ink marks (Vulnerable → Doubtful → Scar → Curse → Entombed), updates campaign persistence, and displays exact results in the <strong>Round Summary Modal</strong>.
                   </p>
+                </div>
+
+                {/* Interaction 6 */}
+                <div className="bg-[#120e0a] border border-[#2d2319] p-4 rounded-lg space-y-2">
+                  <h4 className="text-sm font-semibold text-blue-300 font-display m-0 flex items-center gap-2">
+                    <span>🛡️</span> Anchors & Absorption Defense UI
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+                    <div className="bg-[#18130e] p-3 rounded border border-[#251e16]">
+                      <span className="text-game-muted block text-[11px] uppercase tracking-wider font-semibold mb-1">Physical Rule</span>
+                      Anchored cards (<code className="text-amber-200 font-mono">[ + ]</code>) absorb freeze hits with 4 corner quadrant red dots before shield breaks. Round clears upgrade final lower-value cards or solo Kings.
+                    </div>
+                    <div className="bg-[#18130e] p-3 rounded border border-blue-900/30">
+                      <span className="text-blue-300 block text-[11px] uppercase tracking-wider font-semibold mb-1">Web UI Interaction</span>
+                      Anchor progression upgrades (<code className="text-amber-200 font-mono">[ — ]</code> Fortifying or <code className="text-amber-200 font-mono">[ + ]</code> Anchored) display in the <strong>Round Summary Modal</strong>. Anchored cards show corner absorption charge indicators (<code className="text-amber-200 font-mono">0/4</code> to <code className="text-amber-200 font-mono">4/4</code> red dots) on the card badge.
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

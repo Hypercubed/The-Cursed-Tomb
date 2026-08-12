@@ -1,8 +1,8 @@
 ---
 title: "The Cursed Tomb"
 subtitle: "Official Ruleset"
-version: "0.0.11"
-date: "2026-08-08"
+version: "0.0.12"
+date: "2026-08-11"
 status: "draft"
 description: "A persistent, mutating tactical card game played with a standard 52-card deck and fine-tip felt markers."
 license: "CC-BY-SA-4.0"
@@ -127,13 +127,13 @@ Compare the final two cards' active Functional Values:
     *   ♣ **Clubs (Universal Wildcard):** Center face icon: Circled Sun Cross (`⊕`). Cross out the rank number digit in blue ink (`X`) on the upper-left and bottom-right corner indices. When pairing, this card can legally pair with **ANY exposed card** regardless of that partner card's functional value (treating the combined sum as 13).
 *   **The Lower-Value Card builds the Anchor:** Progress its defensive immunity track by one stroke in the upper-right corner margin (and bottom-left corner rotated 180°):
     *   *First Stroke `[ — ]` (Fortifying):* Draw a single bold dark horizontal line in the upper-right corner margin. No mechanical effect yet.
-    *   *Second Stroke `[ + ]` (Anchored):* Cross it vertically with a bold dark stroke (`+`) in the upper-right corner margin. The card is now permanently immune to rank loss marks.
+    *   *Second Stroke `[ + ]` (Anchored):* Cross it vertically with a bold dark stroke (`+`) in the upper-right corner margin. The card gains a defensive absorption shield (`[+]`) that absorbs up to 4 round-freeze attrition hits before exhausting.
 *   **Wildcard Partner Rule:** If the final pair includes an existing **♣ Clubs Universal Wildcard** (`⊕`), the Wildcard cannot receive another blessing and **automatically becomes the Anchor** (incrementing its Anchor track `[ — ]` / `[ + ]`). Its partner card becomes the **Blessed Hero** (gaining its suit blessing illustration, unless already blessed or Stage 4 Cursed). If both cards in the final pair are Wildcards, neither can receive a blessing, and one Wildcard receives the Anchor stroke.
 
 ### B. The Solo Clear (Standalone Value 13 / King Clear)
 If the final card clearing the board is played singly (a King or any card with an active Functional Value of 13), progress its upper-right Anchor track by one stroke (`[ — ]` or `[ + ]`). No Hero's Blessing is awarded.
 
-*Anchor Progression & Entombment:* Cards continue to accumulate upper-right Anchor strokes (`[ — ]` and `[ + ]`) at all active attrition stages (including Scarred and Cursed cards at Stage 3 and 4) up until they are Entombed (Stage 5). Once a card reaches Stage 2 Anchored (`[ + ]`), it becomes immune to further round-freeze attrition.
+*Anchor Progression & Entombment:* Cards continue to accumulate upper-right Anchor strokes (`[ — ]` and `[ + ]`) at all active attrition stages (including Scarred and Cursed cards at Stage 3 and 4) up until they are Entombed (Stage 5). Once a card reaches Stage 2 Anchored (`[ + ]`), it absorbs round-freeze attrition hits (up to 4 hits, recorded as red quadrant marks surrounding the `+` cross, before the shield exhausts).
 
 ### C. Visual Reference Guide
 Mutated physical cards retain clear visual separation between corner index marks and center face drawings:

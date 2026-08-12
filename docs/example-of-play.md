@@ -18,7 +18,7 @@ This example assumes **Archaeologist (1 Redeal)** and uses a single, invented sh
 Every marked card has two independent zones (§3, §6C):
 
 * **Upper-Left / Bottom-Right:** Rank marks — Attrition strokes `|`, `||`, Scar `|̸| 8`, Curse `|X| 8`, Clubs Wildcard crossed-rank `X`.
-* **Upper-Right / Bottom-Left:** Anchor — `—` (Fortifying) then `+` (Anchored, immune).
+* **Upper-Right / Bottom-Left:** Anchor — `—` (Fortifying) then `+` (Anchored, 4-hit absorption shield).
 * **Center face:** Blessing `∩` `□` `Shovel` `⊕` *or* Curse `▼` `⏍` — never both (§4.4).
 
 ---
@@ -148,7 +148,7 @@ Card B: 2♠ (2, printed 2, functional 2) — clean, unblessed, blocked nothing 
 ```
 
 * **Higher value 11 → Hero (Blessed).** `J♥` gets the Hearts blessing: draw Tomb Archway `∩` in blue center. In all future rounds, *whenever that physical `J♥ ∩` is cleared*, immediately shuffle the entire Waste pile back into Stock **without** spending the Die (§6A ♥). Foundation cards never interact — only Waste → Stock.
-* **Lower value 2 → Anchor.** `2♠` gets `—` in Upper-Right (Fortifying, Stage 1). No immunity yet. A second Anchor as lower card in a future clear would cross it to `+` (Anchored, §6A), making it immune to all future Attrition (§5 Immunity Exception + §4.5).
+* **Lower value 2 → Anchor.** `2♠` gets `—` in Upper-Right (Fortifying, Stage 1). No immunity yet. A second Anchor as lower card in a future clear would cross it to `+` (Anchored, §6A), granting a 4-hit absorption shield against round-freeze Attrition (§5 Immunity Exception + §4.5).
 
 **Wildcard Partner Rule in effect.** Suppose instead the final pair had been:
 
@@ -161,7 +161,7 @@ Even though `9 > 4`, the Wildcard **cannot** become Hero again. So `4♣ ⊕` au
 
 **Solo clear.** If the last card had been a lone `K♣` (or any card functioning as 13), no blessing is awarded — that card gets the Anchor stroke only (§6B).
 
-Anchor progress continues even on Scarred/Cursed cards until Entombed; once a card reaches `+`, it never takes Attrition again (§4.5, §6 note).
+Anchor progress continues even on Scarred/Cursed cards until Entombed; once a card reaches `+`, it absorbs round-freeze Attrition hits (up to 4 hits, recorded as red quadrant marks surrounding the `+` cross, before the shield exhausts) (§4.5, §6 note).
 
 ---
 
@@ -169,8 +169,8 @@ Anchor progress continues even on Scarred/Cursed cards until Entombed; once a ca
 
 Round 5 freezes with bottlenecks `8♦ □ (Anchored +)` and `5♠ |5|`. Per §5:
 
-* `8♦ □ [+]` — **skip** Attrition entirely (Immunity Exception).
-* `5♠ |5|` → `|5̸| 4` (black, −1). Mark in red. The Anchored Vault card stays pristine.
+* `8♦ □ [+]` — **absorbs 1 freeze hit** (Immunity Exception). Draw 1st red quadrant dot around `+` (1/4 absorption charges spent).
+* `5♠ |5|` → `|5̸| 4` (black, −1). Mark in red.
 
 ---
 
@@ -205,7 +205,7 @@ After each round (clear or freeze):
 | `▼` / `⏍` | Center face | Red | Curse illustration (§4.2–4.3) — skipped if already blessed |
 | `∩` `□` `Shovel` `⊕` | Center face | Blue | Hero Blessing (§6A) — skipped if already blessed or cursed |
 | `X` over rank | Upper-Left rank pip | Blue | Clubs Wildcard crossed-rank (§6A ♣) |
-| `—` then `+` | Upper-Right margin | Blue | Anchor Fortifying → Anchored (§6), immune thereafter |
+| `—` then `+` | Upper-Right margin | Blue | Anchor Fortifying → Anchored (§6), 4-hit absorption shield thereafter |
 | Giant `X` | Entire face | Red | Entombed → Graveyard (§5 Stage 5) |
 
 Face-down cards from Red Curses are temporary — flip face-up the moment they become exposed. Vault cards never enter Waste/Stock cycles until the round ends.

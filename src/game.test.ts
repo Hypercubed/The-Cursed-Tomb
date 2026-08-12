@@ -961,6 +961,11 @@ describe('Cursed Tomb campaign mechanics', () => {
       anchoredCard.attritionStage = 3;
       anchoredCard.rewardStage = 2;
       anchoredCard.anchorAbsorption = 0;
+      anchoredCard.tempImmune = false;
+
+      campaign.currentRound.pyramid.flat().forEach((c) => {
+        c.tempImmune = false;
+      });
 
       let origPos = { r: -1, c: -1 };
       for (let r = 0; r < campaign.currentRound.pyramid.length; r++) {
