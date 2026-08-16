@@ -24,12 +24,14 @@ A persistent, mutating tactical card game played with a standard 52-card deck an
 ---
 
 ## 1. Expedition Objective & Failure Conditions
-Your ultimate goal is to play as long as possible before the deck becomes unplayable.
+**The Cursed Tomb is cursed to fail — eventually every expedition collapses.** There is no final victory. Your objective is to endure as many rounds as possible and achieve as many **Wins** as you can before the deck becomes unplayable.
+
+A **Win** is scored whenever you clear all 28 cards from the pyramid layout in a single round — whether you clear only the pyramid ([Pyramid Clear](#6-the-survival-rewards-hero-blessings--anchors)) or clear the entire deck including Stock, Waste, and Vault ([Perfect Win](#7-the-timing--campaign-resets)). Every Win grants Survival Rewards (§6). Keep a tally of your Wins (and separately your Perfect Wins) on paper — your final score is how many you earned before the tomb claimed you.
 
 ### The Tomb Collapses (Campaign End Conditions)
 The campaign ends in instant defeat if the tomb collapses. The tomb collapses the moment the following condition is met:
 
-1.  **Starvation Condition (Mandatory):** At the start of a new round, you do not have enough active cards remaining in your pool to build a full 28-card pyramid layout.
+1.  **Starvation Condition (Mandatory):** At the start of a new round, you do not have enough active cards remaining in your pool to build a full 28-card pyramid layout. This is the sole way the campaign ends — Perfect Wins and Pyramid Clears are accomplishments, not endings; you always shuffle and continue (§7) until starvation.
 
 ---
 
@@ -112,7 +114,9 @@ When a game freezes and no legal moves remain, you lose the round. Identify all 
 ---
 
 ## 6. The Survival Rewards (Hero Blessings & Anchors)
-If you completely clear all 28 cards from the pyramid layout but have leftover cards remaining in the Stock or Waste piles, you achieve a **Pyramid Clear**. Unlocked suit blessings carry over permanently and trigger across all subsequent rounds of the campaign.
+Whenever you score a **Win** — clearing all 28 cards from the pyramid layout in a round (§1) — you earn Survival Rewards. A **Pyramid Clear** (pyramid empty with cards remaining in Stock/Waste/Vault) and a **Perfect Win** (pyramid *and* Stock/Waste/Vault empty, §7) both count as Wins. Apply the rewards below, then continue to the Campaign Reset (§7).
+
+Unlocked suit blessings carry over permanently and trigger across all subsequent rounds of the campaign.
 
 **Card-Specific Legacy Unlocks:** A suit blessing applies strictly to the individual physical card it is drawn upon. While multiple separate cards in your deck can acquire the same suit blessing over the course of the campaign (creating multiple distinct Hero cards), each instance triggers independently when that specific card is cleared.
 
@@ -155,11 +159,13 @@ Mutated physical cards retain clear visual separation between corner index marks
 ---
 
 ## 7. The Timing & Campaign Resets
+Both Pyramid Clears and Perfect Wins are accomplishments, not endings. After scoring a Win and applying Survival Rewards (§6), you always continue to the Campaign Reset Protocol below — the tomb is cursed to endure until starvation.
 
 ### Resolution of Simultaneous End-States
-If the final match played to clear the entire deck and achieve a **Perfect Win** includes a card with a penalty effect—such as a **Black Cursed card (`⏍`)** whose partner would normally be reshuffled back into the Stock pile—**the Perfect Win takes absolute priority.** The penalty effect is bypassed, both cards move to the Foundation, and the round is successfully cleared as a Perfect Win.
+If the final match played to clear the entire deck and achieve a **Perfect Win** includes a card with a penalty effect—such as a **Black Cursed card (`⏍`)** whose partner would normally be reshuffled back into the Stock pile—**the Perfect Win takes absolute priority.** The penalty effect is bypassed, both cards move to the Foundation, and the round is successfully cleared as a Perfect Win. Record the Perfect Win on your tally and proceed to the reset.
 
 ### Campaign Reset Protocol
-1.  **Assemble Active Pool:** Gather all cards from the Foundation pile, remaining Stock, Waste, and the Diamond Vault. This forms your active pool. Leave all entombed `[ X ]` cards behind in the Graveyard Box.
-2.  **Audit the Tomb:** Check the active pool and the Graveyard Box against your active campaign end conditions (Section 1). If you have fewer than 28 cards total in the active pool, the campaign ends in immediate defeat.
-3.  **Shuffle and Re-Deal:** Re-shuffle the active pool and deal a new 28-card pyramid according to the setup constraints.
+1.  **Record the Win:** If the round ended in a Pyramid Clear or Perfect Win, add one to your Win tally (and, for a Perfect Win, one to your Perfect Win tally), then apply Survival Rewards (§6). A Perfect Win counts as a Win.
+2.  **Assemble Active Pool:** Gather all cards from the Foundation pile, remaining Stock, Waste, and the Diamond Vault. This forms your active pool. Leave all entombed `[ X ]` cards behind in the Graveyard Box.
+3.  **Audit the Tomb:** Check the active pool against your active campaign end condition (Section 1). If you have fewer than 28 cards total in the active pool, the campaign ends in immediate defeat — record your final tallies as your score.
+4.  **Shuffle and Re-Deal:** If you have 28 or more active cards, re-shuffle the active pool and deal a new 28-card pyramid according to the setup constraints. The curse continues.
