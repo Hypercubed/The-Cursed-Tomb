@@ -979,6 +979,8 @@ describe('Cursed Tomb campaign mechanics', () => {
         const row6Card = campaign.currentRound.pyramid[6][0];
         campaign.currentRound.pyramid[origPos.r][origPos.c] = row6Card;
         campaign.currentRound.pyramid[6][0] = { ...anchoredCard, removed: false, faceDown: false };
+      } else {
+        campaign.currentRound.pyramid[6][0] = { ...anchoredCard, removed: false, faceDown: false };
       }
 
       campaign.currentRound.status = 'pyramid-collapse';

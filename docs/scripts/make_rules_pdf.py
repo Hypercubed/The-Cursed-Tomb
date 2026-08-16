@@ -3,18 +3,18 @@
 Generate a combined, print-ready PDF rulebook for The Cursed Tomb.
 
 Combines `docs/standard-pyramid-rules.md`, `docs/rules.md` (official ruleset — version from docs/rules.md frontmatter),
-and `docs/example-of-play.md` into a single styled PDF rendered with fpdf2:
+`docs/example-of-play.md`, and `docs/cheat-sheet.md` into a single styled PDF rendered with fpdf2:
 
   * Cover page with a drawn playing-card motif
-  * Copyright & Licenses page (inside front cover) with CC BY-SA 4.0 (Parts II & III) and CC0 1.0 (Part I) — no code license
+  * Copyright & Licenses page (inside front cover) with CC BY-SA 4.0 (Parts II, III & IV) and CC0 1.0 (Part I) — no code license
   * Table of contents with page numbers (two-pass render)
-  * Part I — Standard Pyramid Solitaire / Part II — Official Ruleset / Part III — Example of Play
+  * Part I — Standard Pyramid Solitaire / Part II — Official Ruleset / Part III — Example of Play / Part IV — Campaign Cheat Sheet
   * Running headers, page footers, styled code blocks and tables
 
 Licensing for the generated PDF
 -------------------------------
 This PDF is an offline rulebook, not the application.
-Parts II & III (docs/rules.md, docs/example-of-play.md) are
+Parts II, III & IV (docs/rules.md, docs/example-of-play.md, docs/cheat-sheet.md) are
 ``CC-BY-SA-4.0`` — Copyright (c) 2026 Jayson Harshbarger.
 Part I (docs/standard-pyramid-rules.md — classic Pyramid Solitaire)
 is ``CC0-1.0`` / public domain.  Source-code licensing (MIT) is not
@@ -831,16 +831,9 @@ def render_code_block(pdf: RulebookPDF, text: str, size: float = 8.0) -> None:
     pdf.set_font_style("Mono", size)
     y = y0 + 2
     for ln in lines:
-        if pdf.get_string_width(ln) > box_w - 8:
-            pdf.set_left_margin(x0 + 4)
-            pdf.set_xy(x0 + 4, y)
-            pdf.multi_cell(box_w - 8, line_h, ln, align="L",
-                           new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-            y = pdf.get_y()
-        else:
-            pdf.set_xy(x0 + 4, y)
-            pdf.cell(box_w - 8, line_h, ln, align="L")
-            y += line_h
+        pdf.set_xy(x0 + 4, y)
+        pdf.cell(box_w - 8, line_h, ln, align="L")
+        y += line_h
     pdf.set_left_margin(ML)
     pdf.set_xy(ML, y + 2)
     pdf.set_text_color(*INK)
@@ -896,57 +889,107 @@ def calc_lines(pdf: RulebookPDF, text: str, style: str, size: float, width: floa
     if not text:
         return 1
     pdf.set_font_style(style, size)
-    lines, remaining = 1, width
-    for word in text.split(" "):
-        w = pdf.get_string_width(word) + pdf.get_string_width(" ")
-        if w > remaining and word:
-            lines += 1
-            remaining = width - w
-        else:
-            remaining -= w
-    return lines
+    clean = text.replace("`", "").replace("<br>", "\n").replace("<br/>", "\n").replace("<br />", "\n")
+    clean = re.sub(r"\*\*|\*", "", clean)
+    paras = clean.split("\n")
+    total_lines = 0
+    for para in paras:
+        lines, remaining = 1, width
+        for word in para.split(" "):
+            w = pdf.get_string_width(word) + pdf.get_string_width(" ")
+            if w > remaining and word:
+                lines += 1
+                remaining = width - w
+            else:
+                remaining -= w
+        total_lines += lines
+    return max(total_lines, 1)
 
 
 def render_table(pdf: RulebookPDF, header: List[str], rows: List[List[str]]) -> None:
     n_cols = len(header)
-    col_w = [30, 40, 14, CONTENT_W - 30 - 40 - 14]
-    if n_cols != 4:
+    header_str = " ".join(header)
+    if n_cols == 5 and "Suit" in header_str:
+        col_w = [18, 36, 26, 32, CONTENT_W - 18 - 36 - 26 - 32]
+    elif n_cols == 5 and "Color" in header_str:
+        col_w = [26, 34, 26, 24, CONTENT_W - 26 - 34 - 26 - 24]
+    elif n_cols == 5 and "Difficulty" in header_str:
+        col_w = [26, 20, 28, 30, CONTENT_W - 26 - 20 - 28 - 30]
+    elif n_cols == 4 and "Difficulty" in header_str:
+        col_w = [28, 30, 28, CONTENT_W - 28 - 30 - 28]
+    elif n_cols == 4 and "Stage" in header_str:
+        col_w = [26, 22, 28, CONTENT_W - 26 - 22 - 28]
+    elif n_cols == 4 and "Curse" in header_str:
+        col_w = [28, 32, 24, CONTENT_W - 28 - 32 - 24]
+    elif n_cols == 4 and "Blessing" in header_str:
+        col_w = [22, 34, 24, CONTENT_W - 22 - 34 - 24]
+    elif n_cols == 4 and "Zone" in header_str:
+        col_w = [34, 32, 20, CONTENT_W - 34 - 32 - 20]
+    elif n_cols == 4 and "Mark" in header_str:
+        col_w = [45, 38, 18, CONTENT_W - 45 - 38 - 18]
+    elif n_cols == 3 and "Feature" in header_str:
+        col_w = [40, 70, CONTENT_W - 40 - 70]
+    elif n_cols == 2 and "Pair" in header_str:
+        col_w = [60, CONTENT_W - 60]
+    elif n_cols == 4:
+        col_w = [30, 40, 14, CONTENT_W - 30 - 40 - 14]
+    else:
         col_w = [CONTENT_W / n_cols] * n_cols
+
     pad = 1.8
-    sizes = [8.0, 8.5, 8.5, 8.5]
-    styles = ["Mono", "", "", ""]
+    default_sizes = [8.0, 8.5, 8.5, 8.5, 8.5]
+    default_styles = ["Mono", "", "", "", ""]
+
+    def clean_text(s: str) -> str:
+        s = s.replace("`", "").replace("<br>", "\n").replace("<br/>", "\n").replace("<br />", "\n")
+        s = re.sub(r"\*\*|\*", "", s)
+        return s
+
+    def get_style(ci: int, is_header: bool) -> str:
+        if is_header:
+            return "B"
+        return default_styles[ci] if ci < len(default_styles) else ""
+
+    def get_size(ci: int, is_header: bool) -> float:
+        if is_header:
+            return 9.0
+        return default_sizes[ci] if ci < len(default_sizes) else 8.5
 
     def cell_height(text, ci):
         avail = col_w[ci] - 2 * pad
-        return calc_lines(pdf, text, styles[ci], sizes[ci], avail) * (sizes[ci] * 0.62) + 2 * pad
+        st = get_style(ci, False)
+        sz = get_size(ci, False)
+        return calc_lines(pdf, text, st, sz, avail) * (sz * 0.62) + 2 * pad
 
     def row_height(cells):
         return max(cell_height(c, i) for i, c in enumerate(cells))
 
-    pdf.ensure_room(row_height(header) + 6)
     x0 = ML
 
-    def draw_row(cells, y, is_header=False, zebra=False):
+    def draw_row(cells, y_pos, is_header=False, zebra=False):
         h = row_height(cells)
         if zebra:
             pdf.set_fill_color(*ROW_ALT)
-            pdf.rect(x0, y, sum(col_w), h, "F")
+            pdf.rect(x0, y_pos, sum(col_w), h, "F")
         if is_header:
             pdf.set_fill_color(*BAND_BG)
-            pdf.rect(x0, y, sum(col_w), h, "F")
+            pdf.rect(x0, y_pos, sum(col_w), h, "F")
         x = x0
         for ci, cell in enumerate(cells):
             cx = x + pad
-            cy = y + pad
+            cy = y_pos + pad
             pdf.set_xy(cx, cy)
+            st = get_style(ci, is_header)
+            sz = get_size(ci, is_header)
             if is_header:
-                pdf.set_font_style("B", 9)
+                pdf.set_font_style(st, sz)
                 pdf.set_text_color(*BAND_TEXT)
             else:
-                pdf.set_font_style(styles[ci], sizes[ci])
+                pdf.set_font_style(st, sz)
                 pdf.set_text_color(*INK)
             pdf.set_left_margin(cx)
-            pdf.multi_cell(col_w[ci] - 2 * pad, sizes[ci] * 0.62, cell.replace("`", ""),
+            cleaned = clean_text(cell)
+            pdf.multi_cell(col_w[ci] - 2 * pad, sz * 0.62, cleaned,
                            align="L", wrapmode="WORD",
                            new_x=XPos.LMARGIN, new_y=YPos.NEXT)
             x += col_w[ci]
@@ -954,12 +997,23 @@ def render_table(pdf: RulebookPDF, header: List[str], rows: List[List[str]]) -> 
         pdf.set_text_color(*INK)
         pdf.set_draw_color(*GRID)
         pdf.set_line_width(0.2)
-        pdf.rect(x0, y, sum(col_w), h, "D")
+        pdf.rect(x0, y_pos, sum(col_w), h, "D")
         return h
+
+    # Ensure room for header + at least one data row
+    first_row_h = row_height(rows[0]) if rows else 0
+    hdr_h = row_height(header)
+    if pdf.get_y() + hdr_h + first_row_h > PAGE_H - MB:
+        pdf.new_page()
 
     y = pdf.get_y()
     y += draw_row(header, y, is_header=True)
     for idx, row in enumerate(rows):
+        rh = row_height(row)
+        if y + rh > PAGE_H - MB:
+            pdf.new_page()
+            y = pdf.get_y()
+            y += draw_row(header, y, is_header=True)
         y += draw_row(row, y, zebra=(idx % 2 == 1))
     pdf.set_xy(ML, y + 3)
     pdf.set_text_color(*INK)
@@ -1170,10 +1224,10 @@ def render_license_page(pdf: RulebookPDF) -> None:
     pdf.set_y(pdf.get_y() + 2)
 
     _license_box(pdf,
-        "This Rulebook  \u2014  CC BY-SA 4.0  (Parts II & III)  ·  Part I: CC0",
+        "This Rulebook  \u2014  CC BY-SA 4.0  (Parts II, III & IV)  ·  Part I: CC0",
         [
-            ("Parts II & III of this PDF (Official Ruleset from docs/rules.md and "
-             "Example of Play from docs/example-of-play.md) are licensed under "
+            ("Parts II, III & IV of this PDF (Official Ruleset from docs/rules.md, "
+             "Example of Play from docs/example-of-play.md, and Campaign Cheat Sheet from docs/cheat-sheet.md) are licensed under "
              "Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0).",
              8.5, 4.4),
             ("Part I (Standard Pyramid Solitaire, from docs/standard-pyramid-rules.md) "
@@ -1186,7 +1240,7 @@ def render_license_page(pdf: RulebookPDF) -> None:
              "CC BY-SA legal code:  https://creativecommons.org/licenses/by-sa/4.0/legalcode\n"
              "CC0 deed:  https://creativecommons.org/publicdomain/zero/1.0/",
              8.0, 4.2),
-            ("SPDX: CC-BY-SA-4.0 (Parts II & III)  ·  CC0-1.0 (Part I)  ·  Full texts in docs/LICENSE.",
+            ("SPDX: CC-BY-SA-4.0 (Parts II, III & IV)  ·  CC0-1.0 (Part I)  ·  Full texts in docs/LICENSE.",
              8.0, 4.2),
             ("You are free to share and adapt the CC BY-SA parts for any purpose, even "
              "commercially, provided you credit Jayson Harshbarger, link to the "
@@ -1226,7 +1280,7 @@ def render_cover(pdf: RulebookPDF) -> None:
     pdf.set_text_color(*DARK)
     pdf.set_font_style("B", 13.5)
     pdf.set_y(80)
-    pdf.cell(PAGE_W, 7, "Official Ruleset & Example of Play", align="C")
+    pdf.cell(PAGE_W, 7, "Official Ruleset · Example of Play · Cheat Sheet", align="C")
 
     pdf.set_text_color(*GRAY)
     pdf.set_font_style("", 9)
@@ -1292,45 +1346,46 @@ def render_toc(pdf: RulebookPDF, toc: List[Tuple[str, List[Tuple[str, int]]]]) -
     pdf.add_page()
     pdf.set_text_color(*DARK)
     pdf.set_font_style("B", 16)
-    pdf.set_xy(ML, 34)
+    pdf.set_xy(ML, 28)
     pdf.cell(CONTENT_W, 8, "Contents", align="L")
     pdf.set_draw_color(*CRIMSON)
     pdf.set_line_width(0.6)
-    pdf.line(ML, 44, ML + 24, 44)
-    y = 52
+    pdf.line(ML, 37, ML + 24, 37)
+    y = 42
     for part, entries in toc:
         pdf.set_xy(ML, y)
-        pdf.set_font_style("B", 11)
+        pdf.set_font_style("B", 10.5)
         pdf.set_text_color(*CRIMSON)
-        pdf.cell(CONTENT_W, 6, part, align="L")
-        y += 8
+        pdf.cell(CONTENT_W, 5, part, align="L")
+        y += 6
         for text, page in entries:
             pdf.set_text_color(*INK)
-            pdf.set_font_style("", 9.5)
+            pdf.set_font_style("", 9)
             tw = pdf.get_string_width(text)
             pdf.set_xy(ML + 5, y)
-            pdf.cell(tw, 5, text, align="L")
+            pdf.cell(tw, 4.2, text, align="L")
             num_w = pdf.get_string_width(str(page))
             pdf.set_xy(PAGE_W - MR - num_w, y)
-            pdf.cell(num_w, 5, str(page), align="R")
+            pdf.cell(num_w, 4.2, str(page), align="R")
             dash_x0 = ML + 5 + tw + 3
             dash_x1 = PAGE_W - MR - num_w - 3
-            mid_y = y + 2.5
+            mid_y = y + 2.1
             pdf.set_draw_color(*LEADER)
             pdf.set_line_width(0.2)
             pdf.set_dash_pattern(dash=0.5, gap=1.1)
             if dash_x1 > dash_x0:
                 pdf.line(dash_x0, mid_y, dash_x1, mid_y)
             pdf.set_dash_pattern()
-            y += 6
-        y += 2
-    pdf.set_xy(ML, y + 4)
-    pdf.set_font_style("I", 8.5)
+            y += 4.8
+        y += 1.5
+    pdf.set_xy(ML, y + 2)
+    pdf.set_font_style("I", 8)
     pdf.set_text_color(*GRAY)
-    pdf.multi_cell(CONTENT_W, 4.5,
+    pdf.multi_cell(CONTENT_W, 4.0,
                    "This document combines standard Pyramid Solitaire rules (docs/standard-pyramid-rules.md), "
-                   "the official Cursed Tomb ruleset (docs/rules.md), and a scripted, annotated walkthrough "
-                   "(docs/example-of-play.md). All mechanics in the example follow Sections 1–7 of the rules.",
+                   "the official Cursed Tomb ruleset (docs/rules.md), a scripted, annotated walkthrough "
+                   "(docs/example-of-play.md), and the campaign cheat sheet (docs/cheat-sheet.md). "
+                   "All mechanics in the example and cheat sheet follow Sections 1–7 of the rules.",
                    align="L", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
 
@@ -1362,8 +1417,12 @@ def build_document(pdf: RulebookPDF, parts, record_toc: bool, with_toc_page: boo
         elif idx == 1:
             ver = pdf.rules_meta.version if pdf.rules_meta else "?"
             subtitle = f"Ruleset v{ver}"
-        else:
+        elif idx == 2:
             subtitle = "Companion to the Official Ruleset"
+        elif idx == 3:
+            subtitle = "Quick Reference & Lookup Tables"
+        else:
+            subtitle = ""
         render_part_divider(
             pdf, part_title,
             subtitle,
@@ -1431,9 +1490,9 @@ def configure(pdf: RulebookPDF) -> None:
     ver = pdf.rules_meta.version if pdf.rules_meta else "?"
     pdf.set_title(f"The Cursed Tomb \u2014 Complete Rulebook (v{ver})")
     pdf.set_author("Jayson Harshbarger")
-    pdf.set_subject("Standard Pyramid Solitaire, Cursed Tomb ruleset, and example of play")
-    pdf.set_keywords("cursed tomb, pyramid solitaire, card game, ruleset, campaign, standard rules, CC BY-SA 4.0, CC0")
-    pdf.set_creator("The Cursed Tomb — Offline Rulebook (CC BY-SA 4.0 Parts II & III, CC0 Part I)")
+    pdf.set_subject("Standard Pyramid Solitaire, Cursed Tomb ruleset, example of play, and campaign cheat sheet")
+    pdf.set_keywords("cursed tomb, pyramid solitaire, card game, ruleset, campaign, cheat sheet, standard rules, CC BY-SA 4.0, CC0")
+    pdf.set_creator("The Cursed Tomb — Offline Rulebook (CC BY-SA 4.0 Parts II, III & IV, CC0 Part I)")
 
 
 def main() -> int:
@@ -1441,6 +1500,7 @@ def main() -> int:
     ap.add_argument("--rules", default="docs/rules.md")
     ap.add_argument("--standard", default="docs/standard-pyramid-rules.md")
     ap.add_argument("--example", default="docs/example-of-play.md")
+    ap.add_argument("--cheatsheet", default="docs/cheat-sheet.md")
     ap.add_argument("--output", default="docs/cursed-tomb-rulebook.pdf")
     args = ap.parse_args()
 
@@ -1450,10 +1510,12 @@ def main() -> int:
     rules_md = strip_doc(Path(args.rules).read_text(encoding="utf-8"))
     standard_md = strip_doc(Path(args.standard).read_text(encoding="utf-8"))
     example_md = strip_doc(Path(args.example).read_text(encoding="utf-8"))
+    cheatsheet_md = strip_doc(Path(args.cheatsheet).read_text(encoding="utf-8"))
     parts = [
         ("Part I — Standard Pyramid Solitaire", parse_blocks(standard_md)),
         ("Part II — The Official Ruleset", parse_blocks(rules_md)),
         ("Part III — Example of Play", parse_blocks(example_md)),
+        ("Part IV — Campaign Cheat Sheet", parse_blocks(cheatsheet_md)),
     ]
 
     # Pass A: render once to learn heading page numbers.
