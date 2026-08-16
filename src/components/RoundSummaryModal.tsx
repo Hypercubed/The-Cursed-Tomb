@@ -387,16 +387,22 @@ export function RoundSummaryModal({
                         : `Functional Value shifted -1 (now acts as rank ${fValStr})`;
 
                       if (stage === 1) {
-                        stageTitle = `Vulnerable (|${rLabel})`;
-                        description = '1st attrition line to the left of rank (No functional value shift yet)';
+                        stageTitle = `1 Scar - Vulnerable (|${rLabel})`;
+                        description = '1 red bar left of rank - no effect';
                       } else if (stage === 2) {
-                        stageTitle = `Doubtful (|${rLabel}|)`;
-                        description = '2nd attrition line framing rank (No functional value shift yet)';
+                        stageTitle = `2 Scars - Scarred (|\\${rLabel} ${fValStr})`;
+                        description = isRed
+                          ? `2 Scars: Backslash \\ across rank - value shifted +1 to ${fValStr}`
+                          : `2 Scars: Backslash \\ across rank - value shifted -1 to ${fValStr}`;
                       } else if (stage === 3) {
-                        stageTitle = isRed ? `Red Scar (|${rLabel}\\|)` : `Black Scar (|${rLabel}\\|)`;
-                      }
-
-                      return (
+                        stageTitle = isRed ? `3 Scars - Cursed (|X ${fValStr}) - Red Trap (▼)` : `3 Scars - Cursed (|X ${fValStr}) - Black Weight (⏍)`;
+                        description = isRed
+                          ? `3 Scars: X over rank - Red Curse locks next row face-down`
+                          : `3 Scars: X over rank - Black Curse partner to Stock`;
+                      } else if (stage === 4) {
+                        stageTitle = `4 Scars - Imperiled (|${rLabel}X| ${fValStr}) - still Cursed, one from Entombed`;
+                        description = 'Cursed (|X|) framed with right bar - still trap/weight, next Scar entombs';
+                      }                      return (
                         <div key={card.id} className="flex items-center gap-3 bg-[#120e0a]/80 p-2 rounded border border-amber-900/40">
                           <PlayingCard
                             rank={card.rank}
