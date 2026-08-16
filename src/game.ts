@@ -79,7 +79,7 @@ const ranks: Rank[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
 
 export function getFunctionalValue(card: Card, mode: GameMode = 'standard'): number {
   if (mode !== 'cursed-tomb') return card.rank;
-  if (card.attritionStage < 3) return card.rank;
+  if (card.attritionStage < 2) return card.rank;
   const shift = card.suit === '♥' || card.suit === '♦' ? 1 : -1;
   return ((card.rank + shift - 1 + 13) % 13) + 1;
 }
@@ -153,9 +153,9 @@ export function updateRedCurseFaceDownState(pyramid: Card[][], mode: GameMode = 
       const parent2 = c < parentRow.length ? parentRow[c] : null;
 
       const parent1RedCurse =
-        parent1 && !parent1.removed && !parent1.blessed && parent1.attritionStage === 4 && (parent1.suit === '♥' || parent1.suit === '♦');
+        parent1 && !parent1.removed && !parent1.blessed && parent1.attritionStage >= 3 && parent1.attritionStage <= 4 && (parent1.suit === '♥' || parent1.suit === '♦');
       const parent2RedCurse =
-        parent2 && !parent2.removed && !parent2.blessed && parent2.attritionStage === 4 && (parent2.suit === '♥' || parent2.suit === '♦');
+        parent2 && !parent2.removed && !parent2.blessed && parent2.attritionStage >= 3 && parent2.attritionStage <= 4 && (parent2.suit === '♥' || parent2.suit === '♦');
 
       if (parent1RedCurse || parent2RedCurse) {
         // Face-down card is revealed as soon as it becomes exposed (playable) or if manually revealed by Spades Tunnel
@@ -571,11 +571,11 @@ function removeCard(state: GameState, cardId: string): GameState {
 }
 
 export function isCursed(card: Card, mode: GameMode = 'cursed-tomb'): boolean {
-  return mode === 'cursed-tomb' && !card.blessed && card.attritionStage === 4;
+  return mode === 'cursed-tomb' && !card.blessed && card.attritionStage >= 3 && card.attritionStage <= 4;
 }
 
 export function isBlackCursed(card: Card, mode: GameMode): boolean {
-  return mode === 'cursed-tomb' && !card.blessed && card.attritionStage === 4 && (card.suit === '♠' || card.suit === '♣');
+  return mode === 'cursed-tomb' && !card.blessed && card.attritionStage >= 3 && card.attritionStage <= 4 && (card.suit === '♠' || card.suit === '♣');
 }
 
 export function removePair(state: GameState, card1: Card, card2: Card): GameState {
@@ -896,40 +896,75 @@ export function applyEndOfWeekLifecycle(campaign: CampaignState): CampaignState 
     }
   } else if (round.status === 'complete-victory' || round.status === 'partial-victory') {
     const lastPair = round.lastClearedPair ?? [];
+    // 2/3/5 + Stock Bounty: Blessing with fallback higher->lower->none, then random draw Anchors
     if (lastPair.length === 2) {
       const c1 = lastPair[0];
       const c2 = lastPair[1];
-      const { heroCard, anchorCard } = determineHeroAndAnchor(c1, c2, mode);
+      const val1 = getFunctionalValue(c1, mode);
+      const val2 = getFunctionalValue(c2, mode);
+      const higher = val1 >= val2 ? c1 : c2;
+      const lower = val1 >= val2 ? c2 : c1;
+      const isHigherWild = Boolean(higher.blessed && higher.suit === '♣');
+      const isLowerWild = Boolean(lower.blessed && lower.suit === '♣');
 
-      const hIdx = masterDeck.findIndex((c) => c.id === heroCard.id);
-      if (hIdx !== -1) {
-        if (masterDeck[hIdx].attritionStage < 4) {
+      let blessedThisWin = false;
+      // Wildcard ineligible as primary; fallback handles partner
+      // Primary higher if not wild and eligible
+      if (!isHigherWild) {
+        const hIdx = masterDeck.findIndex((c) => c.id === higher.id);
+        if (hIdx !== -1 && !masterDeck[hIdx].blessed && masterDeck[hIdx].attritionStage < 3) {
           masterDeck[hIdx].blessed = true;
+          blessedThisWin = true;
         }
       }
-
-      const aIdx = masterDeck.findIndex((c) => c.id === anchorCard.id);
-      if (aIdx !== -1) {
-        if (masterDeck[aIdx].attritionStage < 5) {
-          const prevStage = masterDeck[aIdx].rewardStage;
-          const nextStage = Math.min(2, prevStage + 1) as RewardStage;
-          masterDeck[aIdx].rewardStage = nextStage;
-          if (nextStage === 2 && prevStage < 2) {
-            masterDeck[aIdx].anchorAbsorption = 0;
-          }
+      // Fallback to lower if primary not blessed
+      if (!blessedThisWin && !isLowerWild) {
+        const lIdx = masterDeck.findIndex((c) => c.id === lower.id);
+        if (lIdx !== -1 && !masterDeck[lIdx].blessed && masterDeck[lIdx].attritionStage < 3) {
+          masterDeck[lIdx].blessed = true;
         }
       }
+      // No automatic lower Anchor; Anchors come via Stock Bounty below (replaces old lower anchor).
     } else if (lastPair.length === 1) {
-      const kCard = lastPair[0];
-      const kIdx = masterDeck.findIndex((c) => c.id === kCard.id);
-      if (kIdx !== -1) {
-        if (masterDeck[kIdx].attritionStage < 5) {
-          const prevStage = masterDeck[kIdx].rewardStage;
-          const nextStage = Math.min(2, prevStage + 1) as RewardStage;
-          masterDeck[kIdx].rewardStage = nextStage;
-          if (nextStage === 2 && prevStage < 2) {
-            masterDeck[kIdx].anchorAbsorption = 0;
-          }
+      // Solo King/13: no Blessing awarded; Stock Bounty will still apply below
+    }
+    // Stock Bounty: N=1-3 random non-Shield Anchors per Win (0/<=4->3 <=8->2 else 1)
+    if (round.status === 'complete-victory' || round.status === 'partial-victory') {
+      const leftover = round.drawPile.length + round.discardPile.length + round.vaultCards.length;
+      let N: number;
+      if (leftover === 0 || leftover <= 4) N = 3;
+      else if (leftover <= 8) N = 2;
+      else N = 1;
+      // Draw until N non-Shields from shuffled active deck
+      const pool = shuffle(masterDeck.filter((c) => c.attritionStage < 5));
+      let found = 0;
+      for (const card of pool) {
+        if (found >= N) break;
+        if (card.rewardStage >= 2) continue; // skip already Shield, keep flipping
+        const idx = masterDeck.findIndex((c) => c.id === card.id);
+        if (idx === -1) continue;
+        const prevStage = masterDeck[idx].rewardStage;
+        const nextStage = Math.min(2, prevStage + 1) as RewardStage;
+        masterDeck[idx].rewardStage = nextStage;
+        if (nextStage === 2 && prevStage < 2) {
+          masterDeck[idx].anchorAbsorption = 0;
+        }
+        found += 1;
+      }
+    }
+    // Perfect Graveyard Return: 1 random Entombed -> 4 Scars |X| Imperiled (still cursed, keeps ink)
+    if (round.status === 'complete-victory') {
+      if (graveyard.length > 0) {
+        const pickIdx = Math.floor(Math.random() * graveyard.length);
+        const card = graveyard[pickIdx];
+        graveyard.splice(pickIdx, 1);
+        const idx = masterDeck.findIndex((c) => c.id === card.id);
+        if (idx !== -1) {
+          masterDeck[idx].attritionStage = 4 as AttritionStage; // 4 Scars |X| imperiled, one hit from death
+          // keep blessed/rewardStage/anchorAbsorption pre-existing (dying state)
+        } else {
+          // Fallback: push copy with 4 Scars (should not normally happen because card is in masterDeck)
+          graveyard.splice(pickIdx, 0, card); // put back if not found
         }
       }
     }
@@ -1056,11 +1091,11 @@ export function computeRoundLifecycleEffects(
       anchored.push(afterCard);
     }
 
-    if (beforeCard.attritionStage < 4 && afterCard.attritionStage === 4) {
+    if (beforeCard.attritionStage < 3 && afterCard.attritionStage >= 3 && afterCard.attritionStage <= 4) {
       cursed.push(afterCard);
     }
 
-    if (afterCard.attritionStage > beforeCard.attritionStage && afterCard.attritionStage < 4) {
+    if (afterCard.attritionStage > beforeCard.attritionStage && afterCard.attritionStage < 3) {
       scarred.push(afterCard);
     }
 

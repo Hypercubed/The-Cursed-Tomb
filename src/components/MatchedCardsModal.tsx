@@ -252,17 +252,17 @@ export function MatchedCardsModal({
                       Blessed Hero
                     </span>
                     <span className="flex items-center gap-1 text-blue-400 font-medium">
-                      <span className="font-mono font-bold">—</span> Fortifying
+                      <span className="font-mono font-bold">—</span> Fortifying (1 Anchor)
                     </span>
                     <span className="flex items-center gap-1 text-blue-400 font-medium">
-                      <span className="font-mono font-bold">+</span> Anchored (red corner dots = absorbed hits)
+                      <span className="font-mono font-bold">+</span> Shield (2 Anchors, 4 red blocks)
                     </span>
                     <span className="flex items-center gap-1 text-red-400 font-medium" aria-label="Cursed legend">
-                      <span className="inline-flex items-center gap-0.5" aria-label="Cursed suit illustrations">
-                        <span title="Red Curse Downward Triangle"><CardFaceIllustration suit="♥" attritionStage={4} className="w-4 h-4" randomizeTransform={false} strokeWidth={2} /></span>
-                        <span title="Black Curse Trapezoid Weight"><CardFaceIllustration suit="♠" attritionStage={4} className="w-4 h-4" randomizeTransform={false} strokeWidth={2} /></span>
+                      <span className="inline-flex items-center gap-0.5" aria-label="Cursed suit illustrations (3-4 Scars)">
+                        <span title="Red Curse Downward Triangle (3-4 Scars)"><CardFaceIllustration suit="♥" attritionStage={4} className="w-4 h-4" randomizeTransform={false} strokeWidth={2} /></span>
+                        <span title="Black Curse Trapezoid Weight (3-4 Scars)"><CardFaceIllustration suit="♠" attritionStage={4} className="w-4 h-4" randomizeTransform={false} strokeWidth={2} /></span>
                       </span>
-                      Cursed
+                      Cursed (3-4)
                     </span>
                     <span className="flex items-center gap-1 text-blue-400 font-medium" aria-label="Scarred legend">
                       <span
@@ -322,7 +322,7 @@ export function MatchedCardsModal({
                       const rewardStage = cursedCard?.rewardStage ?? 0;
                       const anchorAbsorption = cursedCard?.anchorAbsorption ?? 0;
                       const attritionStage = cursedCard?.attritionStage ?? 0;
-                      const isCursed = !isBlessed && attritionStage === 4;
+                      const isCursed = !isBlessed && attritionStage >= 3 && attritionStage <= 4;
                       const isEntombed = attritionStage === 5;
 
                       const statusParts: string[] = [];
@@ -333,14 +333,13 @@ export function MatchedCardsModal({
                         else if (suit === '♣') statusParts.push('Blessed Hero (◯) (Clubs Rally: Redraw Stock)');
                         else statusParts.push('Blessed Hero (◯)');
                       }
-                      if (rewardStage === 1) statusParts.push('Fortifying Anchor (─)');
-                      if (rewardStage === 2) statusParts.push(anchorAbsorption > 0 ? `Anchored (✢) (${anchorAbsorption}/4 Freeze Hits Absorbed)` : 'Anchored (✢)');
-                      if (attritionStage === 1) statusParts.push(`Scar 1 (|${rLabel})`);
-                      if (attritionStage === 2) statusParts.push(`Scar 2 (|${rLabel}|)`);
-                      if (attritionStage === 3) statusParts.push(`Scar 3 (|${rLabel}\\|)`);
+                      if (rewardStage === 1) statusParts.push('1 Anchor - Fortified (—)');
+                      if (rewardStage === 2) statusParts.push(anchorAbsorption > 0 ? `Shield (2 Anchors, +) (${anchorAbsorption}/4 blocks)` : 'Shield (2 Anchors, +)');
+                      if (attritionStage === 1) statusParts.push(`1 Scar - Vulnerable (|${rLabel})`);
+                      if (attritionStage === 2) statusParts.push(`2 Scars - Scarred (|${rLabel}\\ ${rLabel}|8)`);
                       if (isCursed) {
-                        if (suit === '♥' || suit === '♦') statusParts.push('Red Curse |X| (+1 Shift, Locks Cards Face-Down)');
-                        else statusParts.push('Black Curse |X| (-1 Shift, Pyramid Pairing Only)');
+                        if (suit === '♥' || suit === '♦') statusParts.push(attritionStage === 4 ? '4 Scars - Imperiled |X| - still Red Curse (▼) (+1)' : '3 Scars - Cursed |X| - Red Curse (▼) (+1)');
+                        else statusParts.push(attritionStage === 4 ? '4 Scars - Imperiled |X| - still Black Curse (⏍) (-1)' : '3 Scars - Cursed |X| - Black Curse (⏍) (-1)');
                       }
                       if (isEntombed) statusParts.push('Entombed 💀');
                       if (fVal !== rank) statusParts.push(`Functional Value: ${fValLabel}`);

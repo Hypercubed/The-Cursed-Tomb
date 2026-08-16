@@ -29,7 +29,7 @@ export function CardFaceIllustration({
   // Else if stage 4 (and not blessed), show curse.
   // Otherwise, return null.
 
-  const isCursedStage4 = !blessed && attritionStage === 4;
+  const isCursedStage4 = !blessed && attritionStage >= 3 && attritionStage <= 4;
 
   if (!blessed && !isCursedStage4) {
     return null;

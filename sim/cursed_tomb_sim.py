@@ -6,11 +6,13 @@ The Cursed Tomb (v0.0.9) -- Campaign Simulator
 Simulates full CAMPAIGNS (not single rounds) of the Cursed Tomb ruleset:
 a persistent, mutating variant of Pyramid Solitaire where the same 52
 physical cards carry ink marks (scars, curses, entombment, anchors,
-blessings) across many rounds until the campaign ends in:
-  - VICTORY   : a Perfect Win (all 52 cards reach the Foundation in one round)
+blessings) across many rounds until starvation. The Cursed Tomb is cursed
+to fail — there is no final victory. Every Pyramid Clear (28 cards) and
+Perfect Win (52 cards) counts as a Win, grants Survival Rewards, and the
+campaign continues. The sole defeat condition is:
   - COLLAPSE  : Starvation (fewer than 28 active cards remain for a pyramid)
-  - TIMEOUT   : neither happened within --max-rounds (safety valve; reported
-                separately, not counted in win/collapse rates)
+  - TIMEOUT   : starvation not reached within --max-rounds (safety valve;
+                campaign would continue; reported separately)
 
 Interpretive notes (the source rules have some ambiguity; these are the
 choices this simulator makes, called out here for transparency):
@@ -80,11 +82,11 @@ class CardState:
     """A physical card. Persists across rounds within a campaign."""
     rank: str
     suit: str
-    attrition_stage: int = 0   # 0 none,1 vulnerable,2 doubtful,3 scar,4 curse,5 entombed
-    reward_stage: int = 0      # 0 none,1 fortifying,2 anchored (immune forever)
+    attrition_stage: int = 0   # Scars: 0 none,1 vulnerable |,2 scarred |\,3 cursed |X,4 imperiled |X|,5 entombed X (2/3/5)
+    reward_stage: int = 0      # Anchors: 0 none,1 fortified —,2 Shield + (4 blocks)
     blessed: bool = False      # Hero's Blessing unlocked (uses own suit for effect)
     temp_immune: bool = False  # this-round-only immunity granted by a Hearts blessing
-    anchor_absorption: int = 0 # 0..4 marks absorbed by current Anchor
+    anchor_absorption: int = 0 # Shield blocks 0..4 around +
 
     def __repr__(self):
         return f"{self.rank}{self.suit}"
@@ -94,16 +96,16 @@ class CardState:
 
     def functional_value(self, flags):
         v = RANK_VALUES[self.rank]
-        if flags.scars and self.attrition_stage >= 3:  # scar effect persists through curse stage too
+        if flags.scars and self.attrition_stage >= 2:  # 2+ Scars: value shift (scar at 2)
             v += 1 if self.suit in RED else -1
             v = ((v - 1) % 13) + 1  # Circular A <-> K modulo wrapping (1..13)
         return v
 
     def is_black_cursed(self, flags):
-        return flags.curses and not self.blessed and self.attrition_stage >= 4 and self.suit in BLACK
+        return flags.curses and not self.blessed and self.attrition_stage >= 3 and self.suit in BLACK  # 3-4 Scars: Black Weight
 
     def is_red_cursed(self, flags):
-        return flags.curses and not self.blessed and self.attrition_stage >= 4 and self.suit in RED
+        return flags.curses and not self.blessed and self.attrition_stage >= 3 and self.suit in RED  # 3-4 Scars: Red Trap
 
     def is_anchored(self):
         return self.reward_stage >= 2
@@ -163,12 +165,14 @@ try:
     from solvers.heuristic import HeuristicSolver
     from solvers.beam import BeamSearchSolver
     from solvers.dfs import DFSSolver
+    from solvers.novice import NoviceSolver
 except ImportError:
     from .solvers.base import Move, BaseSolver
     from .solvers.greedy import GreedySolver
     from .solvers.heuristic import HeuristicSolver
     from .solvers.beam import BeamSearchSolver
     from .solvers.dfs import DFSSolver
+    from .solvers.novice import NoviceSolver
 
 
 @dataclass
@@ -177,6 +181,7 @@ class RoundOutcome:
     moves: int = 0
     last_clear_type: str = None   # 'pair' | 'solo' | None
     last_clear_cards: tuple = None
+    leftover: int = None  # Stock+Waste+Vault remaining at win moment (for Stock Bounty); for freeze it's total leftovers
 
 
 class GameState:
@@ -506,7 +511,8 @@ def play_round(pool, rng, max_redeals, flags, max_moves=300, full_registry=None,
     while True:
         terminal, kind = state.is_terminal()
         if terminal:
-            return RoundOutcome(kind, state.moves_played, state.last_clear_type, state.last_clear_cards)
+            leftover = len(state.stock) + len(state.waste) + len(state.vault) if kind in ('perfect_win', 'pyramid_clear') else (N_PYR - len(state.removed)) + len(state.stock) + len(state.waste) + len(state.vault)
+            return RoundOutcome(kind, state.moves_played, state.last_clear_type, state.last_clear_cards, leftover)
 
         legal_moves = state.get_legal_moves()
         if not legal_moves:
@@ -521,26 +527,69 @@ def play_round(pool, rng, max_redeals, flags, max_moves=300, full_registry=None,
     if flags.attrition:
         state.apply_freeze_attrition()
 
-    return RoundOutcome('freeze', state.moves_played)
+    # Capture freeze leftover for callers that care (win path already handled)
+    freeze_leftover = (N_PYR - len(state.removed)) + len(state.stock) + len(state.waste) + len(state.vault)
+    return RoundOutcome('freeze', state.moves_played, None, None, freeze_leftover)
 
 
 def _apply_survival_reward(last_clear_type, last_clear_cards, flags):
+    # 2/3/5: Blessing offered to higher if eligible (<3 Scars, not already blessed); fallback to lower; solo = no blessing
     if last_clear_type == 'pair':
         a, b = last_clear_cards
         va, vb = a.functional_value(flags), b.functional_value(flags)
         higher, lower = (a, b) if va > vb else (b, a)
-        if flags.blessings and not higher.blessed and higher.attrition_stage < 4:
+        # Higher is primary candidate
+        blessed_this_win = False
+        if flags.blessings and not higher.blessed and higher.attrition_stage < 3:
             higher.blessed = True
-        prev_stage = lower.reward_stage
-        lower.reward_stage = min(2, lower.reward_stage + 1)
-        if lower.reward_stage == 2 and prev_stage < 2:
-            lower.anchor_absorption = 0
+            blessed_this_win = True
+        # Fallback to lower if primary ineligible
+        if not blessed_this_win and flags.blessings and not lower.blessed and lower.attrition_stage < 3:
+            lower.blessed = True
+        # Wildcard Partner Rule: blessed clubs ♣ wildcard in pair is ineligible as primary; already handled via fallback (higher blessed? skip, lower gets it if eligible)
+        # Lower does NOT get automatic Anchor; Anchors come via Stock Bounty random draw below (1-3 per Win)
+        # Handle wildcard explicit: if one is ♣ blessed, it should have been skipped as primary already via blessed check; ensure partner was primary
+        # No additional logic needed here; blessing fallback covers it. If both are ♣ wildcards, both blessed -> no blessing awarded.
+        pass
     elif last_clear_type == 'solo':
-        card, = last_clear_cards
-        prev_stage = card.reward_stage
-        card.reward_stage = min(2, card.reward_stage + 1)
-        if card.reward_stage == 2 and prev_stage < 2:
-            card.anchor_absorption = 0
+        # Solo King/13: no Blessing awarded; will still get Stock Bounty Anchors via random draw in run_campaign
+        pass
+
+
+def classic_base_score(pass_num: int, pyramid_cleared: bool) -> int:
+    """Classic Pyramid (Semicolon) base: 50/35/20/0 by pass when pyramid cleared.
+    Pass is 1-indexed (1 = first stock pass). Beyond 3 passes = 10 (house rule for Novice infinite).
+    Source: https://www.semicolon.com/Solitaire/Rules/Pyramid.html"""
+    if not pyramid_cleared:
+        return 0
+    if pass_num <= 1:
+        return 50
+    if pass_num == 2:
+        return 35
+    if pass_num == 3:
+        return 20
+    return 10
+
+
+def classic_score(pass_num: int, pyramid_cleared: bool, leftover: int) -> int:
+    """Classic Pyramid score for a round: base(pass) - leftover (not discarded).
+    leftover = remaining pyramid cards + remaining Stock+Waste+Vault at round end.
+    0 = Perfect Win. Negative scores occur on freezes."""
+    return classic_base_score(pass_num, pyramid_cleared) - leftover
+
+
+def classic_bonus_stars(leftover: int, pass_num: int, pyramid_cleared: bool) -> int:
+    """Star rating derived from classic score thresholds for Stock Bounty mapping."""
+    if not pyramid_cleared:
+        return 0
+    s = classic_score(pass_num, pyramid_cleared, leftover)
+    if s >= 40:
+        return 3
+    if s >= 25:
+        return 2
+    if s >= 12:
+        return 1
+    return 0
 
 
 def run_campaign(rng, max_redeals, flags, max_rounds, deadlock_limit=None, solver=None):
@@ -591,18 +640,42 @@ def run_campaign(rng, max_redeals, flags, max_rounds, deadlock_limit=None, solve
 
         outcome = play_round(active, rng, max_redeals, flags, full_registry=registry, solver=solver)
 
-        if outcome.kind == 'perfect_win':
-            return {
-                "result": "victory",
-                "rounds": rounds_played,
-                "pyramids_cleared": pyramids_cleared + 1,
-                "perfect_wins": perfect_wins + 1,
-                "rank_anchor_unlocked_round": rank_anchor_unlocked_round,
-            }
-
-        if outcome.kind == 'pyramid_clear':
+        if outcome.kind in ('perfect_win', 'pyramid_clear'):
             pyramids_cleared += 1
+            if outcome.kind == 'perfect_win':
+                perfect_wins += 1
             _apply_survival_reward(outcome.last_clear_type, outcome.last_clear_cards, flags)
+            # Stock Bounty: 1-3 random Anchors drawn until N non-Shields (replaces lower-card Anchor)
+            leftover = getattr(outcome, 'leftover', None)
+            if leftover is None:
+                leftover = 52  # fallback: inefficient
+            if leftover == 0 or leftover <= 4:
+                N = 3
+            elif leftover <= 8:
+                N = 2
+            else:
+                N = 1
+            # Draw N random non-Shields from remaining active deck
+            pool = [c for c in registry if c.attrition_stage < flags.max_attrition_stage]
+            rng.shuffle(pool)
+            found = 0
+            for card in pool:
+                if card.reward_stage >= 2:
+                    continue
+                prev_stage = card.reward_stage
+                card.reward_stage = min(2, card.reward_stage + 1)
+                if card.reward_stage == 2 and prev_stage < 2:
+                    card.anchor_absorption = 0
+                found += 1
+                if found >= N:
+                    break
+            # Perfect Graveyard Return: 1 random Entombed X -> 4 Scars |X| Imperiled (still cursed, keeps ink)
+            if outcome.kind == 'perfect_win':
+                graveyard = [c for c in registry if c.attrition_stage >= flags.max_attrition_stage]
+                if graveyard:
+                    card = rng.choice(graveyard)
+                    card.attrition_stage = flags.max_attrition_stage - 1  # 4 scars |X| imperiled
+                    # keep reward_stage/blessed/anchor_absorption as is (still cursed, dying state)
 
         if rank_anchor_unlocked_round is None:
             anchored_ranks = {c.rank for c in registry if c.is_anchored()}
@@ -663,13 +736,13 @@ def run_many_campaigns(difficulty, campaigns, seed, flags, max_rounds, verbose=F
     base_rng = random.Random(actual_seed)
     max_redeals = DIFFICULTIES[difficulty]
 
-    victories = 0
     collapses = 0
     timeouts = 0
     stall_deadlocks = 0
-    victory_rounds = []
     collapse_rounds = []
-    rounds_to_resolution = []  # victories + collapses only (excludes timeouts)
+    all_pyramids_cleared = []
+    all_perfect_wins = []
+    all_survived = []
 
     worker_args = [
         (base_rng.randint(0, 1_000_000_000), difficulty, flags, max_rounds, solver_name)
@@ -677,23 +750,21 @@ def run_many_campaigns(difficulty, campaigns, seed, flags, max_rounds, verbose=F
     ]
 
     def process_result(i, result):
-        nonlocal victories, collapses, timeouts, stall_deadlocks
+        nonlocal collapses, timeouts, stall_deadlocks
         res_type = result["result"]
         rds = result["rounds"]
-        if res_type == "victory":
-            victories += 1
-            victory_rounds.append(rds)
-            rounds_to_resolution.append(rds)
-        elif res_type == "timeout":
+        if res_type == "timeout":
             timeouts += 1
         elif res_type == "stall_deadlock":
             stall_deadlocks += 1
         else:
             collapses += 1
             collapse_rounds.append(rds)
-            rounds_to_resolution.append(rds)
+        all_pyramids_cleared.append(result.get("pyramids_cleared", 0))
+        all_perfect_wins.append(result.get("perfect_wins", 0))
+        all_survived.append(rds)
         if verbose:
-            print(f"campaign {i:>4}: {res_type:<22} rounds={rds}")
+            print(f"campaign {i:>4}: {res_type:<22} rounds={rds} wins={result.get('pyramids_cleared',0)} perfect={result.get('perfect_wins',0)}")
 
     if n_workers > 1 and campaigns >= 10:
         chunk = max(1, campaigns // (n_workers * 4))
@@ -705,7 +776,7 @@ def run_many_campaigns(difficulty, campaigns, seed, flags, max_rounds, verbose=F
             result = _run_single_campaign_worker(args_item)
             process_result(i, result)
 
-    print(f"\n=== The Cursed Tomb -- Campaign Simulation ===")
+    print(f"\n=== The Cursed Tomb -- Campaign Simulation (Endless) ===")
     print(f"difficulty:          {difficulty} (max_redeals={max_redeals})")
     print(f"scars:               {'on' if flags.scars else 'off'}")
     print(f"curses:              {'on' if flags.curses else 'off'}")
@@ -714,42 +785,39 @@ def run_many_campaigns(difficulty, campaigns, seed, flags, max_rounds, verbose=F
     print(f"campaign round cap:  {max_rounds}")
     print(f"campaigns run:       {campaigns}")
     print(f"workers:             {n_workers}")
-    print(f"victories:           {victories}")
     print(f"collapses:           {collapses}")
     if stall_deadlocks:
         print(f"stall (deadlock):    {stall_deadlocks}  (all-immune or no-progress deadlock)")
     if timeouts:
         print(f"timeouts (round cap):{timeouts}  (increase --max-rounds to resolve these)")
-    resolved = victories + collapses
-    if resolved:
-        print(f"victory rate:        {victories / resolved:.2%} (of resolved campaigns)")
-        print(f"collapse rate:       {collapses / resolved:.2%} (of resolved campaigns)")
-    print(f"victory rate (all):  {victories / campaigns:.2%}")
     print(f"collapse rate (all): {collapses / campaigns:.2%}")
     print(f"timeout rate (all):  {timeouts / campaigns:.2%}")
-    if victory_rounds:
-        v_mean = statistics.mean(victory_rounds)
-        v_std = statistics.stdev(victory_rounds) if len(victory_rounds) > 1 else 0.0
-        print(f"avg rounds to win:      {v_mean:.1f} ± {v_std:.1f} (median {statistics.median(victory_rounds):.1f})")
-    else:
-        print(f"avg rounds to win:      N/A (0 wins)")
     if collapse_rounds:
         c_mean = statistics.mean(collapse_rounds)
         c_std = statistics.stdev(collapse_rounds) if len(collapse_rounds) > 1 else 0.0
         print(f"avg rounds to collapse: {c_mean:.1f} ± {c_std:.1f} (median {statistics.median(collapse_rounds):.1f})")
     else:
         print(f"avg rounds to collapse: N/A (0 collapses)")
-    if rounds_to_resolution:
-        r_mean = statistics.mean(rounds_to_resolution)
-        r_std = statistics.stdev(rounds_to_resolution) if len(rounds_to_resolution) > 1 else 0.0
-        print(f"overall avg to resolve: {r_mean:.1f} ± {r_std:.1f} (median {statistics.median(rounds_to_resolution):.1f})")
+    if all_survived:
+        s_mean = statistics.mean(all_survived)
+        s_std = statistics.stdev(all_survived) if len(all_survived) > 1 else 0.0
+        print(f"avg rounds survived:    {s_mean:.1f} ± {s_std:.1f} (median {statistics.median(all_survived):.1f})")
+    if all_pyramids_cleared:
+        w_mean = statistics.mean(all_pyramids_cleared)
+        w_std = statistics.stdev(all_pyramids_cleared) if len(all_pyramids_cleared) > 1 else 0.0
+        w_med = statistics.median(all_pyramids_cleared)
+        print(f"pyramids cleared:       {w_mean:.1f} ± {w_std:.1f} (median {w_med:.1f}) max {max(all_pyramids_cleared)}")
+    if all_perfect_wins:
+        p_mean = statistics.mean(all_perfect_wins)
+        p_med = statistics.median(all_perfect_wins)
+        print(f"perfect wins:           {p_mean:.2f} (median {p_med:.1f}) max {max(all_perfect_wins)} ({sum(1 for x in all_perfect_wins if x>0)}/{campaigns} camps with >=1)")
 
 
 def parse_args():
     p = argparse.ArgumentParser(description="The Cursed Tomb: campaign simulator")
     p.add_argument("--campaigns", type=int, default=200, help="number of campaigns to simulate")
     p.add_argument("--difficulty", choices=list(DIFFICULTIES.keys()), default="archaeologist")
-    p.add_argument("--solver", choices=["greedy", "heuristic", "beam", "dfs"], default="heuristic", help="solver strategy")
+    p.add_argument("--solver", choices=["greedy", "heuristic", "beam", "dfs", "novice"], default="heuristic", help="solver strategy")
     p.add_argument("--seed", type=int, default=None)
     p.add_argument("--no-scars", action="store_true", help="disable the stage-3 scar value shift")
     p.add_argument("--no-curses", action="store_true", help="disable stage-4 red/black curse effects")
@@ -774,6 +842,8 @@ def get_solver(name: str):
         return BeamSearchSolver()
     elif s == 'dfs':
         return DFSSolver()
+    elif s == 'novice':
+        return NoviceSolver(seed=0)
     raise ValueError(f"Unknown solver: {name}")
 
 

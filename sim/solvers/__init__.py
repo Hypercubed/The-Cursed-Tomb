@@ -7,6 +7,7 @@ from .greedy import GreedySolver
 from .heuristic import HeuristicSolver
 from .beam import BeamSearchSolver
 from .dfs import DFSSolver
+from .novice import NoviceSolver
 
 __all__ = [
     "BaseSolver",
@@ -15,4 +16,5 @@ __all__ = [
     "HeuristicSolver",
     "BeamSearchSolver",
     "DFSSolver",
+    "NoviceSolver",
 ]

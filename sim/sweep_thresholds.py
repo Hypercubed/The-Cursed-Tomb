@@ -11,7 +11,7 @@ Usage:
 """
 import argparse, random, time, statistics, cursed_tomb_sim
 from multiprocessing import Pool, cpu_count
-from solvers import GreedySolver, HeuristicSolver, BeamSearchSolver, DFSSolver
+from solvers import GreedySolver, HeuristicSolver, BeamSearchSolver, DFSSolver, NoviceSolver
 
 def create_solver(solver_name: str):
     s = solver_name.lower()
@@ -23,6 +23,8 @@ def create_solver(solver_name: str):
         return BeamSearchSolver()
     elif s == 'dfs':
         return DFSSolver()
+    elif s == 'novice':
+        return NoviceSolver(seed=0)
     raise ValueError(f"Unknown solver: {solver_name}")
 
 def get_stats_str(rounds_list):
@@ -132,7 +134,7 @@ def parse_args():
     parser.add_argument("-d", "--deadlock-limit", type=str, default="0.10",
                         help="Deadlock threshold (either float fraction of max-rounds e.g. 0.10 or int round count e.g. 30) (default: 0.10)")
     parser.add_argument("-s", "--seed", type=int, default=42, help="Random seed (default: 42)")
-    parser.add_argument("--solver", choices=["greedy", "heuristic", "beam", "dfs"], default="heuristic", help="Solver strategy")
+    parser.add_argument("--solver", choices=["greedy", "heuristic", "beam", "dfs", "novice"], default="heuristic", help="Solver strategy")
     parser.add_argument("--workers", type=int, default=cpu_count(), help="Number of parallel worker processes (default: CPU cores)")
     return parser.parse_args()
 

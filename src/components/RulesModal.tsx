@@ -265,7 +265,7 @@ export function RulesModal({ isOpen, onClose, initialTab = 'core-rules' }: Rules
                 </h3>
                 <div className="mt-3 space-y-3 text-xs leading-relaxed">
                   <p className="m-0 text-game-text">
-                    Your ultimate goal is to achieve a single <strong>Perfect Win</strong>—completely moving all 52 cards of the deck into the face-up <strong>Foundation pile</strong> across your campaign.
+                    The Cursed Tomb is <strong>cursed to fail</strong> — no final victory. Score as many <strong>Wins</strong> (Pyramid Clear 28 or Perfect 52) as you can before Starvation. Every Win grants Survival Rewards.
                   </p>
                   <div className="bg-[#18130e] p-3 rounded border border-[#251e16] space-y-1.5">
                     <span className="font-semibold text-red-400 font-display uppercase tracking-wide block">
@@ -356,7 +356,7 @@ export function RulesModal({ isOpen, onClose, initialTab = 'core-rules' }: Rules
                   </div>
                   <div className="bg-[#18130e] p-3 rounded border border-[#251e16]">
                     <strong className="text-blue-300 block mb-1">5. Retrospective Anchor Rules & Absorption Shield</strong>
-                    An Anchor <code className="text-amber-200 font-mono">[ + ]</code> drawn in Cobalt Blue ink in the card's upper-right corner acts as a defensive shield absorbing up to 4 round-freeze attrition hits. Each absorbed freeze hit is recorded as a scarlet red mark (dot or small tick) in one of the 4 outer corner quadrants surrounding the blue <code className="text-amber-200 font-mono">+</code> cross. On absorbing the 4th freeze hit, the Anchor shield exhausts (returning to un-anchored status), after which the card resumes taking freeze attrition toward entombment. Pre-existing Scars and Curses remain active and are preserved when the Anchor shield exhausts.
+                    A blue <strong>Anchor</strong> (<code className="text-amber-200 font-mono">[ — ]</code>, 1 Anchor Fortified) crossed to <strong>Shield</strong> (<code className="text-amber-200 font-mono">[ + ]</code>, 2 Anchors) contains <strong>4 Scar absorption blocks</strong> (Scarlet Red dots in quadrants around the <code>+</code>). Each Scar that would advance <code>| → |\ → |X| → |X| → X</code> instead fills one block; on the 4th block the Shield exhausts (→ 0 Anchors), Scars preserved. Imperiled <code>|X| 4 Scars</code> is still Cursed. <span className="sr-only">Anchor [ + ]</span>
                   </div>
                 </div>
               </section>
@@ -368,24 +368,24 @@ export function RulesModal({ isOpen, onClose, initialTab = 'core-rules' }: Rules
                 </h3>
                 <div className="mt-3 space-y-2 text-xs">
                   <p className="m-0 text-game-muted leading-relaxed">
-                    When a game freezes with no legal moves remaining, all completely exposed <strong>Bottleneck cards</strong> at the lowest remaining pyramid tiers suffer failure ink marks drawn directly across their rank number:
+                    When a game freezes with no legal moves remaining, all completely exposed <strong>Bottleneck cards</strong> at the lowest remaining pyramid tiers gain <strong>one red Scar</strong> in the Upper-Left index. Five Scars = Entombed (<code>X</code> → Graveyard, until Perfect returns it as <code>|X| 4 Scars Imperiled</code>). A completed Shield (<code>+</code>, 2 Anchors) absorbs a Scar as one <strong>red block</strong> in a quadrant around the <code>+</code> instead.
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-5 gap-2 text-center mt-3">
                     <div className="bg-[#18130e] p-2.5 rounded border border-[#251e16] flex flex-col items-center gap-1.5">
                       <RealRankMark rank="7" stage={1} color="red" />
-                      <span className="text-[10px] text-game-muted font-medium">Stage 1: Vulnerable</span>
+                      <span className="text-[10px] text-game-muted font-medium">1 Scar: Vulnerable</span>
                     </div>
                     <div className="bg-[#18130e] p-2.5 rounded border border-[#251e16] flex flex-col items-center gap-1.5">
-                      <RealRankMark rank="7" stage={2} color="red" />
-                      <span className="text-[10px] text-game-muted font-medium">Stage 2: Doubtful</span>
+                      <RealRankMark rank="7" stage={2} funcVal="8" color="red" />
+                      <span className="text-[10px] text-game-muted font-medium">2 Scars: Scarred (+1 / -1)</span>
                     </div>
                     <div className="bg-[#18130e] p-2.5 rounded border border-[#251e16] flex flex-col items-center gap-1.5">
                       <RealRankMark rank="7" stage={3} funcVal="8" color="red" />
-                      <span className="text-[10px] text-game-muted font-medium">Stage 3: Scar (+1 / -1)</span>
+                      <span className="text-[10px] text-game-muted font-medium">3 Scars: Cursed</span>
                     </div>
                     <div className="bg-[#18130e] p-2.5 rounded border border-[#251e16] flex flex-col items-center gap-1.5">
                       <RealRankMark rank="7" stage={4} funcVal="8" color="red" />
-                      <span className="text-[10px] text-game-muted font-medium">Stage 4: Curse (Trap/Weight)</span>
+                      <span className="text-[10px] text-game-muted font-medium">4 Scars: Imperiled</span>
                     </div>
                     <div className="bg-[#18130e] p-2.5 rounded border border-[#251e16] flex flex-col items-center gap-1.5 justify-center">
                       <RealRankMark stage={5} />
@@ -397,7 +397,7 @@ export function RulesModal({ isOpen, onClose, initialTab = 'core-rules' }: Rules
                       Immunity Exception (Anchor Absorption)
                     </span>
                     <p className="m-0 text-game-muted leading-relaxed">
-                      If a card possesses a completed <strong className="text-amber-200 font-mono">Anchor [ + ]</strong> in its upper-right corner, it absorbs freeze hits with scarlet red quadrant marks (up to 4 absorbed hits) instead of advancing Attrition stages.
+                      A completed <strong className="text-amber-200 font-mono">Shield [ + ]</strong> (2 Anchors) contains <strong>4 Scar blocks</strong> (red dots in quadrants around the <code>+</code>). Each Scar that would advance <code>| → |\ → |X| → |X| → X</code> instead fills one block; on the 4th block the Shield exhausts (→ 0 Anchors), Scars preserved. Imperiled <code>|X| 4 Scars</code> is still Cursed.
                     </p>
                   </div>
                 </div>
@@ -440,22 +440,12 @@ export function RulesModal({ isOpen, onClose, initialTab = 'core-rules' }: Rules
                       </div>
 
                       <p className="m-0 text-game-text pt-1">
-                        <strong className="text-blue-300">2. Lower-Value Card (Anchor Progression):</strong> Progresses its upper-right defensive Anchor track by 1 stroke:
+                        <strong className="text-blue-300">2. Stock Bounty — 1-3 Random Anchors (replaces lower Anchor):</strong> Fan <code className="text-amber-200 font-mono">Stock+Waste+Vault</code> leftover: <code>0</code> or <code>≤4</code> → <code>3</code> Anchors, <code>≤8</code> → <code>2</code>, else <code>1</code> mandatory. Shuffle remaining active deck face-down, flip until <code>N</code> non-Shield (<code>+</code>) cards found; each gains one blue Anchor (<code>—</code> → <code>+</code> Shield with 4 blocks). Skip any already Shield. Covers solo <code>K</code> as well. Never erase.
                       </p>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pl-2">
-                        <div className="bg-[#120e0a] p-2 rounded border border-[#251e16]">
-                          <strong className="text-amber-200 font-mono block mb-0.5">1st Stroke [ — ] (Fortifying)</strong>
-                          Single horizontal line in upper-right corner margin.
-                        </div>
-                        <div className="bg-[#120e0a] p-2 rounded border border-[#251e16]">
-                          <strong className="text-amber-200 font-mono block mb-0.5">2nd Stroke [ + ] (Anchored)</strong>
-                          Crossed vertically (<code className="text-amber-200 font-mono">+</code>). Card gains 4-hit absorption immunity.
-                        </div>
-                      </div>
 
                       <div className="bg-[#120e0a] p-2.5 rounded border border-emerald-900/30 text-game-muted">
-                        <strong className="text-emerald-400 block mb-0.5">♣ Wildcard Partner Rule</strong>
-                        If the final pair contains an existing ♣ Clubs Universal Wildcard, the Wildcard automatically takes the Anchor stroke (<code className="text-amber-200 font-mono">[ — ]</code> → <code className="text-amber-200 font-mono">[ + ]</code>), while its partner receives the Hero Blessing.
+                        <strong className="text-emerald-400 block mb-0.5">♣ Wildcard & Blessing Fallback</strong><span className="sr-only">♣ Wildcard Partner Rule</span>
+                        If the final pair includes an existing ♣ Wildcard (<code>⊕</code>), it is ineligible as the primary Blessing candidate — offer Blessing to the partner if eligible (&lt;3 Scars, not already blessed). If the higher-value card is already blessed or 3+ Scars Cursed, offer Blessing to the lower card instead. If both ineligible, no Blessing. All Anchors now come from the Stock Bounty above (1-3 random until non-Shield).
                       </div>
                     </div>
                   </div>
@@ -465,10 +455,10 @@ export function RulesModal({ isOpen, onClose, initialTab = 'core-rules' }: Rules
                     <strong className="text-amber-300 font-display block">B. The Solo Clear (King / Value 13)</strong>
                     <div className="bg-[#18130e] p-3 rounded border border-[#251e16] space-y-1.5">
                       <p className="m-0 text-game-text">
-                        If the final card clearing the pyramid is played singly (a King or card with active Functional Value 13), it progresses its upper-right Anchor track by 1 stroke (<code className="text-amber-200 font-mono">[ — ]</code> or <code className="text-amber-200 font-mono">[ + ]</code>). No Hero Blessing is awarded.
+                        If the final card clearing the pyramid is played singly (a King or card with active Functional Value 13), <strong>no Blessing</strong> is awarded — but the same <strong>Stock Bounty 1-3 random Anchors</strong> (fan <code>Stock+Waste+Vault</code>, <code>0/≤4→3 ≤8→2 else 1</code>, shuffle remaining active deck face-down, flip until <code>N</code> non-Shield <code>+</code> cards) still applies.
                       </p>
-                      <p className="m-0 text-game-muted text-[11px]">
-                        <em>Anchor Progression for Mutated Cards:</em> Active cards accumulate Anchor strokes (<code className="text-amber-200 font-mono">[ — ]</code> and <code className="text-amber-200 font-mono">[ + ]</code>) at all active attrition stages (including Stage 3 Scarred and Stage 4 Cursed cards) up until Stage 5 Entombment.
+                      <p className="m-0 text-game-text">
+                        On a <strong>Perfect Win</strong> (<code>0</code> leftover, 52 cards: pyramid + Stock+Waste+Vault empty), also shuffle the <strong>Graveyard Box</strong> face-down and draw <strong>one random <code>X</code> Entombed</strong> card; return it as <code>4 Scars |X| Imperiled</code> (keeps prior red/blue ink, still Cursed — one Scar from death). If Graveyard empty, no return. This is the sole way an <code>X</code> re-enters play.
                       </p>
                     </div>
                   </div>

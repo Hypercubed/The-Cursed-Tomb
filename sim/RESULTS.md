@@ -61,57 +61,61 @@ The base-game campaign has no attrition, so the tomb cannot starve or collapse. 
 
 ---
 
-## Part 3 — Full Rules Campaign
+## Part 3 — Full Rules Campaign (Endless)
 
 > **Command pattern:**
 > ```bash
 > python sim/cursed_tomb_sim.py --campaigns 1000 --seed 42 --difficulty [difficulty] --solver heuristic --max-rounds 500 --workers 4
 > ```
 
-This section enables scars, curses, blessings, attrition, and **Anchor Absorption** (`anchor_absorption = True`). A campaign can end in:
+This section enables scars, curses, blessings, attrition, and **Anchor Absorption** (`anchor_absorption = True`) under the **endless paradigm**: **The Cursed Tomb is cursed to fail — there is no final victory.** Every **Pyramid Clear** (28 cards) and **Perfect Win** (52 cards) scores a **Win**, grants Survival Rewards (§6 of the rules), and the campaign continues until **Starvation** (<28 active cards) or the safety cap. `perfect_win` no longer terminates the campaign.
 
-- **Victory:** Perfect Win clears all 52 cards in one round.
-- **Collapse:** Starvation.
-- **Stall:** no-progress/all-immune deadlock detected by the simulator.
-- **Timeout:** the 500-round safety cap is reached.
+A campaign record reports:
+
+- **Collapse:** Starvation (<28 active cards) — the sole defeat condition.
+- **Timeout:** Starvation not reached within `--max-rounds` (campaign would have continued).
+- **Deadlock:** No-progress stall (`stall_deadlock` / `all_immune_stall`) detected by the simulator.
+- **Scoring:** `pyramids_cleared` (total Wins) and `perfect_wins` counted across the whole campaign.
 
 **Sample size:** 1,000 campaigns per difficulty; maximum 500 rounds per campaign
 
 <!-- BEGIN PART 3 TABLE 1 -->
-| Difficulty    | Redraws | Victory (all) | Collapse (all) | Stall | Timeout | Victory / Collapse of Resolved |
-| :------------ | :-----: | ------------: | -------------: | ----: | ------: | -----------------------------: |
-| Survivalist   |    0    |         2.70% |         97.30% | 0.00% |   0.00% |                 2.70% / 97.30% |
-| Archaeologist |    1    |        42.70% |         51.30% | 0.00% |   5.00% |                45.43% / 54.57% |
-| Explorer      |    3    |        55.70% |         18.80% | 0.00% |  23.50% |                74.77% / 25.23% |
-| Novice        |    5    |        55.70% |         18.60% | 0.00% |  23.70% |                74.97% / 25.03% |
+| Difficulty    | Redraws | Collapse | Timeout | Deadlock | Collapse Rate | Timeout Rate |
+| :------------ | :-----: | -------: | ------: | -------: | ------------: | -----------: |
+| Survivalist   |    0    |     1000 |       0 |        0 |       100.00% |        0.00% |
+| Archaeologist |    1    |      931 |      55 |       14 |        93.10% |        5.50% |
+| Explorer      |    3    |      783 |     163 |       54 |        78.30% |       16.30% |
+| Novice        |    5    |      780 |     164 |       56 |        78.00% |       16.40% |
 <!-- END PART 3 TABLE 1 -->
 
-### Round-resolution metrics
+### Endless scoring & survival
 
 <!-- BEGIN PART 3 TABLE 2 -->
-| Difficulty    |     Avg Rounds to Win |    Avg Rounds to Collapse |     Overall Avg to Resolve |
-| :------------ | --------------------: | ------------------------: | -------------------------: |
-| Survivalist   | 5.9 ± 3.3 (median 5.0) | 114.0 ± 15.9 (median 113.0) | 111.1 ± 23.5 (median 112.0) |
-| Archaeologist | 9.2 ± 7.6 (median 8.0) | 205.3 ± 72.8 (median 184.0) | 116.2 ± 111.6 (median 135.0) |
-| Explorer      | 8.7 ± 20.7 (median 5.0) | 301.4 ± 100.7 (median 288.5) |  82.6 ± 138.1 (median 8.0) |
-| Novice        | 8.7 ± 20.7 (median 5.0) | 301.7 ± 101.0 (median 286.0) |  82.0 ± 137.9 (median 8.0) |
+| Difficulty    | Avg Rounds Survived | Avg Rounds to Collapse | Pyramids Cleared | Perfect Wins |
+| :------------ | ------------------: | ---------------------: | --------------: | -----------: |
+| Survivalist   | 153.4 ± 22.5 (median 150.5) | 153.4 ± 22.5 (median 150.5) | 0.1 ± 0.4 (median 0.0) max 4 | 0.01 (median 0.0) max 2 (14/1000 camps with >=1) |
+| Archaeologist | 250.2 ± 93.4 (median 220.0) | 234.0 ± 72.3 (median 216.0) | 9.0 ± 18.7 (median 3.0) max 96 | 0.27 (median 0.0) max 3 (233/1000 camps with >=1) |
+| Explorer      | 299.9 ± 131.1 (median 276.0) | 253.0 ± 102.7 (median 246.0) | 41.6 ± 37.1 (median 19.0) max 100 | 0.53 (median 0.0) max 4 (410/1000 camps with >=1) |
+| Novice        | 299.9 ± 131.5 (median 276.0) | 252.0 ± 102.6 (median 244.5) | 41.9 ± 37.2 (median 20.0) max 100 | 0.52 (median 0.0) max 4 (408/1000 camps with >=1) |
 <!-- END PART 3 TABLE 2 -->
 
 ---
 
-## Part 4 — Endless Campaign Endurance Sweep
+## Part 4 — Endless Campaign Endurance Sweep (300 cap)
 
 > **Command:** `python sim/sweep_thresholds.py --campaigns 1000 --max-rounds 300 --solver heuristic --seed 42 --workers 4`
+
+Same endless rules as Part 3 but capped at 300 rounds for faster sweeps. Starvation is the sole defeat; timeout = would have continued.
 
 **Sample size:** 1,000 campaigns per setting; maximum 300 rounds per campaign
 
 <!-- BEGIN PART 4 TABLE 1 -->
 | Difficulty    | Redraws | Mean Rounds Survived | Pyramids Cleared / Campaign | Perfect Wins / Campaign | Rank-Anchor Achievement |
 | :------------ | :-----: | -------------------: | --------------------------: | ----------------------: | ----------------------: |
-| Survivalist   |    0    |         111.1 ± 23.5 |                        0.2 |                     0.0 |                    0.0% |
-| Archaeologist |    1    |        123.0 ± 108.4 |                        8.2 |                     0.4 |                    0.0% |
-| Explorer      |    3    |        127.9 ± 137.3 |                       28.1 |                     0.6 |                    0.2% |
-| Novice        |    5    |        127.9 ± 137.4 |                       28.6 |                     0.6 |                    0.2% |
+| Survivalist   |    0    |         153.4 ± 22.5 |                        0.1 |                     0.0 |                    0.0% |
+| Archaeologist |    1    |         226.7 ± 51.2 |                        8.4 |                     0.3 |                    3.9% |
+| Explorer      |    3    |         238.6 ± 66.0 |                       38.7 |                     0.5 |                   35.7% |
+| Novice        |    5    |         238.0 ± 66.1 |                       39.0 |                     0.5 |                   35.9% |
 <!-- END PART 4 TABLE 1 -->
 
 ### End-type rates
@@ -119,10 +123,10 @@ This section enables scars, curses, blessings, attrition, and **Anchor Absorptio
 <!-- BEGIN PART 4 TABLE 2 -->
 | Difficulty    | Starvation | Deadlock | Round Cap |
 | :------------ | ---------: | -------: | --------: |
-| Survivalist   |      97.3% |     0.0% |      0.0% |
-| Archaeologist |      45.3% |     0.9% |     11.1% |
-| Explorer      |       9.9% |     3.3% |     31.2% |
-| Novice        |       9.9% |     3.3% |     31.2% |
+| Survivalist   |     100.0% |     0.0% |      0.0% |
+| Archaeologist |      75.7% |     2.7% |     18.3% |
+| Explorer      |      26.4% |     9.3% |     34.5% |
+| Novice        |      26.1% |     9.5% |     34.1% |
 <!-- END PART 4 TABLE 2 -->
 
 ---
@@ -134,10 +138,11 @@ This section enables scars, curses, blessings, attrition, and **Anchor Absorptio
 <!-- BEGIN PART 5 TABLE -->
 | Solver Policy       | Single-Game Win Rate | Wins | Losses | Execution Time* | Moves / Game |
 | :------------------ | -------------------: | ---: | -----: | --------------: | -----------: |
-| Greedy             |                34.0% |   17 |     33 |           0.22s |         50.1 |
-| Heuristic          |                34.0% |   17 |     33 |           0.21s |         49.9 |
-| BeamSearch (D3,B4) |                42.0% |   21 |     29 |           0.42s |         49.0 |
-| DFS (Max 3k nodes) |                46.0% |   23 |     27 |           0.66s |         49.4 |
+| Greedy             |                34.0% |   17 |     33 |           0.02s |         50.1 |
+| Heuristic          |                34.0% |   17 |     33 |           0.01s |         49.9 |
+| BeamSearch (D3,B4) |                42.0% |   21 |     29 |           0.23s |         49.0 |
+| DFS (Max 3k nodes) |                46.0% |   23 |     27 |           0.89s |         49.4 |
+| Novice             |                26.0% |   13 |     37 |           0.02s |         48.9 |
 <!-- END PART 5 TABLE -->
 
 ---

@@ -33,11 +33,11 @@ P1_SEP    = "| :----------------------- | :-----: | -----------------: | -------
 P2_HEADER = "| Difficulty    | Redraws | Win Rate within 500 Rounds | Avg Rounds to Win | Median Rounds |"
 P2_SEP    = "| :------------ | :-----: | -------------------------: | ----------------: | ------------: |"
 
-P3_T1_HEADER = "| Difficulty    | Redraws | Victory (all) | Collapse (all) | Stall | Timeout | Victory / Collapse of Resolved |"
-P3_T1_SEP    = "| :------------ | :-----: | ------------: | -------------: | ----: | ------: | -----------------------------: |"
+P3_T1_HEADER = "| Difficulty    | Redraws | Collapse | Timeout | Deadlock | Collapse Rate | Timeout Rate |"
+P3_T1_SEP    = "| :------------ | :-----: | -------: | ------: | -------: | ------------: | -----------: |"
 
-P3_T2_HEADER = "| Difficulty    |     Avg Rounds to Win |    Avg Rounds to Collapse |     Overall Avg to Resolve |"
-P3_T2_SEP    = "| :------------ | --------------------: | ------------------------: | -------------------------: |"
+P3_T2_HEADER = "| Difficulty    | Avg Rounds Survived | Avg Rounds to Collapse | Pyramids Cleared | Perfect Wins |"
+P3_T2_SEP    = "| :------------ | ------------------: | ---------------------: | --------------: | -----------: |"
 
 P4_T1_HEADER = "| Difficulty    | Redraws | Mean Rounds Survived | Pyramids Cleared / Campaign | Perfect Wins / Campaign | Rank-Anchor Achievement |"
 P4_T1_SEP    = "| :------------ | :-----: | -------------------: | --------------------------: | ----------------------: | ----------------------: |"
@@ -132,42 +132,42 @@ def _run_part3_diff(args):
     label, redraw, diff, campaigns, solver, seed, workers = args
     cmd = [sys.executable, "sim/cursed_tomb_sim.py", "--campaigns", str(campaigns), "--seed", str(seed), "--difficulty", diff, "--solver", solver, "--max-rounds", "500", "--workers", str(workers)]
     output = run_command(cmd)
-    
-    vic_all = "0.00%"
-    col_all = "0.00%"
-    stall = "0.00%"
-    timeout = "0.00%"
-    vic_resolved = "0.00%"
-    col_resolved = "0.00%"
-    
-    avg_win = "N/A"
-    avg_col = "N/A"
-    avg_res = "N/A"
-    
-    for line in output.splitlines():
-        line_str = line.strip()
-        if line_str.startswith("victory rate (all):"):
-            vic_all = line_str.split(":")[-1].strip()
-        elif line_str.startswith("collapse rate (all):"):
-            col_all = line_str.split(":")[-1].strip()
-        elif line_str.startswith("timeout rate (all):"):
-            timeout = line_str.split(":")[-1].strip()
-        elif line_str.startswith("victory rate:"):
-            vic_resolved = line_str.split(":")[1].split("(")[0].strip()
-        elif line_str.startswith("collapse rate:"):
-            col_resolved = line_str.split(":")[1].split("(")[0].strip()
-        elif line_str.startswith("avg rounds to win:"):
-            avg_win = line_str.split(":", 1)[-1].strip()
-        elif line_str.startswith("avg rounds to collapse:"):
-            avg_col = line_str.split(":", 1)[-1].strip()
-        elif line_str.startswith("overall avg to resolve:"):
-            avg_res = line_str.split(":", 1)[-1].strip()
-            
-    res_str = f"{vic_resolved} / {col_resolved}"
-    r1 = f"| {label:<13} | {redraw:^7} | {vic_all:>13} | {col_all:>14} | {stall:>5} | {timeout:>7} | {res_str:>30} |"
-    r2 = f"| {label:<13} | {avg_win:>22} | {avg_col:>25} | {avg_res:>26} |"
-    return r1, r2
 
+    collapses = "0"
+    timeouts = "0"
+    deadlock = "0"
+    collapse_rate = "0.00%"
+    timeout_rate = "0.00%"
+
+    avg_survived = "N/A"
+    avg_collapse = "N/A"
+    pyramids = "N/A"
+    perfects = "N/A"
+
+    for line in output.splitlines():
+        ls = line.strip()
+        if ls.startswith("collapses:"):
+            collapses = ls.split(":")[-1].strip()
+        elif ls.startswith("timeouts (round cap):"):
+            timeouts = ls.split(":")[-1].split("(")[0].strip()
+        elif ls.startswith("stall (deadlock):"):
+            deadlock = ls.split(":")[-1].split("(")[0].strip()
+        elif ls.startswith("collapse rate (all):"):
+            collapse_rate = ls.split(":")[-1].strip()
+        elif ls.startswith("timeout rate (all):"):
+            timeout_rate = ls.split(":")[-1].strip()
+        elif ls.startswith("avg rounds survived:"):
+            avg_survived = ls.split(":", 1)[-1].strip()
+        elif ls.startswith("avg rounds to collapse:"):
+            avg_collapse = ls.split(":", 1)[-1].strip()
+        elif ls.startswith("pyramids cleared:"):
+            pyramids = ls.split(":", 1)[-1].strip()
+        elif ls.startswith("perfect wins:"):
+            perfects = ls.split(":", 1)[-1].strip()
+
+    r1 = f"| {label:<13} | {redraw:^7} | {collapses:>8} | {timeouts:>7} | {deadlock:>8} | {collapse_rate:>13} | {timeout_rate:>12} |"
+    r2 = f"| {label:<13} | {avg_survived:>21} | {avg_collapse:>22} | {pyramids:>14} | {perfects:>12} |"
+    return r1, r2
 
 def run_part3(campaigns, seed, solver, workers):
     print(f"--- Running Part 3: Full Rules Campaign ({campaigns} campaigns) ---", flush=True)

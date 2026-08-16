@@ -29,6 +29,9 @@ try:
         N_PYR,
         play_round,
         _apply_survival_reward,
+        classic_base_score,
+        classic_score,
+        classic_bonus_stars,
     )
 except ImportError:
     from . import cursed_tomb_sim
@@ -41,12 +44,15 @@ except ImportError:
         N_PYR,
         play_round,
         _apply_survival_reward,
+        classic_base_score,
+        classic_score,
+        classic_bonus_stars,
     )
 
 try:
-    from solvers import GreedySolver, HeuristicSolver, BeamSearchSolver, DFSSolver
+    from solvers import GreedySolver, HeuristicSolver, BeamSearchSolver, DFSSolver, NoviceSolver
 except ImportError:
-    from .solvers import GreedySolver, HeuristicSolver, BeamSearchSolver, DFSSolver
+    from .solvers import GreedySolver, HeuristicSolver, BeamSearchSolver, DFSSolver, NoviceSolver
 
 try:
     import matplotlib
@@ -86,6 +92,8 @@ def create_solver(solver_name: str):
         return BeamSearchSolver()
     elif s == 'dfs':
         return DFSSolver()
+    elif s == 'novice':
+        return NoviceSolver(seed=0)
     raise ValueError(f"Unknown solver strategy: {solver_name}")
 
 
@@ -235,6 +243,34 @@ def run_collapse_campaign(
         )
         if outcome.kind in ("perfect_win", "pyramid_clear"):
             _apply_survival_reward(outcome.last_clear_type, outcome.last_clear_cards, flags)
+            # Stock Bounty: 1-3 random non-Shields (0/<=4->3 <=8->2 else 1)
+            leftover = getattr(outcome, 'leftover', None)
+            if leftover is not None:
+                if leftover == 0 or leftover <= 4:
+                    N = 3
+                elif leftover <= 8:
+                    N = 2
+                else:
+                    N = 1
+                pool_cards = [c for c in registry if c.attrition_stage < 5]
+                rng.shuffle(pool_cards)
+                found = 0
+                for card in pool_cards:
+                    if card.reward_stage >= 2:
+                        continue
+                    prev_stage = card.reward_stage
+                    card.reward_stage = min(2, card.reward_stage + 1)
+                    if card.reward_stage == 2 and prev_stage < 2:
+                        card.anchor_absorption = 0
+                    found += 1
+                    if found >= N:
+                        break
+            # Perfect Graveyard Return: 1 random Entombed -> 4 Scars imperiled
+            if outcome.kind == 'perfect_win':
+                graveyard = [c for c in registry if c.attrition_stage >= 5]
+                if graveyard:
+                    card = rng.choice(graveyard)
+                    card.attrition_stage = 4  # imperiled |X|, still cursed
 
     return {
         "first_unwinnable_round": first_unwinnable_round,

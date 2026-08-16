@@ -233,7 +233,7 @@ describe('MatchedCardsModal deck matrix visuals', () => {
     );
 
     expect(container.querySelector('[aria-label="Blessed suit illustrations"]')?.querySelectorAll('svg')).toHaveLength(4);
-    expect(container.querySelector('[aria-label="Cursed suit illustrations"]')?.querySelectorAll('svg')).toHaveLength(2);
+    expect(container.querySelector('[aria-label="Cursed suit illustrations (3-4 Scars)"]')?.querySelectorAll('svg')).toHaveLength(2);
 
     const scarredLegend = container.querySelector('[aria-label="Scarred legend"]');
     expect(scarredLegend).not.toBeNull();

@@ -483,10 +483,13 @@ describe('Cursed Tomb campaign mechanics', () => {
 
     const updated = applyEndOfWeekLifecycle(campaign);
     const updatedHigh = updated.masterDeck.find((c: CursedCard) => c.id === cardHigh.id);
-    const updatedLow = updated.masterDeck.find((c: CursedCard) => c.id === cardLow.id);
-
+    // Blessing with fallback: higher gets blessed; lower no longer auto-anchors (replaced by Stock Bounty 1-3 random Anchors)
     expect(updatedHigh?.blessed).toBe(true);
-    expect(updatedLow?.rewardStage).toBe(1);
+    // Lower no longer automatically anchored; Anchors now come via Stock Bounty (count Stock+Waste+Vault leftover)
+    // Verify at least one random active card got an Anchor (stock bounty 1-3)
+    const anchored = updated.masterDeck.filter((c) => c.rewardStage > 0);
+    expect(anchored.length).toBeGreaterThanOrEqual(1);
+    expect(anchored.length).toBeLessThanOrEqual(3);
   });
 
   it('allows active cards at all stages (including Stage 3+ Scarred/Cursed) to receive Anchor rewards until entombed', () => {
@@ -500,13 +503,14 @@ describe('Cursed Tomb campaign mechanics', () => {
     campaign.currentRound.lastClearedPair = [cardHigh, cardLowStage1];
 
     const updatedStage1 = applyEndOfWeekLifecycle(campaign);
-    const updatedLow1 = updatedStage1.masterDeck.find((c: CursedCard) => c.id === cardLowStage1.id);
-    expect(updatedLow1?.rewardStage).toBe(1);
+    // Stock Bounty: 1-3 random non-Shield Anchors (not deterministic lower). Verify some active card got anchored.
+    const anchored1 = updatedStage1.masterDeck.filter((c) => !beforeDeck1.find((b) => b.id === c.id && b.rewardStage === c.rewardStage) && c.rewardStage > 0);
+    expect(anchored1.length).toBeGreaterThanOrEqual(1);
 
     const effects1 = computeRoundLifecycleEffects(beforeDeck1, updatedStage1.masterDeck, campaign.currentRound);
     expect(effects1.clearDetails?.anchorBlockedByScar).toBe(false);
 
-    // Now test Stage 3 card (Scarred) - should also receive Anchor reward
+    // Now test Stage 3 card (Scarred) - should also allow Anchors via Stock Bounty
     const campaignStage3 = createCampaign('cursed-tomb', 1);
     const cardHigh3 = campaignStage3.masterDeck.find((c) => c.rank === 10)!;
     const cardLowStage3 = campaignStage3.masterDeck.find((c) => c.rank === 2 && c.suit === '♥')!;
@@ -517,8 +521,8 @@ describe('Cursed Tomb campaign mechanics', () => {
     campaignStage3.currentRound.lastClearedPair = [cardHigh3, cardLowStage3];
 
     const updatedStage3 = applyEndOfWeekLifecycle(campaignStage3);
-    const updatedLow3 = updatedStage3.masterDeck.find((c: CursedCard) => c.id === cardLowStage3.id);
-    expect(updatedLow3?.rewardStage).toBe(1); // Receives Anchor reward
+    const anchored3 = updatedStage3.masterDeck.filter((c) => !beforeDeck3.find((b) => b.id === c.id && b.rewardStage === c.rewardStage) && c.rewardStage > 0);
+    expect(anchored3.length).toBeGreaterThanOrEqual(1); // Still works at 3 Scars via Stock Bounty
 
     const effects3 = computeRoundLifecycleEffects(beforeDeck3, updatedStage3.masterDeck, campaignStage3.currentRound);
     expect(effects3.clearDetails?.anchorBlockedByScar).toBe(false);
@@ -543,21 +547,65 @@ describe('Cursed Tomb campaign mechanics', () => {
     wildcard.blessed = true; // Sun Cross Universal Wildcard
     const partner = campaign.masterDeck.find((c) => c.suit === '♥' && c.rank === 2)!;
 
-    // determineHeroAndAnchor check
+    // determineHeroAndAnchor is retained for legacy; Wildcard Blessing fallback: higher non-wild gets Blessing, lower wildcard is fallback only
     const pairResult = determineHeroAndAnchor(wildcard, partner, 'cursed-tomb');
     expect(pairResult.heroCard.id).toBe(partner.id);
     expect(pairResult.anchorCard.id).toBe(wildcard.id);
 
-    // applyEndOfWeekLifecycle check
+    // applyEndOfWeekLifecycle check: Wildcard is ineligible as primary (blessed), but partner should get Blessing; Anchor now via Stock Bounty (not deterministic wildcard anchor)
     campaign.currentRound.status = 'partial-victory';
     campaign.currentRound.lastClearedPair = [wildcard, partner];
 
     const updated = applyEndOfWeekLifecycle(campaign);
-    const updatedWildcard = updated.masterDeck.find((c: CursedCard) => c.id === wildcard.id);
     const updatedPartner = updated.masterDeck.find((c: CursedCard) => c.id === partner.id);
 
-    expect(updatedWildcard?.rewardStage).toBe(1); // Wildcard acts as Anchor
-    expect(updatedPartner?.blessed).toBe(true); // Partner becomes Blessed Hero
+    expect(updatedPartner?.blessed).toBe(true); // Partner becomes Blessed Hero (fallback from wildcard primary)
+    // Wildcard no longer automatically Anchored; Anchors are Stock Bounty random
+    const anchored = updated.masterDeck.filter((c) => c.rewardStage > 0);
+    expect(anchored.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('offers Blessing fallback to lower card when higher is already blessed', () => {
+    const campaign = createCampaign('cursed-tomb', 1);
+    const cardHigh = campaign.masterDeck.find((c) => c.rank === 8)!;
+    const cardLow = campaign.masterDeck.find((c) => c.rank === 5)!;
+    // Make higher already blessed so fallback should bless lower
+    cardHigh.blessed = true;
+    cardHigh.attritionStage = 0;
+    cardLow.attritionStage = 0;
+    cardLow.blessed = false;
+
+    campaign.currentRound.status = 'partial-victory';
+    campaign.currentRound.lastClearedPair = [
+      { ...cardHigh, removed: true, selected: false },
+      { ...cardLow, removed: true, selected: false },
+    ];
+
+    const updated = applyEndOfWeekLifecycle(campaign);
+    const updatedLow = updated.masterDeck.find((c) => c.id === cardLow.id);
+    const updatedHigh = updated.masterDeck.find((c) => c.id === cardHigh.id);
+    expect(updatedLow?.blessed).toBe(true);
+    expect(updatedHigh?.blessed).toBe(true); // stays blessed
+  });
+
+  it('grants Stock Bounty Anchors via random draw on solo King clear (no Blessing)', () => {
+    const campaign = createCampaign('cursed-tomb', 1);
+    const kCard = campaign.masterDeck.find((c) => c.rank === 13)!;
+    kCard.attritionStage = 0;
+    const beforeAnchored = campaign.masterDeck.filter((c) => c.rewardStage >= 1).length;
+
+    campaign.currentRound.status = 'partial-victory';
+    campaign.currentRound.lastClearedPair = [{ ...kCard, removed: true, selected: false }];
+    campaign.currentRound.drawPile = []; // force leftover small for N=3
+    campaign.currentRound.discardPile = [];
+    campaign.currentRound.vaultCards = [];
+
+    const updated = applyEndOfWeekLifecycle(campaign);
+    // Solo gives no Blessing but still 1-3 random Anchors via Stock Bounty
+    expect(updated.masterDeck.find((c) => c.id === kCard.id)?.blessed).toBe(false);
+    const afterAnchored = updated.masterDeck.filter((c) => c.rewardStage >= 1).length;
+    expect(afterAnchored).toBeGreaterThanOrEqual(beforeAnchored + 1);
+    expect(afterAnchored).toBeLessThanOrEqual(beforeAnchored + 3);
   });
 
   it('triggers Starvation defeat when fewer than 28 active cards remain', () => {

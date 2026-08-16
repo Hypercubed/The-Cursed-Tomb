@@ -16,7 +16,7 @@ from multiprocessing import Pool, cpu_count
 sys.path.insert(0, os.path.dirname(__file__))
 
 from cursed_tomb_sim import play_round, CardState, RuleFlags, SUITS, RANKS, GameState, Move
-from solvers import GreedySolver, HeuristicSolver, BeamSearchSolver, DFSSolver
+from solvers import GreedySolver, HeuristicSolver, BeamSearchSolver, DFSSolver, NoviceSolver
 
 BASE_FLAGS = RuleFlags(
     scars=False,
@@ -40,6 +40,8 @@ def create_solver(solver_key: str):
         return BeamSearchSolver(depth=3, beam_width=4)
     elif 'dfs' in s:
         return DFSSolver(max_nodes=3000)
+    elif 'novice' in s:
+        return NoviceSolver(seed=0)
     raise ValueError(f"Unknown solver: {solver_key}")
 
 
@@ -61,6 +63,7 @@ def run_benchmark(n_games: int = 100, seed: int = 42, max_redeals: int = 2, n_wo
         ("Heuristic", "heuristic"),
         ("BeamSearch (D3,B4)", "beam"),
         ("DFS (Max 3k nodes)", "dfs"),
+        ("Novice", "novice"),
     ]
 
     # Pre-generate identical seeds per game index for all solvers

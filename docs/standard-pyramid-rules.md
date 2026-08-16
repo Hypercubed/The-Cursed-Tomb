@@ -1,9 +1,6 @@
 ---
 title: "Standard Pyramid Solitaire"
 subtitle: "Classic Rules Foundation"
-version: "1.0"
-date: "2026-08-08"
-status: "stable"
 description: "Classic Pyramid Solitaire rules that form the foundation for The Cursed Tomb campaign mechanics."
 license: "CC0-1.0"
 spdx: "CC0-1.0"
@@ -27,23 +24,49 @@ is therefore public domain / CC0, unlike Parts II & III which are CC BY-SA 4.0.
 
 ---
 
+## Definitions & Zones
+
+*   **The Pyramid:** 28-card layout in 7 overlapping rows (§1).
+*   **Exposed Card:** A pyramid card with no cards overlapping it from the row below; only exposed cards may be paired or cleared singly as a King.
+*   **The Foundation:** Separate pile for cleared pairs and solo Kings — the destination for all removed cards.
+*   **The Stock:** Face-down draw pile of the remaining 24 cards; turn top card face-up before it enters the Waste.
+*   **The Waste (Talon):** Face-up discard pile where exposed Stock cards land when not paired; may be flipped as a block to redeal (not shuffled, §3).
+
+---
+
 ## 1. Layout & Objective
 
 ### Pyramid Layout
-28 cards are dealt face-up into 7 overlapping rows forming a pyramid:
-- Row 1 has 1 card
-- Row 2 has 2 cards  
-- Row 3 has 3 cards
-- Row 4 has 4 cards
-- Row 5 has 5 cards
-- Row 6 has 6 cards
-- Row 7 has 7 cards
+28 cards are dealt face-up into 7 overlapping rows forming a pyramid (each card overlap covers corners of the card above; only base row is never overlapped):
+
+```
+              ┌───┐
+              │ 1 │
+            ┌─┴───┴─┐
+            │ 2 │ 3 │
+          ┌─┴───┴───┴─┐
+          │ 4 │ 5 │ 6 │
+        ┌─┴───┴───┴───┴─┐
+        │ 7 │ 8 │ 9 │10 │
+      ┌─┴───┴───┴───┴───┴─┐
+      │11 │12 │13 │14 │15 │
+    ┌─┴───┴───┴───┴───┴───┴─┐
+    │16 │17 │18 │19 │20 │21 │
+  ┌─┴───┴───┴───┴───┴───┴───┴─┐
+  │22 │23 │24 │25 │26 │27 │28 │  7 cards — Row 7 (base)
+  └───┴───┴───┴───┴───┴───┴───┘
+```
+
+`1+2+3+4+5+6+7 = 28`. Rows 1–6 each overlapped by two cards below; Row 7 holds `22–28` at the base.
 
 ### Exposed Cards
 Only cards with no overlapping cards beneath them in lower rows are exposed and available to pair. A card becomes exposed when both cards directly below it have been cleared.
 
 ### Win Condition
 Dismantle the pyramid by clearing all 28 cards to the Foundation pile.
+
+### The Foundation
+Cleared pairs (and solo Kings) are placed face-up in the **Foundation** — a separate destination pile of completed matches.
 
 ---
 
@@ -73,7 +96,7 @@ Cards are cleared by selecting pairs of exposed cards whose values sum exactly t
 ## 3. Stock Draw & Waste Pile
 
 ### Stock Draw
-The remaining 24 cards form the face-down **Stock pile**. Turn cards one-by-one onto the Waste pile.
+The remaining cards form the face-down **Stock pile**. Turn the top Stock card face-up — it is immediately **exposed** and may be paired (or cleared solo as a King) before it enters the Waste pile. If no other move is played, that exposed Stock card is then placed face-up on the **Waste pile** (the face-up discard pile).
 
 ### Eligible Cards
 The following cards can be paired together:
@@ -82,48 +105,8 @@ The following cards can be paired together:
 - Exposed Pyramid cards
 
 ### Redeals
-Standard Pyramid allows resetting the Waste back to Stock up to 1 time (2 total passes through the deck). This is the "Archaeologist" difficulty setting in *The Cursed Tomb*.
+When the Stock is exhausted, the **Waste pile is picked up and flipped over** as a block (turned face-down, **not shuffled**) to form a new Stock pile — this preserves the original Stock deal order — and dealing continues. House rules vary — some allow **1 redeal** (2 total passes; *The Cursed Tomb* Archaeologist setting), others play **up to 2 redeals** (3 passes, as on semicolon.com). After the allowed redeals are used, no further cycling is permitted and the game ends when no moves remain.
+
+In *The Cursed Tomb* you choose the limit up front via Difficulty (§5 of the main rules).
 
 ---
-
-## 4. Standard vs. Cursed Tomb Comparison
-
-| Feature | Standard Pyramid | The Cursed Tomb |
-|---------|-----------------|-----------------|
-| Card Values | Static (A–K) | Dynamic Scars (+1/-1) |
-| Defeat Penalty | Game over / Reset | Attrition Ink Marks |
-| Special Powers | None | Suit Hero Blessings |
-| Traps & Extra | None | Red Curses, Vault, etc. |
-| Deck Persistence | Single round | Multi-round campaign |
-| Card Modifications | None | Permanent ink marks |
-
----
-
-## 5. Difficulty Levels (Redeals)
-
-*The Cursed Tomb* offers multiple difficulty settings that control redeal allowances:
-
-- **Novice (Tutorial / Sandbox)**: Infinite Redeals (unlimited passes through Stock)
-- **Explorer (Easy)**: 2 Redeals (3 total passes through Stock)
-- **Archaeologist (Normal)**: 1 Redeal (2 total passes through Stock) — *Matches standard Pyramid*
-- **Survivalist (Hard)**: 0 Redeals (1 single pass through Stock)
-
----
-
-## 6. Key Differences from Campaign Mode
-
-In **Standard Pyramid** mode:
-- No attrition marks or card degradation
-- No suit blessings or special powers
-- No face-down cards from Red Curses
-- No Vault mechanics
-- No persistent deck state
-- Game ends when pyramid is cleared or no moves remain
-
-In **Cursed Tomb Campaign** mode:
-- Cards carry permanent ink marks across rounds
-- Suit blessings unlock special powers
-- Red Curses deal face-down cards
-- Diamond Vault provides strategic storage
-- Deck persists and evolves over multiple rounds
-- Campaign ends via starvation or sealed tomb victory

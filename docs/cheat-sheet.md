@@ -1,10 +1,10 @@
 ---
 title: "The Cursed Tomb"
 subtitle: "Campaign Cheat Sheet & Quick Reference"
-version: "0.0.12"
-date: "2026-08-15"
+version: "0.0.13"
+date: "2026-08-16"
 status: "draft"
-description: "Terse quick-reference cheat sheet covering campaign structure, attrition, curse traps, hero blessings, defensive immunity, and card anatomy for The Cursed Tomb."
+description: "Terse quick-reference cheat sheet covering campaign structure, scar track, shield, curse traps, hero blessings, and card anatomy for The Cursed Tomb."
 license: "CC-BY-SA-4.0"
 copyright: "Copyright (c) 2026 Jayson Harshbarger"
 spdx: "CC-BY-SA-4.0"
@@ -26,9 +26,9 @@ Quick-reference reference guide for **The Cursed Tomb** campaign rules, progress
 ## 1. Campaign Structure & Setup
 
 * **Components:** Standard 52-card poker deck, red & blue fine-tip felt markers, Graveyard Box, d6 / tokens for redeals.
-* **Objective:** Achieve a **Perfect Win** (clear all 52 cards into the Foundation) or survive as many rounds as possible.
-* **The Tomb Collapses (Defeat):** Instant defeat if active deck pool has **< 28 cards** at round start (Starvation).
-* **Campaign Reset Protocol:** Active Pool = Foundation + Stock + Waste + Vault (exclude Graveyard). Re-shuffle and deal 28-card pyramid (7 rows: 1–7).
+* **Objective:** **The Tomb is cursed to fail.** No final victory — score as many **Wins** (Pyramid Clear 28 or Perfect 52, §6/§7) as you can before Starvation.
+* **The Tomb Collapses (Defeat):** Instant defeat if active deck pool has **< 28 cards** at round start (Starvation). Sole defeat; Perfect/Pyramid are not endings.
+* **Campaign Reset Protocol:** Active Pool = Foundation + Stock + Waste + Vault (+ any Graveyard return on Perfect §7; exclude remaining Graveyard). Re-shuffle and deal 28-card pyramid (7 rows: 1–7).
 
 ### Global Difficulty Modes
 
@@ -41,56 +41,66 @@ Quick-reference reference guide for **The Cursed Tomb** campaign rules, progress
 
 ---
 
-## 2. The Attrition Track & Curse Traps
+## 2. The Scar Track & Shield
 
-When a round freezes (no legal moves left), all exposed **bottleneck cards** at the lowest remaining base tiers take 1 red ink stroke across their rank number pip.
+When a round freezes (no legal moves left), all exposed **bottleneck cards** at the lowest remaining base tiers take **1 red Scar** (Upper-Left index). Five Scars = Entombed. A completed **Shield** (`+`, 2 Anchors) absorbs a Scar as one **red block** in a quadrant around the `+` instead.
 
-### The Attrition Failure Track
+### The Scar Track (Upper-Left, Red Strokes)
 
-| Stage | Pip Mark | Value Shift | In-Game Effect |
+| Scars | Pip Mark | Value / Curse | Effect |
 |---|:---:|:---:|---|
-| **1. Vulnerable** | `\|7` | None | 1st vertical stroke left of rank. No mechanical effect. |
-| **2. Doubtful** | `\|7\|` | None | 2nd vertical stroke right of rank (framing digit). No mechanical effect. |
-| **3. The Scar** | `\|7\\|8` | Red +1 / Black -1 | Backslash `\` across rank; new **Functional Value** written to right. Wraps 1↔13. |
-| **4. The Curse** | `\|7X\|8` | Red +1 / Black -1 | Forward slash `/` forms `X` over rank + draw center curse icon. Enforces trap/weight. |
-| **5. Entombed** | `[ X ]` | None | Giant `X` across face. **Permanently destroyed**; move to Graveyard Box. |
+| **1** | `|7` | — | 1st bar left of rank. **Vulnerable**, no effect. |
+| **2** | `|\7 8` | Red +1 / Black -1 | Backslash `\` across rank; new **Functional Value** right. Wraps 1↔13. |
+| **3** | `|X 8` | Red +1 / Black -1 | `X` (`\`+`/`); **Cursed** — trap/weight. |
+| **4** | `|X| 8` | Red +1 / Black -1 | Right bar `|` → `|X|`; **Imperiled** — still Cursed, next Scar entombs. |
+| **5** | `X` | — | **Entombed** face-down → Graveyard Box (removed until Perfect §7 returns it as 4 Scars `|X|`). |
 
-### Curse Traps Lookup (Stage 4)
+### Curse Traps (3–4 Scars)
 
-| Suit / Color | Curse Name | Center Icon | Trap / Penalty Effect |
-|---|---|:---:|---|
-| **Red** (♥ / ♦) | **The Trap** | **`▼`** Triangle | **Pyramid Deal:** Overlapping cards dealt in next row are dealt **face-down**. Flip when exposed. |
-| **Black** (♠ / ♣) | **Recycled Weight** | **`⏍`** Weight | **Pairing Penalty:** Cursed card goes to Foundation; paired partner **shuffles back into Stock**. |
+| Scars | Color | Curse Name | Center Icon | Effect |
+|---|:---:|---|---|---|
+| 3–4 | **Red** (♥ / ♦) | **The Trap** | **`▼`** | **Pyramid Deal:** Overlapping next row dealt **face-down**. Flip when exposed. |
+| 3–4 | **Black** (♠ / ♣) | **Recycled Weight** | **`⏍`** | **Pairing:** Cursed to Foundation; partner **shuffles back into Stock**. |
 
-### Curse Rules & Interactions
-* **Mutual Exclusivity:** A card carries either a Blessing OR a Curse illustration on its center face—never both.
-* **Blessed at Stage 4:** Receives `|NX|` rank mark and can be Entombed, but **skips** Curse trap/weight and keeps Blessing.
-* **Cursed as Hero:** If a Stage 4 Cursed card is cleared as Hero, the **Blessing award is skipped**.
-* **Simultaneous Perfect Win Priority:** Final pair clearing the entire deck ignores Black Curse partner reshuffle penalty.
+### Scar / Shield Rules
+* **Mutual Exclusivity:** A card carries either a Blessing OR a Curse center icon — never both.
+* **Blessed at 3+ Scars:** Receives `|NX|` / `|NX|` marks and can advance to `X` Entombed, but **skips** Curse trap/weight and keeps Blessing.
+* **Cursed as Hero:** If a 3- or 4-Scar Cursed card is the primary Blessing candidate, the **Blessing is offered to the lower card instead** (§3); if both are cursed/blessed, **no Blessing**.
+* **Perfect Priority:** Final pair clearing the entire deck ignores the Black Curse partner reshuffle.
+* **Shield absorbs Scars:** A `+` Shield contains **4 red blocks** (quadrants around `+`). Each freeze that would add a Scar instead fills one block; on the 4th the Shield exhausts (→ 0 Anchors), Scars preserved. **Imperiled `|X|` is still Cursed** — it retains `X` trap/weight until entombed.
+* **Perfect Graveyard Return (§3 C):** Perfect Win shuffles Graveyard face-down, draws 1 random `X` Entombed card, returns it as **4 Scars `|X|` Imperiled** (keeps prior Scar/Anchor/Blessing ink, still Cursed). If empty, nothing happens.
 
 ---
 
-## 3. Hero Blessings & Defensive Immunity
+## 3. Hero Blessings & Stock Bounty
 
-Unlocked on a **Pyramid Clear** (all 28 pyramid cards cleared). The final card play awards legacy unlocks:
-* **Higher-Value Card:** Becomes the **Blessed Hero** (draw suit icon in Cobalt Blue ink on center face).
-* **Lower-Value Card / Solo King (13):** Progresses defensive **Anchor track** in upper-right margin (`—` → `+`).
+Unlocked on **any Win** (Pyramid Clear 28 or Perfect 52). Compare the **final pair's Functional Values**:
+
+* **Blessing (1 per Win, with fallback):** Higher-value card is primary. Draw its suit icon (Blue, center face) if **not already blessed and <3 Scars** (not yet Cursed). If primary is ineligible (already blessed — e.g., vaulted Diamond `□` — or 3+ Scars), offer to the **lower card** instead if eligible. If both ineligible, **no Blessing**. Vaulting the last pyramid Diamond `♦` counts as a Win; the vaulted card is the hero (already blessed, so skipped) and only Anchors (§5 B) apply. Solo `K`/`13` gives no Blessing.
+* **Stock Bounty — 1–3 random Anchors (draw until `N` non-Shields):** After any Win, fan the remaining `Stock+Waste+Vault` (all Stock-origin cards not in Foundation/pyramid) together to count `leftover` (usually only Waste at end, Vault only if ♦):
+  * `0` (Perfect) → `N=3`
+  * `≤4` → `N=3`
+  * `≤8` → `N=2`
+  * `>8` → `N=1` mandatory
+  Shuffle the **remaining active deck** (<5 Scars) face-down, flip until you have **`N` cards that are *not* already a Shield (`+`, 2 Anchors)**. For each, add one blue **Anchor** (`—` → `+`, Shield with 0 blocks). If already a Shield, **skip and keep flipping** (no-op on `+`). Covers solo `K` clears.
 
 ### Hero Blessings Lookup
 
 | Suit | Blessing Name | Center Icon | Effect Summary |
-|---|---|:---:|---|
+|---|:---:|---|
 | **♥ Hearts** | **Stock Reshuffle** | **`∩`** Archway | **On Clear:** Immediately shuffle all face-up Waste cards into face-down Stock without spending a redeal. |
 | **♦ Diamonds** | **The Vault** | **`□`** Vault Box | **Anytime Exposed:** Free action to place into FILO Vault stack; unblocks cards beneath; survives redeals. |
 | **♠ Spades** | **The Tunnel** | **Shovel** | **On Clear:** Move any 1 exposed pyramid card directly to the top of the Waste pile. |
-| **♣ Clubs** | **Universal Wildcard** | **`⊕`** Sun Cross | **When Pairing:** Cross out rank digit (`X`); pairs with **ANY exposed card** regardless of rank/value. |
+| **♣ Clubs** | **Universal Wildcard** | **`⊕`** Sun Cross | **When Pairing:** Cross out rank digit (`X`); pairs with **ANY exposed card** (as `0–12` to sum 13); **cannot clear solo** as 13. |
 
-### Defensive Immunity: Anchors & Absorption Shield
-* **1st Clear `[ — ]` (Fortifying):** Single horizontal line in upper-right margin. No mechanical effect.
-* **2nd Clear `[ + ]` (Anchored):** Crossed vertically (`+`). Grants a **4-hit Absorption Shield**.
-* **Absorption Shield:** Anchored cards absorb freeze hits instead of advancing Attrition stages. Mark 1 red dot/tick in an outer quadrant around `+` per hit (`1/4` → `2/4` → `3/4` → `4/4`).
-* **Shield Exhaustion:** On the 4th hit, shield breaks (returns to un-anchored). Existing Scars/Curses are preserved.
-* **Wildcard Partner Rule:** Existing ♣ Wildcard in final pair automatically takes Anchor stroke; partner gains Hero Blessing.
+### Anchors & Shield
+* **1st Anchor `[ — ]` (Fortified):** Horizontal line Upper-Right. No effect.
+* **2nd Anchor `[ + ]` (Shield):** Vertical crossing `+`. Grants **4 Scar blocks** (quadrants around `+`).
+* **Shield blocks:** Each freeze that would add a Scar instead fills one red dot/tick (`1/4` → `4/4`). On the 4th the Shield breaks (→ 0 Anchors), Scars preserved. Valid at all Scar stages including Scarred/Cursed/Imperiled until 5 Scars Entombed.
+* **Wildcard Partner Rule:** If the final pair includes an existing ♣ Wildcard (`⊕`), it cannot receive another Blessing and is **not eligible as primary** — it may only be the fallback lower candidate. If both are Wildcards, **no Blessing**.
+
+### C. Perfect Win Graveyard Return (§3/§7)
+* **On Perfect only (0 leftover):** After A–B Stock Bounty above, shuffle Graveyard (`X` 5-Scar Entombed cards) face-down, draw **1 random card**, return to active deck as **4 Scars `|X| 8` — Imperiled** (keeps prior Scar/Anchor/Blessing ink, still Cursed, one Scar from death). If empty, no effect. Sole way an `X` re-enters play; all marks remain permanent and additive.
 
 ---
 
@@ -100,26 +110,26 @@ Physical card modifications are strictly confined to distinct visual zones:
 
 ```
 +───────────────────────────+
-| |7̸| 8                [+]  |   <- Upper-Left: Slashed Rank, Functional Val
-|  ♥                        |   <- Upper-Right: Anchor Badge [+]
-|                           |
-|           ╭───╮           |   <- Center Face: Blessing or Curse illustration
-|           │ ∩ │           |      drawn on the card face
-|           │   │           |      (Archway, Vault Box, Shovel, Sun Cross, ▼, ⏍)
+| |\7 8              [+]• |   <- Upper-Left: Scars + value (`|\7`: 2 Scars); Upper-Right: Shield + 2/4 red blocks
+|  ♥  •                     |   <- Shield quadrants (Red dots; 4th exhausts Shield → 0)
+|           ╭───╮           |   <- Center Face: Blessing or Curse (∩ □ Shovel ⊕ / ▼ ⏍)
+|           │ ∩ │           |
+|           │   │           |
 |           ╰───╯           |
-|                        ♥  |
-|  [+]             |7̸| 8    |   <- 180° Symmetrical Bottom Index (optional)
+|                    •  ♥  •|
+|  [+]•            |\7 8   |   <- 180° symmetrical; Shield dots mirrored
 +───────────────────────────+
 ```
+*`+` shows 2/4 Shield blocks (two red dots); empty quadrants stay blue. At 4/4 the Shield breaks.*
 
 ### Zone & Color Summary
 
 | Zone | Modification | Ink Color | Marks & Symbols |
 |---|---|:---:|---|
-| **Upper-Left Corner** | Rank Modifications | **Red** | `|` (Stage 1), `||` (Stage 2), `|N̸| V` (Stage 3 Scar), `|NX| V` (Stage 4 Curse) |
+| **Upper-Left Corner** | Scars (1–5) | **Red** | `|7` (1 Vulnerable) → `|\7 8` (2 Scarred) → `|X 8` (3 Cursed) → `|X| 8` (4 Imperiled) → `X` (5 Entombed) |
 | **Upper-Left Corner** | Wildcard Rank | **Blue** | `X` crossed over rank pip (♣ Clubs Wildcard) |
 | **Center Face** | Hero Blessings | **Blue** | `∩` (Hearts), `□` (Diamonds), Shovel (Spades), `⊕` (Clubs) |
 | **Center Face** | Curse Traps | **Red** | `▼` (Red Trap), `⏍` (Black Weight) |
-| **Upper-Right Margin** | Defensive Immunity | **Blue** | `—` (Fortifying Stage 1), `+` (Anchored Stage 2) |
-| **Around Upper-Right `+`** | Absorption Hits | **Red** | 1 to 4 dots/ticks in outer quadrants around `+` |
-| **Entire Card Face** | Entombment | **Red** | Giant `X` across face (Stage 5 Entombed → Graveyard) |
+| **Upper-Right Margin** | Anchors / Shield | **Blue** | `—` (1 Fortified), `+` (2 = Shield) |
+| **Around Upper-Right `+`** | Scar Absorption Blocks | **Red** | 1 to 4 dots/ticks in outer quadrants around `+` |
+| **Graveyard Box** | Entombed | — | `X` 5-Scar cards (face-down, out of pool) |

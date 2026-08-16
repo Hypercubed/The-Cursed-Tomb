@@ -21,7 +21,7 @@ from multiprocessing import Pool, cpu_count
 sys.path.insert(0, os.path.dirname(__file__))
 
 from cursed_tomb_sim import play_round, CardState, RuleFlags, SUITS, RANKS
-from solvers import GreedySolver, HeuristicSolver, BeamSearchSolver, DFSSolver
+from solvers import GreedySolver, HeuristicSolver, BeamSearchSolver, DFSSolver, NoviceSolver
 
 BASE_FLAGS = RuleFlags(
     scars=False,
@@ -47,6 +47,8 @@ def create_solver(solver_name: str):
         return BeamSearchSolver()
     elif s == 'dfs':
         return DFSSolver()
+    elif s == 'novice':
+        return NoviceSolver(seed=0)
     raise ValueError(f"Unknown solver: {solver_name}")
 
 def create_fresh_pool():
@@ -106,7 +108,7 @@ def parse_args():
     p = argparse.ArgumentParser(description="Base game single-round simulation")
     p.add_argument("--games", type=int, default=1000, help="number of games per configuration")
     p.add_argument("--seed", type=int, default=42, help="random seed")
-    p.add_argument("--solver", choices=["greedy", "heuristic", "beam", "dfs"], default="heuristic", help="solver strategy")
+    p.add_argument("--solver", choices=["greedy", "heuristic", "beam", "dfs", "novice"], default="heuristic", help="solver strategy")
     p.add_argument("--workers", type=int, default=cpu_count(), help="number of parallel worker processes")
     return p.parse_args()
 

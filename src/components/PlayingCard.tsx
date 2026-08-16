@@ -79,22 +79,29 @@ function getUpperRightTooltip(suit: string, attritionStage: number, rank: number
   const isRed = isRedSuit(suit);
   const fVal = functionalValue ?? rank;
   const rLabel = rankLabel(rank);
-  if (attritionStage === 1) return `Vulnerable (|${rLabel}): 1st Attrition line to the left of rank`;
-  if (attritionStage === 2) return `Doubtful (|${rLabel}|): 2nd Attrition line to the right of rank`;
-  if (attritionStage === 3) {
+  if (attritionStage === 1) return `1 Scar - Vulnerable (|${rLabel}): 1 red bar left of rank`;
+  if (attritionStage === 2) {
     return isRed
-      ? `Red Scar (|${rLabel}\\|): Functional value shifted (+1). Effective value: ${rankLabel(fVal)}`
-      : `Black Scar (|${rLabel}\\|): Functional value shifted (-1). Effective value: ${rankLabel(fVal)}`;
+      ? `2 Scars - Scarred (|${rLabel}\\ ${rankLabel(fVal)}): Functional value shifted (+1). Effective: ${rankLabel(fVal)}`
+      : `2 Scars - Scarred (|${rLabel}\\ ${rankLabel(fVal)}): Functional value shifted (-1). Effective: ${rankLabel(fVal)}`;
+  }
+  if (attritionStage === 3) {
+    if (blessed) {
+      return `3 Scars - Cursed (|${rLabel}X|): Blessed so Curse trap skipped, but Scar count and shift remain.`;
+    }
+    return isRed
+      ? `3 Scars - Cursed (|${rLabel}X|) (▼): Red Curse (+1 shift, locks next row face-down). Effective: ${rankLabel(fVal)}`
+      : `3 Scars - Cursed (|${rLabel}X|) (⏍): Black Curse (-1 shift, partner reshuffled to Stock). Effective: ${rankLabel(fVal)}`;
   }
   if (attritionStage === 4) {
     if (blessed) {
-      return `Stage 4 Attrition (|X|): Card is Blessed. Curse trap skipped (Blessed card: Curse trap skipped).`;
+      return `4 Scars - Imperiled (|${rLabel}X|): Blessed so Curse trap skipped. One Scar from Entombed.`;
     }
     return isRed
-      ? `Red Curse (|X|) (▼ Downward Triangle): Red Curse active (+1 value shift & locks next lower row cards face-down)`
-      : `Black Curse (|X|) (⏍ Weight): Black Curse active (-1 value shift & shuffles paired partner into Stock pile)`;
+      ? `4 Scars - Imperiled (|${rLabel}X|) (▼): Still Cursed but vulnerable to Entombment. Effective: ${rankLabel(fVal)}`
+      : `4 Scars - Imperiled (|${rLabel}X|) (⏍): Still Cursed but one Scar from Entombed. Effective: ${rankLabel(fVal)}`;
   }
-  if (attritionStage === 5) return 'Entombed (💀): Permanently destroyed card';
+  if (attritionStage === 5) return '5 Scars - Entombed (Entombed): In Graveyard until Perfect Win returns it as |X| Imperiled';
   return '';
 }
 
@@ -198,21 +205,8 @@ function SlashedRank({
               className="drop-shadow-[0_0_2px_rgba(220,38,38,0.45)]"
             />
 
-            {/* Stage 2: Right vertical line with organic stroke wobble */}
+            {/* 2 Scars: Backslash \ across rank (Scarred, value shift) */}
             {stage >= 2 && (
-              <path
-                d="M 86 5 Q 94 50 88 95"
-                stroke="#dc2626"
-                strokeWidth="18"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                filter="url(#ink-bleed)"
-                className="drop-shadow-[0_0_2px_rgba(220,38,38,0.45)]"
-              />
-            )}
-
-            {/* Stage 3: Backslash \ with organic curve */}
-            {stage >= 3 && (
               <path
                 d="M 12 4 C 36 32 64 65 88 96"
                 stroke="#dc2626"
@@ -224,10 +218,23 @@ function SlashedRank({
               />
             )}
 
-            {/* Stage 4: Forward slash / forming '|X|' */}
-            {stage >= 4 && (
+            {/* 3 Scars: Forward slash / forming X (Cursed) */}
+            {stage >= 3 && (
               <path
                 d="M 10 96 C 34 66 66 34 90 4"
+                stroke="#dc2626"
+                strokeWidth="18"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                filter="url(#ink-bleed)"
+                className="drop-shadow-[0_0_2px_rgba(220,38,38,0.45)]"
+              />
+            )}
+
+            {/* 4 Scars: Right vertical bar framing X (Imperiled) */}
+            {stage >= 4 && (
+              <path
+                d="M 86 5 Q 94 50 88 95"
                 stroke="#dc2626"
                 strokeWidth="18"
                 strokeLinecap="round"
@@ -240,8 +247,8 @@ function SlashedRank({
         </svg>
       )}
 
-      {/* Modified value written in scarlet red gel ink to the right of the scar box */}
-      {stage >= 3 && funcValLabel && (
+      {/* Modified value written in scarlet red gel ink to the right of the scar box (2+ Scars) */}
+      {stage >= 2 && funcValLabel && (
         <span
           className="absolute left-full ml-1 sm:ml-1.5 top-[-6px] sm:top-[-8px] lg:top-[-9px] text-[0.95rem] sm:text-base lg:text-lg xl:text-xl font-black leading-none whitespace-nowrap"
           style={{
@@ -466,7 +473,7 @@ function CornerIndex({
   const red = isRedSuit(suit);
   const effectiveValue = functionalValue !== undefined
     ? functionalValue
-    : (attritionStage >= 3 ? Math.max(1, Math.min(13, rank + (red ? 1 : -1))) : rank);
+    : (attritionStage >= 2 ? Math.max(1, Math.min(13, rank + (red ? 1 : -1))) : rank);
   const funcValLabel = rankLabel(effectiveValue);
   const isSunCross = blessed && suit === '♣';
 
@@ -609,7 +616,7 @@ export function PlayingCard({
       {/* Centre row: Suit pip always shown; illustration overlaid on top when applicable */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none z-10">
         <SuitIcon suit={suit} className="w-3.5 h-3.5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 xl:w-8 xl:h-8 opacity-90" />
-        {(blessed || attritionStage === 4) && (
+        {(blessed || (attritionStage >= 3 && attritionStage <= 4)) && (
           <div className="absolute inset-0 flex items-center justify-center">
             <CardFaceIllustration suit={suit} rank={rank} blessed={blessed} attritionStage={attritionStage} seed={seed} />
           </div>
