@@ -239,12 +239,16 @@ describe('MatchedCardsModal deck matrix visuals', () => {
     expect(scarredLegend).not.toBeNull();
     expect(scarredLegend?.textContent).toContain('N');
     expect(scarredLegend?.textContent).toContain('Scarred');
+    expect(scarredLegend?.className).toContain('text-red-400');
     const scarredMark = scarredLegend?.querySelector('svg');
     expect(scarredMark).not.toBeNull();
-    expect(scarredMark?.querySelectorAll('line')).toHaveLength(3);
+    expect(scarredMark?.querySelectorAll('line')).toHaveLength(2);
     expect(scarredMark?.querySelector('line:nth-child(1)')?.getAttribute('x1')).toBe('8');
-    expect(scarredMark?.querySelector('line:nth-child(2)')?.getAttribute('x1')).toBe('92');
-    expect(scarredMark?.querySelector('line:nth-child(3)')?.getAttribute('x2')).toBe('92');
+    expect(scarredMark?.querySelector('line:nth-child(1)')?.getAttribute('x2')).toBe('8');
+    expect(scarredMark?.querySelector('line:nth-child(1)')?.getAttribute('stroke')).toBe('#dc2626');
+    expect(scarredMark?.querySelector('line:nth-child(2)')?.getAttribute('x1')).toBe('8');
+    expect(scarredMark?.querySelector('line:nth-child(2)')?.getAttribute('x2')).toBe('92');
+    expect(scarredMark?.querySelector('line:nth-child(2)')?.getAttribute('stroke')).toBe('#dc2626');
     expect(scarredMark?.querySelector('line')?.getAttribute('stroke-width')).toBe('20');
 
     for (const icon of container.querySelectorAll('[aria-label="Blessed suit illustrations"] svg, [aria-label="Cursed suit illustrations"] svg')) {
@@ -268,6 +272,69 @@ describe('MatchedCardsModal deck matrix visuals', () => {
     expect(cursedCell?.querySelector('polygon')?.getAttribute('points')).toBe('32,30 68,30 82,80 18,80');
     expect(cursedCell?.querySelector('polygon')?.getAttribute('stroke')).toBe('#dc2626');
     expect(blessedCell?.querySelector('path')?.getAttribute('stroke')).toBe('#1d4ed8');
+  });
+
+  it('renders red scar lines (1-4 strokes) and shifted functional value in matrix cells', () => {
+    const masterDeck = createDeck();
+    masterDeck.find((card) => card.id === '♥2')!.attritionStage = 1;
+    masterDeck.find((card) => card.id === '♥3')!.attritionStage = 2; // fVal = 4
+    masterDeck.find((card) => card.id === '♠4')!.attritionStage = 3; // fVal = 3
+    masterDeck.find((card) => card.id === '♠5')!.attritionStage = 4; // fVal = 4
+
+    const { container } = render(
+      <MatchedCardsModal
+        isOpen
+        onClose={() => undefined}
+        removedCardIds={new Set()}
+        pairStats={[]}
+        masterDeck={masterDeck}
+        mode="cursed-tomb"
+      />
+    );
+
+    const cellFor = (prefix: string): HTMLElement => {
+      const cell = Array.from(container.querySelectorAll<HTMLElement>('[title]')).find((element) =>
+        element.title.startsWith(prefix)
+      );
+      expect(cell).toBeDefined();
+      return cell!;
+    };
+
+    // Stage 1 (♥2): 1 red vertical line
+    const stage1Cell = cellFor('♥2');
+    const stage1Lines = stage1Cell.querySelectorAll('svg line[stroke="#dc2626"]');
+    expect(stage1Lines).toHaveLength(1);
+    expect(stage1Lines[0].getAttribute('x1')).toBe('8');
+    expect(stage1Lines[0].getAttribute('x2')).toBe('8');
+    expect(stage1Cell.textContent).not.toContain('3');
+
+    // Stage 2 (♥3): 2 red lines (left line + backslash) and shifted functional value '4'
+    const stage2Cell = cellFor('♥3');
+    const stage2Lines = stage2Cell.querySelectorAll('svg line[stroke="#dc2626"]');
+    expect(stage2Lines).toHaveLength(2);
+    expect(stage2Lines[0].getAttribute('x1')).toBe('8');
+    expect(stage2Lines[0].getAttribute('x2')).toBe('8');
+    expect(stage2Lines[1].getAttribute('x1')).toBe('8');
+    expect(stage2Lines[1].getAttribute('x2')).toBe('92');
+    expect(stage2Cell.textContent).toContain('4'); // functional value for red +1
+
+    // Stage 3 (♠4): 3 red lines (left line + backslash + forward slash) and shifted value '3'
+    const stage3Cell = cellFor('♠4');
+    const stage3Lines = stage3Cell.querySelectorAll('svg line[stroke="#dc2626"]');
+    expect(stage3Lines).toHaveLength(3);
+    expect(stage3Lines[2].getAttribute('x1')).toBe('8');
+    expect(stage3Lines[2].getAttribute('x2')).toBe('92');
+    expect(stage3Lines[2].getAttribute('y1')).toBe('95');
+    expect(stage3Lines[2].getAttribute('y2')).toBe('5');
+    expect(stage3Cell.textContent).toContain('3'); // functional value for black -1
+
+    // Stage 4 (♠5): 4 red lines (left line + backslash + forward slash + right line) and shifted value '4'
+    const stage4Cell = cellFor('♠5');
+    const stage4Lines = stage4Cell.querySelectorAll('svg line[stroke="#dc2626"]');
+    expect(stage4Lines).toHaveLength(4);
+    expect(stage4Lines[3].getAttribute('x1')).toBe('92');
+    expect(stage4Lines[3].getAttribute('x2')).toBe('92');
+    expect(stage4Cell.textContent).toContain('4'); // functional value for black -1
   });
 });
 

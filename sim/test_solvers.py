@@ -229,11 +229,54 @@ def verify_anchor_absorption():
     print("[OK] Verification: Anchor absorption shields up to 4 hits and resumes attrition from existing stage upon exhaustion")
 
 
+def verify_dual_black_curse_resolution():
+    rng = random.Random(42)
+    flags = RuleFlags(
+        scars=True,
+        curses=True,
+        blessings=True,
+        attrition=True,
+    )
+    # ♠10: Black Curse (attrition 4), shifted -1 -> fVal 9
+    card_ten = CardState('10', 'S', attrition_stage=4, reward_stage=0)
+    # ♣5: Black Curse (attrition 3), shifted -1 -> fVal 4
+    card_five = CardState('5', 'C', attrition_stage=3, reward_stage=0)
+
+    # 1. Test Pyramid-Pyramid pair ('pp')
+    pyr = [CardState('2', 'H')] * 21 + [card_ten, card_five] + [CardState('2', 'H')] * 5
+    state = GameState(pyr, [], [], [], set(), {}, 1, flags, rng)
+    state.apply_move(Move('pp', (21, 22)))
+    assert len(state.stock) == 1
+    assert state.stock[0] == card_five, "Lower functional value card (♣5) should be reshuffled to stock"
+    assert 21 in state.removed and 22 in state.removed
+
+    # 2. Test Pyramid-Waste pair ('pw')
+    state_pw = GameState(pyr, [], [card_five], [], set(), {}, 1, flags, rng)
+    state_pw.apply_move(Move('pw', (21, 'waste', None)))
+    assert len(state_pw.stock) == 1
+    assert state_pw.stock[0] == card_five, "Lower functional value card (♣5) should be reshuffled to stock"
+
+    # 3. Test Stock-Pyramid pair ('stock_pyramid')
+    state_sp = GameState(pyr, [card_five], [], [], set(), {}, 1, flags, rng)
+    state_sp.apply_move(Move('stock_pyramid', (21,)))
+    assert len(state_sp.stock) == 1
+    assert state_sp.stock[0] == card_five, "Lower functional value card (♣5) should be reshuffled to stock"
+
+    # 4. Test Stock-Waste pair ('stock_waste')
+    state_sw = GameState(pyr, [card_ten], [card_five], [], set(), {}, 1, flags, rng)
+    state_sw.apply_move(Move('stock_waste', ('waste', None)))
+    assert len(state_sw.stock) == 1
+    assert state_sw.stock[0] == card_five, "Lower functional value card (♣5) should be reshuffled to stock"
+
+    print("[OK] Verification: Dual Black Curse pair resolves higher functional value to Foundation and lower to Stock")
+
+
 def main():
     args = parse_args()
     verify_redeal_order()
     verify_stock_vault_progress()
     verify_anchor_absorption()
+    verify_dual_black_curse_resolution()
     run_benchmark(n_games=args.games, seed=args.seed, max_redeals=args.redraws, n_workers=args.workers)
 
 

@@ -332,8 +332,10 @@ class GameState:
                 self.stock.append(card_a)
                 self.rng.shuffle(self.stock)
             elif a_bc and b_bc:
-                self.stock.append(card_a)
-                self.stock.append(card_b)
+                val_a = card_a.functional_value(self.flags)
+                val_b = card_b.functional_value(self.flags)
+                lower = card_a if val_a < val_b else card_b
+                self.stock.append(lower)
                 self.rng.shuffle(self.stock)
             self.fire_on_clear(card_a); self.fire_on_clear(card_b)
             self.last_clear_type, self.last_clear_cards = 'pair', (card_a, card_b)
@@ -375,8 +377,10 @@ class GameState:
                 self.stock.append(card_a)
                 self.rng.shuffle(self.stock)
             elif a_bc and w_bc:
-                self.stock.append(card_a)
-                self.stock.append(card_w)
+                val_a = card_a.functional_value(self.flags)
+                val_w = card_w.functional_value(self.flags)
+                lower = card_a if val_a < val_w else card_w
+                self.stock.append(lower)
                 self.rng.shuffle(self.stock)
             self.fire_on_clear(card_a); self.fire_on_clear(card_w)
             self.last_clear_type, self.last_clear_cards = 'pair', (card_a, card_w)
@@ -397,8 +401,10 @@ class GameState:
                 self.stock.append(stock_card)
                 self.rng.shuffle(self.stock)
             elif s_bc and p_bc:
-                self.stock.append(stock_card)
-                self.stock.append(pyr_card)
+                val_s = stock_card.functional_value(self.flags)
+                val_p = pyr_card.functional_value(self.flags)
+                lower = stock_card if val_s < val_p else pyr_card
+                self.stock.append(lower)
                 self.rng.shuffle(self.stock)
             self.fire_on_clear(stock_card); self.fire_on_clear(pyr_card)
             self.last_clear_type, self.last_clear_cards = 'pair', (stock_card, pyr_card)
@@ -418,8 +424,10 @@ class GameState:
                 self.stock.append(stock_card)
                 self.rng.shuffle(self.stock)
             elif s_bc and o_bc:
-                self.stock.append(stock_card)
-                self.stock.append(other_card)
+                val_s = stock_card.functional_value(self.flags)
+                val_o = other_card.functional_value(self.flags)
+                lower = stock_card if val_s < val_o else other_card
+                self.stock.append(lower)
                 self.rng.shuffle(self.stock)
             self.fire_on_clear(stock_card); self.fire_on_clear(other_card)
             self.last_clear_type, self.last_clear_cards = 'pair', (stock_card, other_card)

@@ -1,5 +1,9 @@
 # debug-autoplay-panel
 
+## Purpose
+
+Provides a debug, oracle analysis, and autoplay panel allowing instant game state transitions, deal winnability analysis, multi-strategy solver stepping, and continuous background simulation.
+
 ## Requirements
 
 ### Requirement: Greedy solver engine
@@ -22,7 +26,7 @@ The system SHALL provide a greedy solver utility function that evaluates the cur
 - **THEN** solver returns null indicating no move is available
 
 ### Requirement: Multi-strategy solver engine
-The system SHALL provide a unified solver engine supporting three distinct strategy modes: Greedy, Smart (heuristic lookahead), and Perfect (DFS/A* graph search oracle).
+The system SHALL provide a unified solver engine supporting four distinct strategy modes: Greedy, Smart (heuristic lookahead), Perfect (DFS/A* graph search oracle), and Novice (stochastic beginner simulation).
 
 #### Scenario: Greedy strategy execution
 - **WHEN** solver strategy is set to `greedy`
@@ -35,6 +39,10 @@ The system SHALL provide a unified solver engine supporting three distinct strat
 #### Scenario: Perfect solver strategy execution
 - **WHEN** solver strategy is set to `perfect`
 - **THEN** solver performs a graph search with state hashing across the complete game state (pyramid + remaining stock) to select the next step along a guaranteed winning solution path if one exists
+
+#### Scenario: Novice solver strategy execution
+- **WHEN** solver strategy is set to `novice`
+- **THEN** solver identifies all legal candidate moves and applies stochastic filters representing beginner human mistakes (tunnel-vision missing Stock-to-Pyramid pairs, overlooking King removals, and ignoring Diamond Vault placements), selecting among remaining visible moves with score noise or random fallback before drawing/cycling if no visible move is chosen
 
 #### Scenario: Deal winnability determination
 - **WHEN** the game state updates or a new deal is initialized

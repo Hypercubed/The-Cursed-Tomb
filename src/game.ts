@@ -592,8 +592,10 @@ export function removePair(state: GameState, card1: Card, card2: Card): GameStat
     } else if (c2Bc && !c1Bc) {
       toReshuffle.push({ ...card1, removed: false, faceDown: false, selected: false });
     } else if (c1Bc && c2Bc) {
-      toReshuffle.push({ ...card1, removed: false, faceDown: false, selected: false });
-      toReshuffle.push({ ...card2, removed: false, faceDown: false, selected: false });
+      const v1 = getFunctionalValue(card1, state.mode);
+      const v2 = getFunctionalValue(card2, state.mode);
+      const lowerCard = v1 < v2 ? card1 : card2;
+      toReshuffle.push({ ...lowerCard, removed: false, faceDown: false, selected: false });
     }
 
     if (toReshuffle.length > 0) {

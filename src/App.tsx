@@ -45,7 +45,7 @@ import { CampaignEndModal } from './components/CampaignEndModal';
 import { CampaignSetupModal } from './components/CampaignSetupModal';
 import { RulesModal, RulesTab } from './components/RulesModal';
 import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal';
-import { defaultPersistenceManager, StoredStats, StoredCampaignStats } from './storage/persistence';
+import { defaultPersistenceManager, StoredStats, StoredCampaignStats, DEFAULT_CAMPAIGN_STATS } from './storage/persistence';
 import { hapticError, hapticMatch } from './utils/haptics';
 
 const initialState: GameState = {
@@ -76,6 +76,10 @@ function App() {
   });
 
   const [campaignStats, setCampaignStats] = useState<StoredCampaignStats>(() => {
+    const activeCampaign = defaultPersistenceManager.getCampaignState();
+    if (!activeCampaign) {
+      return DEFAULT_CAMPAIGN_STATS;
+    }
     return defaultPersistenceManager.getCampaignStats();
   });
 
@@ -130,6 +134,8 @@ function App() {
     } else {
       setCampaign(null);
       defaultPersistenceManager.clearCampaignState();
+      const resetStats = defaultPersistenceManager.resetCampaignStats();
+      setCampaignStats(resetStats);
       setGame(startGame(selectedRedraw, selectedMode));
     }
 
@@ -157,6 +163,9 @@ function App() {
         defaultPersistenceManager.clearCampaignState();
         setGame(startGame(difficulty, mode));
       }
+
+      const resetStats = defaultPersistenceManager.resetCampaignStats();
+      setCampaignStats(resetStats);
 
       setHasRecordedOutcome(false);
       setRoundEffects(null);

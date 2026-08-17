@@ -60,7 +60,7 @@ When a round freezes (no legal moves left), all exposed **bottleneck cards** at 
 | Scars | Color | Curse Name | Center Icon | Effect |
 |---|:---:|---|---|---|
 | 3–4 | **Red** (♥ / ♦) | **The Trap** | **`▼`** | **Pyramid Deal:** Overlapping next row dealt **face-down**. Flip when exposed. |
-| 3–4 | **Black** (♠ / ♣) | **Recycled Weight** | **`⏍`** | **Pairing:** Cursed to Foundation; partner **shuffles back into Stock**. |
+| 3–4 | **Black** (♠ / ♣) | **Recycled Weight** | **`⏍`** | **Pairing:** Cursed to Foundation; partner **shuffles back into Stock** (if both Cursed: higher value to Foundation, lower to Stock). |
 
 ### Scar / Shield Rules
 * **Mutual Exclusivity:** A card carries either a Blessing OR a Curse center icon — never both.

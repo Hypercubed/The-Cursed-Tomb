@@ -23,4 +23,4 @@
 
 - [x] 4.1 Add unit tests for blessing fallback (higher already blessed → lower) and solo King Stock Bounty path
 - [x] 4.2 Add sim regression: Heuristic vs Novice stretch at `2/3/5` should remain `2.0–4.0× wins` and `1.25–1.5× survived` (BALANCE_SPEC §4.2) after flag becomes default
-- [ ] 4.3 Manual playtest: 2+ physical games with `2/3/5` track and Stock Bounty shuffle-and-flip (verify `8`/`4` card fan heights and Shield quadrant drawing are comfortable)
+- [x] 4.3 Manual playtest: 2+ physical games with `2/3/5` track and Stock Bounty shuffle-and-flip (verify `8`/`4` card fan heights and Shield quadrant drawing are comfortable)

@@ -264,7 +264,7 @@ export function MatchedCardsModal({
                       </span>
                       Cursed (3-4)
                     </span>
-                    <span className="flex items-center gap-1 text-blue-400 font-medium" aria-label="Scarred legend">
+                    <span className="flex items-center gap-1 text-red-400 font-medium" aria-label="Scarred legend">
                       <span
                         role="img"
                         aria-label="Scarred rank N with side marks and diagonal slash"
@@ -277,12 +277,11 @@ export function MatchedCardsModal({
                           viewBox="0 0 100 100"
                           preserveAspectRatio="none"
                         >
-                          <line x1="8" y1="5" x2="8" y2="95" stroke="#2563eb" strokeWidth="20" strokeLinecap="round" />
-                          <line x1="92" y1="5" x2="92" y2="95" stroke="#2563eb" strokeWidth="20" strokeLinecap="round" />
-                          <line x1="8" y1="5" x2="92" y2="95" stroke="#2563eb" strokeWidth="20" strokeLinecap="round" />
+                          <line x1="8" y1="5" x2="8" y2="95" stroke="#dc2626" strokeWidth="20" strokeLinecap="round" />
+                          <line x1="8" y1="5" x2="92" y2="95" stroke="#dc2626" strokeWidth="20" strokeLinecap="round" />
                         </svg>
                       </span>
-                      Scarred
+                      Scarred (2)
                     </span>
                     <span className="flex items-center gap-1 text-red-400 font-medium">
                       <span>💀</span> Entombed
@@ -336,10 +335,12 @@ export function MatchedCardsModal({
                       if (rewardStage === 1) statusParts.push('1 Anchor - Fortified (—)');
                       if (rewardStage === 2) statusParts.push(anchorAbsorption > 0 ? `Shield (2 Anchors, +) (${anchorAbsorption}/4 blocks)` : 'Shield (2 Anchors, +)');
                       if (attritionStage === 1) statusParts.push(`1 Scar - Vulnerable (|${rLabel})`);
-                      if (attritionStage === 2) statusParts.push(`2 Scars - Scarred (|${rLabel}\\ ${rLabel}|8)`);
+                      if (attritionStage === 2) statusParts.push(`2 Scars - Scarred (|\\${rLabel} ${fValLabel})`);
+                      if (isBlessed && attritionStage === 3) statusParts.push(`3 Scars - Cursed rank (|X) (Curse trap skipped)`);
+                      if (isBlessed && attritionStage === 4) statusParts.push(`4 Scars - Imperiled rank (|X|) (Curse trap skipped)`);
                       if (isCursed) {
-                        if (suit === '♥' || suit === '♦') statusParts.push(attritionStage === 4 ? '4 Scars - Imperiled |X| - still Red Curse (▼) (+1)' : '3 Scars - Cursed |X| - Red Curse (▼) (+1)');
-                        else statusParts.push(attritionStage === 4 ? '4 Scars - Imperiled |X| - still Black Curse (⏍) (-1)' : '3 Scars - Cursed |X| - Black Curse (⏍) (-1)');
+                        if (suit === '♥' || suit === '♦') statusParts.push(attritionStage === 4 ? `4 Scars - Imperiled (|X|) - still Red Curse (▼) (+1)` : `3 Scars - Cursed (|X) - Red Curse (▼) (+1)`);
+                        else statusParts.push(attritionStage === 4 ? `4 Scars - Imperiled (|X|) - still Black Curse (⏍) (-1)` : `3 Scars - Cursed (|X) - Black Curse (⏍) (-1)`);
                       }
                       if (isEntombed) statusParts.push('Entombed 💀');
                       if (fVal !== rank) statusParts.push(`Functional Value: ${fValLabel}`);
@@ -386,7 +387,7 @@ export function MatchedCardsModal({
                             </div>
                           )}
 
-                          {/* Rank Row with Blue Slashed Scar Overlay / Sun Cross Wildcard Cross-Out */}
+                          {/* Rank Row with Red Slashed Scar Overlay / Sun Cross Wildcard Cross-Out */}
                           <div className="flex items-center justify-center w-full leading-none relative">
                             {isEntombed ? (
                               <span className="text-xs">💀</span>
@@ -411,22 +412,31 @@ export function MatchedCardsModal({
                                     viewBox="0 0 100 100"
                                     preserveAspectRatio="none"
                                   >
-                                    <line x1="8" y1="5" x2="8" y2="95" stroke="#2563eb" strokeWidth="20" strokeLinecap="round" />
+                                    {/* 1 Scar: Left vertical bar */}
+                                    <line x1="8" y1="5" x2="8" y2="95" stroke="#dc2626" strokeWidth="20" strokeLinecap="round" />
+                                    {/* 2 Scars: Backslash \ across rank */}
                                     {attritionStage >= 2 && (
-                                      <line x1="92" y1="5" x2="92" y2="95" stroke="#2563eb" strokeWidth="20" strokeLinecap="round" />
+                                      <line x1="8" y1="5" x2="92" y2="95" stroke="#dc2626" strokeWidth="20" strokeLinecap="round" />
                                     )}
+                                    {/* 3 Scars: Forward slash / forming X */}
                                     {attritionStage >= 3 && (
-                                      <line x1="8" y1="5" x2="92" y2="95" stroke="#2563eb" strokeWidth="20" strokeLinecap="round" />
+                                      <line x1="8" y1="95" x2="92" y2="5" stroke="#dc2626" strokeWidth="20" strokeLinecap="round" />
                                     )}
+                                    {/* 4 Scars: Right vertical bar framing X */}
                                     {attritionStage >= 4 && (
-                                      <line x1="8" y1="95" x2="92" y2="5" stroke="#2563eb" strokeWidth="20" strokeLinecap="round" />
+                                      <line x1="92" y1="5" x2="92" y2="95" stroke="#dc2626" strokeWidth="20" strokeLinecap="round" />
                                     )}
                                   </svg>
                                 )}
-                                {attritionStage >= 3 && (
+                                {attritionStage >= 2 && fVal !== rank && (
                                   <span
-                                    className="absolute left-full ml-1 top-[-2px] text-[9px] text-blue-400 font-black font-mono leading-none whitespace-nowrap"
-                                    style={{ fontFamily: '"Caveat", "Architects Daughter", "Comic Sans MS", cursive, sans-serif' }}
+                                    className="absolute left-full ml-0.5 top-[-2px] text-[9px] font-black font-mono leading-none whitespace-nowrap"
+                                    style={{
+                                      fontFamily: '"Caveat", "Architects Daughter", "Comic Sans MS", cursive, sans-serif',
+                                      color: '#be123c',
+                                      WebkitTextStroke: '0.4px #dc2626',
+                                      textShadow: '0 0 1px #dc2626',
+                                    }}
                                   >
                                     {fValLabel}
                                   </span>

@@ -45,4 +45,43 @@ describe('DebugPanel Component', () => {
     fireEvent.click(forceLossBtn);
     expect(onForceLoss).toHaveBeenCalledTimes(1);
   });
+
+  it('renders all four solver strategies and handles selection changes', async () => {
+    const onStrategyChange = vi.fn();
+
+    render(
+      <DebugPanel
+        game={dummyGame}
+        isPlaying={false}
+        isThinking={false}
+        strategy="greedy"
+        speedMs={500}
+        moveCount={0}
+        onForceWin={vi.fn()}
+        onForcePerfectWin={vi.fn()}
+        onForceLoss={vi.fn()}
+        onStepOne={vi.fn()}
+        onTogglePlay={vi.fn()}
+        onSpeedChange={vi.fn()}
+        onStrategyChange={onStrategyChange}
+      />
+    );
+
+    const select = screen.getByLabelText(/Solver Strategy/i) as HTMLSelectElement;
+    expect(select).toBeDefined();
+
+    await waitFor(() => expect(select.disabled).toBe(false));
+
+    const options = Array.from(select.querySelectorAll('option'));
+    expect(options).toHaveLength(4);
+    expect(options.map((opt) => opt.value)).toEqual([
+      'greedy',
+      'smart',
+      'perfect',
+      'novice',
+    ]);
+
+    fireEvent.change(select, { target: { value: 'novice' } });
+    expect(onStrategyChange).toHaveBeenCalledWith('novice');
+  });
 });

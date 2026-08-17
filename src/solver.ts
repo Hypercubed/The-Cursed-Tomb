@@ -21,7 +21,7 @@ import {
   getFunctionalValue,
 } from './game';
 
-export type SolverStrategy = 'greedy' | 'smart' | 'perfect';
+export type SolverStrategy = 'greedy' | 'smart' | 'perfect' | 'novice';
 export type WinnabilityStatus = 'complete-victory' | 'partial-victory' | 'unwinnable' | 'deadlocked';
 
 /**
@@ -441,6 +441,198 @@ export function findNextSmartMove(state: GameState): GameState | null {
   return resignGame(state);
 }
 
+interface NoviceCandidateMove {
+  state: GameState;
+  kind:
+    | 'p_king'
+    | 'waste_king'
+    | 'stock_king'
+    | 'pyramid_pair'
+    | 'pyramid_waste'
+    | 'stock_pyramid'
+    | 'stock_waste'
+    | 'stock_vault'
+    | 'vault_waste'
+    | 'vault_stock'
+    | 'vault_p';
+  score: number;
+}
+
+/**
+ * Novice Solver: Simulates human beginner gameplay with plausible blind spots
+ * (missed stock pairs, missed kings, ignored vault moves, score jitter, and noisy/random choice).
+ */
+export function findNextNoviceMove(
+  state: GameState,
+  rng: () => number = Math.random
+): GameState | null {
+  if (state.status !== 'in-progress') return null;
+
+  // Resolve any pending hero power targeting before continuing normal move selection
+  if (state.interactionMode && state.interactionMode !== 'normal') {
+    return resolveTargetingMode(state);
+  }
+
+  if (!isGamePlayable(state)) {
+    return resignGame(state);
+  }
+
+  const cleanState = state.selectedCardId ? { ...state, selectedCardId: null } : state;
+  const visiblePyramid = visibleCards(cleanState.pyramid);
+  const topDiscard = cleanState.discardPile[0] ?? null;
+  const topStock = cleanState.drawPile[0] ?? null;
+  const vaultCard = cleanState.vaultCards[cleanState.vaultCards.length - 1] ?? null;
+
+  const candidateMoves: NoviceCandidateMove[] = [];
+
+  // 0. Vault moves
+  if (topDiscard && topDiscard.blessed && topDiscard.suit === '♦') {
+    const next = moveWasteToVault(cleanState);
+    candidateMoves.push({ state: next, kind: 'vault_waste', score: scoreCandidateState(cleanState, next) });
+  }
+  if (topStock && topStock.blessed && topStock.suit === '♦') {
+    const next = moveStockToVault(cleanState);
+    candidateMoves.push({ state: next, kind: 'vault_stock', score: scoreCandidateState(cleanState, next) });
+  }
+  for (const card of visiblePyramid) {
+    if (card.blessed && card.suit === '♦') {
+      const next = movePyramidToVault(cleanState, card.id);
+      candidateMoves.push({ state: next, kind: 'vault_p', score: scoreCandidateState(cleanState, next) });
+    }
+  }
+
+  // 1. Single Kings in Pyramid
+  for (const card of visiblePyramid) {
+    if (canRemoveSingle(card, cleanState.mode)) {
+      const next = playCard(cleanState, card.id);
+      candidateMoves.push({ state: next, kind: 'p_king', score: scoreCandidateState(cleanState, next) });
+    }
+  }
+
+  // 1b. Single King on Discard
+  if (topDiscard && canRemoveSingle(topDiscard, cleanState.mode)) {
+    const next = playCard(cleanState, topDiscard.id);
+    candidateMoves.push({ state: next, kind: 'waste_king', score: scoreCandidateState(cleanState, next) });
+  }
+
+  // 1c. Single King on Stock
+  if (topStock && canRemoveSingle(topStock, cleanState.mode)) {
+    const next = playCard(cleanState, topStock.id);
+    candidateMoves.push({ state: next, kind: 'stock_king', score: scoreCandidateState(cleanState, next) });
+  }
+
+  // 2. Pyramid Pairs
+  for (let i = 0; i < visiblePyramid.length; i += 1) {
+    for (let j = i + 1; j < visiblePyramid.length; j += 1) {
+      const cardA = visiblePyramid[i];
+      const cardB = visiblePyramid[j];
+      if (canRemovePair(cardA, cardB, cleanState.mode, 'pyramid', 'pyramid')) {
+        const step1 = playCard(cleanState, cardA.id);
+        const step2 = playCard(step1, cardB.id);
+        candidateMoves.push({ state: step2, kind: 'pyramid_pair', score: scoreCandidateState(cleanState, step2) });
+      }
+    }
+  }
+
+  // 3. Pyramid + Discard Pairs
+  if (topDiscard) {
+    for (const card of visiblePyramid) {
+      if (canRemovePair(topDiscard, card, cleanState.mode, 'discard', 'pyramid')) {
+        const step1 = playCard(cleanState, topDiscard.id);
+        const step2 = playCard(step1, card.id);
+        candidateMoves.push({ state: step2, kind: 'pyramid_waste', score: scoreCandidateState(cleanState, step2) });
+      }
+    }
+  }
+
+  // 3b. Stock Pairs (Stock + Pyramid, Stock + Waste, Stock + Vault)
+  if (topStock) {
+    for (const card of visiblePyramid) {
+      if (canRemovePair(topStock, card, cleanState.mode, 'draw', 'pyramid')) {
+        const step1 = playCard(cleanState, topStock.id);
+        const step2 = playCard(step1, card.id);
+        candidateMoves.push({ state: step2, kind: 'stock_pyramid', score: scoreCandidateState(cleanState, step2) });
+      }
+    }
+    if (topDiscard && canRemovePair(topStock, topDiscard, cleanState.mode, 'draw', 'discard')) {
+      const step1 = playCard(cleanState, topStock.id);
+      const step2 = playCard(step1, topDiscard.id);
+      candidateMoves.push({ state: step2, kind: 'stock_waste', score: scoreCandidateState(cleanState, step2) });
+    }
+    if (vaultCard && canRemovePair(topStock, vaultCard, cleanState.mode, 'draw', 'vault')) {
+      const step1 = playCard(cleanState, topStock.id);
+      const step2 = playCard(step1, vaultCard.id);
+      candidateMoves.push({ state: step2, kind: 'stock_vault', score: scoreCandidateState(cleanState, step2) });
+    }
+  }
+
+  // Filter stochastic blindness (matching Python simulation defaults)
+  const visible: NoviceCandidateMove[] = [];
+  for (const m of candidateMoves) {
+    if (
+      (m.kind === 'stock_pyramid' || m.kind === 'stock_waste' || m.kind === 'stock_vault') &&
+      rng() < 0.3
+    ) {
+      continue;
+    }
+    if (
+      (m.kind === 'vault_waste' || m.kind === 'vault_stock' || m.kind === 'vault_p') &&
+      rng() < 0.5
+    ) {
+      continue;
+    }
+    if (
+      (m.kind === 'p_king' || m.kind === 'waste_king' || m.kind === 'stock_king') &&
+      rng() < 0.3
+    ) {
+      continue;
+    }
+    visible.push(m);
+  }
+
+  // If candidate moves pass the blindness filter, pick one
+  if (visible.length > 0) {
+    if (rng() < 0.2) {
+      const randomIndex = Math.floor(rng() * visible.length);
+      return visible[randomIndex].state;
+    }
+    // Noisy greedy score: score + uniform(-1.0, 1.0)
+    visible.sort((a, b) => {
+      const noisyScoreA = a.score + (rng() * 2 - 1);
+      const noisyScoreB = b.score + (rng() * 2 - 1);
+      return noisyScoreB - noisyScoreA;
+    });
+    return visible[0].state;
+  }
+
+  // If no removal moves were visible/chosen, draw or cycle
+  if (cleanState.drawPile.length > 0) {
+    return drawCard(cleanState);
+  }
+  if (
+    cleanState.discardPile.length > 0 &&
+    (cleanState.redrawsRemaining === null || cleanState.redrawsRemaining > 0)
+  ) {
+    return cyclePile(cleanState);
+  }
+
+  // If draw/cycle is impossible (deck exhausted) but legal moves exist, fallback to candidate moves
+  if (candidateMoves.length > 0) {
+    if (rng() < 0.2) {
+      const randomIndex = Math.floor(rng() * candidateMoves.length);
+      return candidateMoves[randomIndex].state;
+    }
+    candidateMoves.sort((a, b) => {
+      const noisyScoreA = a.score + (rng() * 2 - 1);
+      const noisyScoreB = b.score + (rng() * 2 - 1);
+      return noisyScoreB - noisyScoreA;
+    });
+    return candidateMoves[0].state;
+  }
+
+  return resignGame(state);
+}
+
 /**
  * Generates a unique state hash for solver search graph.
  */
@@ -585,6 +777,9 @@ export function findNextMove(state: GameState, strategy: SolverStrategy = 'greed
   }
   if (strategy === 'perfect') {
     return findNextPerfectMove(state);
+  }
+  if (strategy === 'novice') {
+    return findNextNoviceMove(state);
   }
   return findNextGreedyMove(state);
 }

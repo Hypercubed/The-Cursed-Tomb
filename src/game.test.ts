@@ -416,6 +416,40 @@ describe('Cursed Tomb campaign mechanics', () => {
     expect(nextGame.discardPile.find((c) => c.id === '♦4')).toBeUndefined();
   });
 
+  it('resolves dual Black Curse pairing by moving the higher value card to Foundation and reshuffling lower to Stock', () => {
+    const blackTen = { id: '♠10', suit: '♠' as const, rank: 10 as const, removed: false, selected: false, attritionStage: 4 as const, rewardStage: 0 as const, blessed: false }; // fVal = 9
+    const blackFive = { id: '♣5', suit: '♣' as const, rank: 5 as const, removed: false, selected: false, attritionStage: 3 as const, rewardStage: 0 as const, blessed: false }; // fVal = 4
+
+    expect(canRemovePair(blackTen, blackFive, 'cursed-tomb', 'pyramid', 'pyramid')).toBe(true);
+
+    let game = startGame(1, 'cursed-tomb');
+    const id1 = game.pyramid[6][0].id;
+    const id2 = game.pyramid[6][1].id;
+    game.pyramid = game.pyramid.map((row, r) =>
+      row.map((c, col) => {
+        if (r === 6 && col === 0) return { ...blackTen, id: id1 };
+        if (r === 6 && col === 1) return { ...blackFive, id: id2 };
+        return c;
+      })
+    );
+    game.drawPile = game.drawPile.filter((c) => c.id !== id1 && c.id !== id2);
+
+    game = playCard(game, id1);
+    expect(game.selectedCardId).toBe(id1);
+
+    const nextGame = playCard(game, id2);
+
+    // Higher card (♠10 / id1, fVal 9) should move to Foundation (not in drawPile, marked removed in pyramid)
+    expect(nextGame.drawPile.some((c) => c.id === id1)).toBe(false);
+    expect(nextGame.pyramid[6][0].removed).toBe(true);
+
+    // Lower card (♣5 / id2, fVal 4) should be reshuffled into drawPile with removed: false
+    const recycledInDraw = nextGame.drawPile.find((c) => c.id === id2);
+    expect(recycledInDraw).toBeDefined();
+    expect(recycledInDraw?.removed).toBe(false);
+    expect(recycledInDraw?.faceDown).toBe(false);
+  });
+
   it('triggers Spades Tunnel targeting mode to move an exposed pyramid card to Waste', () => {
     let game = startGame(1, 'cursed-tomb');
     const spadesHero = { id: '♠8', suit: '♠' as const, rank: 8 as const, removed: false, selected: false, attritionStage: 0 as const, rewardStage: 0 as const, blessed: true };

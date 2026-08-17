@@ -4,6 +4,7 @@ import {
   findNextGreedyMove,
   findNextSmartMove,
   findNextPerfectMove,
+  findNextNoviceMove,
   findNextMove,
   getLegalNextStates,
   evaluateWinnability,
@@ -224,10 +225,12 @@ describe('solver', () => {
       const greedyMove = findNextMove(game, 'greedy');
       const smartMove = findNextMove(game, 'smart');
       const perfectMove = findNextMove(game, 'perfect');
+      const noviceMove = findNextMove(game, 'novice');
 
       expect(greedyMove).not.toBeNull();
       expect(smartMove).not.toBeNull();
       expect(perfectMove).not.toBeNull();
+      expect(noviceMove).not.toBeNull();
     });
 
     it('resigns and detects deadlock during infinite redraws on unplayable deal', () => {
@@ -332,6 +335,26 @@ describe('solver', () => {
       };
 
       const nextState = findNextPerfectMove(state);
+      expect(nextState).not.toBeNull();
+      expect(nextState!.status).not.toBe('pyramid-collapse');
+      expect(nextState!.interactionMode).toBe('normal');
+    });
+
+    it('novice solver auto-resolves targeting-spades without resigning', () => {
+      const game = startGame(1, 'cursed-tomb');
+      const customPyramid = game.pyramid.map((row, rIdx) =>
+        row.map((card, cIdx) =>
+          rIdx === 5 && cIdx === 0 ? { ...card, faceDown: true } : card
+        )
+      );
+      const state: GameState = {
+        ...game,
+        pyramid: customPyramid,
+        interactionMode: 'targeting-spades',
+        pendingHeroCardId: '♠A',
+      };
+
+      const nextState = findNextNoviceMove(state);
       expect(nextState).not.toBeNull();
       expect(nextState!.status).not.toBe('pyramid-collapse');
       expect(nextState!.interactionMode).toBe('normal');
@@ -471,6 +494,79 @@ describe('solver', () => {
       expect(nextState).not.toBeNull();
       expect(nextState!.vaultCards.length).toBe(1);
       expect(nextState!.vaultCards[0].id).toBe(topStock.id);
+    });
+  });
+
+  describe('novice solver behavior', () => {
+    it('executes visible King removal when blindness filter passes', () => {
+      const game = startGame(1);
+      const customPyramid = game.pyramid.map((row, rIdx) => {
+        if (rIdx === 6) {
+          return row.map((card, cIdx) => (cIdx === 0 ? { ...card, rank: 13 as const } : { ...card, rank: 1 as const }));
+        }
+        return row.map((card) => ({ ...card, rank: 1 as const }));
+      });
+      const state: GameState = { ...game, pyramid: customPyramid };
+
+      // rng returning 0.99 passes the < 0.3 blindness check and < 0.2 random choice check
+      const nextState = findNextNoviceMove(state, () => 0.99);
+      expect(nextState).not.toBeNull();
+      expect(nextState!.pyramid[6][0].removed).toBe(true);
+    });
+
+    it('draws card when King is missed due to blindness and stock is available', () => {
+      const game = startGame(1);
+      const customPyramid = game.pyramid.map((row, rIdx) => {
+        if (rIdx === 6) {
+          return row.map((card, cIdx) => (cIdx === 0 ? { ...card, rank: 13 as const } : { ...card, rank: 1 as const }));
+        }
+        return row.map((card) => ({ ...card, rank: 1 as const }));
+      });
+      const state: GameState = { ...game, pyramid: customPyramid };
+
+      // rng returning 0.05 fails the blindness filter (0.05 < 0.3), so King is ignored and solver draws
+      const initialDrawLen = state.drawPile.length;
+      const nextState = findNextNoviceMove(state, () => 0.05);
+      expect(nextState).not.toBeNull();
+      expect(nextState!.drawPile.length).toBe(initialDrawLen - 1);
+      expect(nextState!.discardPile.length).toBe(state.discardPile.length + 1);
+    });
+
+    it('falls back to legal removal when deck is empty even if initial filter missed it', () => {
+      const game = startGame(1);
+      const customPyramid = game.pyramid.map((row, rIdx) => {
+        if (rIdx === 6) {
+          return row.map((card, cIdx) => (cIdx === 0 ? { ...card, rank: 13 as const } : { ...card, rank: 1 as const }));
+        }
+        return row.map((card) => ({ ...card, rank: 1 as const }));
+      });
+      const state: GameState = {
+        ...game,
+        pyramid: customPyramid,
+        drawPile: [],
+        discardPile: [],
+        redrawsRemaining: 0,
+      };
+
+      // Even if rng causes initial blindness, fallback executes the King removal instead of stalling
+      const nextState = findNextNoviceMove(state, () => 0.05);
+      expect(nextState).not.toBeNull();
+      expect(nextState!.pyramid[6][0].removed).toBe(true);
+    });
+
+    it('resigns cleanly on completely deadlocked deal', () => {
+      const game = startGame(1);
+      const deadlockedState: GameState = {
+        ...game,
+        pyramid: game.pyramid.map((row) => row.map((card) => ({ ...card, rank: 1 as const }))),
+        drawPile: [],
+        discardPile: [],
+        redrawsRemaining: 0,
+      };
+
+      const nextState = findNextNoviceMove(deadlockedState);
+      expect(nextState).not.toBeNull();
+      expect(nextState!.status).toBe('pyramid-collapse');
     });
   });
 });

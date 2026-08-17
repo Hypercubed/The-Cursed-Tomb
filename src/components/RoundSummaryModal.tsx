@@ -381,7 +381,7 @@ export function RoundSummaryModal({
                       const rLabel = card.rank === 1 ? 'A' : card.rank === 11 ? 'J' : card.rank === 12 ? 'Q' : card.rank === 13 ? 'K' : String(card.rank);
                       const fValStr = fVal === 1 ? 'A' : fVal === 11 ? 'J' : fVal === 12 ? 'Q' : fVal === 13 ? 'K' : String(fVal);
 
-                      let stageTitle = isRed ? `Red Scar (|${rLabel}\\|)` : `Black Scar (|${rLabel}\\|)`;
+                      let stageTitle = isRed ? `Red Scar (|\\${rLabel} ${fValStr})` : `Black Scar (|\\${rLabel} ${fValStr})`;
                       let description = isRed
                         ? `Functional Value shifted +1 (now acts as rank ${fValStr})`
                         : `Functional Value shifted -1 (now acts as rank ${fValStr})`;
@@ -390,10 +390,20 @@ export function RoundSummaryModal({
                         stageTitle = `Vulnerable (|${rLabel})`;
                         description = '1st attrition line to the left of rank (No functional value shift yet)';
                       } else if (stage === 2) {
-                        stageTitle = `Doubtful (|${rLabel}|)`;
-                        description = '2nd attrition line framing rank (No functional value shift yet)';
+                        stageTitle = isRed ? `Red Scar (|\\${rLabel} ${fValStr})` : `Black Scar (|\\${rLabel} ${fValStr})`;
+                        description = isRed
+                          ? `Functional Value shifted +1 (now acts as rank ${fValStr})`
+                          : `Functional Value shifted -1 (now acts as rank ${fValStr})`;
                       } else if (stage === 3) {
-                        stageTitle = isRed ? `Red Scar (|${rLabel}\\|)` : `Black Scar (|${rLabel}\\|)`;
+                        stageTitle = isRed ? `Red Curse (|X ${fValStr})` : `Black Curse (|X ${fValStr})`;
+                        description = isRed
+                          ? `Red Curse trap active (underlying cards dealt face-down) (FV: ${fValStr})`
+                          : `Black Curse weight active (paired partner reshuffled to Stock) (FV: ${fValStr})`;
+                      } else if (stage === 4) {
+                        stageTitle = isRed ? `Red Curse Imperiled (|X| ${fValStr})` : `Black Curse Imperiled (|X| ${fValStr})`;
+                        description = isRed
+                          ? `Imperiled: 1 scar from Entombment! Red Curse trap active (FV: ${fValStr})`
+                          : `Imperiled: 1 scar from Entombment! Black Curse weight active (FV: ${fValStr})`;
                       }
 
                       return (
@@ -406,7 +416,7 @@ export function RoundSummaryModal({
                           />
                           <div className="flex flex-col gap-0.5 text-xs">
                             <span className="font-bold text-amber-200">
-                              {card.suit}{card.rank} — {stageTitle} {stage >= 3 ? `(FV: ${fValStr})` : ''}
+                              {card.suit}{card.rank} — {stageTitle} {stage >= 2 ? `(FV: ${fValStr})` : ''}
                             </span>
                             <span className="text-[11px] text-amber-300/80 leading-tight">
                               {description}

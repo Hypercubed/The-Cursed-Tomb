@@ -23,7 +23,7 @@ function RealRankMark({
   isSunCross?: boolean;
 }) {
   const strokeColor =
-    color === 'red' ? '#ef4444' : color === 'amber' ? '#f59e0b' : '#3b82f6';
+    color === 'red' ? '#dc2626' : color === 'amber' ? '#f59e0b' : '#1d4ed8';
 
   if (stage === 5) {
     return <span className="text-zinc-400 font-bold font-mono">🪦 Entombed</span>;
@@ -45,14 +45,14 @@ function RealRankMark({
               <>
                 <path
                   d="M 12 12 Q 50 50 88 88"
-                  stroke="#3b82f6"
+                  stroke="#1d4ed8"
                   strokeWidth="18"
                   strokeLinecap="round"
                   filter="url(#ink-bleed)"
                 />
                 <path
                   d="M 12 88 Q 50 50 88 12"
-                  stroke="#3b82f6"
+                  stroke="#1d4ed8"
                   strokeWidth="18"
                   strokeLinecap="round"
                   filter="url(#ink-bleed)"
@@ -63,7 +63,7 @@ function RealRankMark({
             {/* Stage 1: Left vertical line framing rank */}
             {stage >= 1 && (
               <path
-                d="M 12 5 Q 6 50 10 95"
+                d="M 14 5 Q 6 50 12 95"
                 stroke={strokeColor}
                 strokeWidth="18"
                 strokeLinecap="round"
@@ -71,19 +71,8 @@ function RealRankMark({
               />
             )}
 
-            {/* Stage 2: Right vertical line framing rank */}
+            {/* Stage 2: Backslash \ across rank */}
             {stage >= 2 && (
-              <path
-                d="M 88 5 Q 94 50 90 95"
-                stroke={strokeColor}
-                strokeWidth="18"
-                strokeLinecap="round"
-                filter="url(#ink-bleed)"
-              />
-            )}
-
-            {/* Stage 3: Backslash \ directly overlapping rank */}
-            {stage >= 3 && (
               <path
                 d="M 12 4 C 36 32 64 65 88 96"
                 stroke={strokeColor}
@@ -93,10 +82,21 @@ function RealRankMark({
               />
             )}
 
-            {/* Stage 4: Forward slash / forming X directly overlapping rank */}
-            {stage >= 4 && (
+            {/* Stage 3: Forward slash / forming X directly overlapping rank */}
+            {stage >= 3 && (
               <path
                 d="M 10 96 C 34 66 66 34 90 4"
+                stroke={strokeColor}
+                strokeWidth="18"
+                strokeLinecap="round"
+                filter="url(#ink-bleed)"
+              />
+            )}
+
+            {/* Stage 4: Right vertical line framing X */}
+            {stage >= 4 && (
+              <path
+                d="M 86 5 Q 94 50 88 95"
                 stroke={strokeColor}
                 strokeWidth="18"
                 strokeLinecap="round"
@@ -107,9 +107,9 @@ function RealRankMark({
         )}
       </span>
 
-      {stage >= 3 && funcVal && (
+      {stage >= 2 && funcVal && (
         <span
-          className="text-xs sm:text-sm font-black leading-none ml-1 font-mono text-amber-300"
+          className="text-xs sm:text-sm font-black leading-none ml-1 font-mono text-red-400"
           style={{
             fontFamily: '"Caveat", "Architects Daughter", cursive, sans-serif',
             transform: 'rotate(-4deg)',
@@ -348,7 +348,7 @@ export function RulesModal({ isOpen, onClose, initialTab = 'core-rules' }: Rules
                   </div>
                   <div className="bg-[#18130e] p-3 rounded border border-[#251e16]">
                     <strong className="text-amber-300 block mb-1">3. Black Curses [ |X| ] (The Recycled Weight) — ⏍ Weight</strong>
-                    When paired with a matching partner card, the Black Cursed card moves to Foundation, but its partner card is shuffled back into the Stock pile.
+                    When paired with a matching partner card, the Black Cursed card moves to Foundation, but its partner card is shuffled back into the Stock pile. If both cards in the pair are Black Cursed, the higher functional value card moves to Foundation, and only the lower functional value partner card is reshuffled to Stock.
                   </div>
                   <div className="bg-[#18130e] p-3 rounded border border-[#251e16]">
                     <strong className="text-blue-300 block mb-1">4. Blessing & Curse Mutual Exclusivity</strong>
@@ -680,7 +680,7 @@ export function RulesModal({ isOpen, onClose, initialTab = 'core-rules' }: Rules
                     </div>
                     <div className="bg-[#18130e] p-3 rounded border border-[#251e16]">
                       <span className="text-amber-400 font-semibold block mb-1">Black Curse Weight</span>
-                      Clearing a Black Cursed card automatically shuffles its paired partner card back into the face-down Stock pile instead of moving it to Foundation.
+                      Clearing a Black Cursed card automatically shuffles its paired partner card back into the face-down Stock pile instead of moving it to Foundation. If both cards are Black Cursed, the higher functional value card moves to Foundation while the lower is reshuffled to Stock.
                     </div>
                   </div>
                 </div>
@@ -691,7 +691,7 @@ export function RulesModal({ isOpen, onClose, initialTab = 'core-rules' }: Rules
                     <span>🏺</span> Automated Post-Round Lifecycle & Attrition
                   </h4>
                   <p className="m-0 text-game-muted leading-relaxed">
-                    When a round ends in defeat (pyramid freeze), the game engine automatically scans the layout, identifies exposed bottleneck cards, applies failure ink marks (Vulnerable → Doubtful → Scar → Curse → Entombed), updates campaign persistence, and displays exact results in the <strong>Round Summary Modal</strong>.
+                    When a round ends in defeat (pyramid freeze), the game engine automatically scans the layout, identifies exposed bottleneck cards, applies failure ink marks (Vulnerable → Scarred → Cursed → Imperiled → Entombed), updates campaign persistence, and displays exact results in the <strong>Round Summary Modal</strong>.
                   </p>
                 </div>
 

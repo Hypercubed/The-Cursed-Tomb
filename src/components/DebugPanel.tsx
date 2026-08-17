@@ -205,6 +205,7 @@ export function DebugPanel({
                     <option value="greedy">Greedy (Naive Priority)</option>
                     <option value="smart">Smart (Heuristic Lookahead)</option>
                     <option value="perfect">Perfect (DFS Graph Oracle)</option>
+                    <option value="novice">Novice (Stochastic Beginner)</option>
                   </select>
                 </label>
               </div>
