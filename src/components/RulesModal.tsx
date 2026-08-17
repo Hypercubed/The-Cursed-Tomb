@@ -364,7 +364,7 @@ export function RulesModal({ isOpen, onClose, initialTab = 'core-rules' }: Rules
               {/* Section 5 */}
               <section className="bg-[#120e0a] border border-[#2d2319] p-4 rounded-lg">
                 <h3 className="text-sm font-semibold text-game-accent font-display tracking-wider uppercase m-0 pb-2 border-b border-[#251e16] flex items-center gap-2">
-                  <span>── 5.</span> The Attrition Track (Rank Pip Ink Marks)
+                  <span>── 5.</span> The Attrition Track (Scars)
                 </h3>
                 <div className="mt-3 space-y-2 text-xs">
                   <p className="m-0 text-game-muted leading-relaxed">
@@ -389,7 +389,7 @@ export function RulesModal({ isOpen, onClose, initialTab = 'core-rules' }: Rules
                     </div>
                     <div className="bg-[#18130e] p-2.5 rounded border border-[#251e16] flex flex-col items-center gap-1.5 justify-center">
                       <RealRankMark stage={5} />
-                      <span className="text-[10px] text-game-muted font-medium">Stage 5: Graveyard Box</span>
+                      <span className="text-[10px] text-game-muted font-medium">5 Scars: Entombed (Graveyard)</span>
                     </div>
                   </div>
                   <div className="bg-[#18130e] p-3 rounded border border-blue-900/30 mt-3 space-y-1">
@@ -691,7 +691,7 @@ export function RulesModal({ isOpen, onClose, initialTab = 'core-rules' }: Rules
                     <span>🏺</span> Automated Post-Round Lifecycle & Attrition
                   </h4>
                   <p className="m-0 text-game-muted leading-relaxed">
-                    When a round ends in defeat (pyramid freeze), the game engine automatically scans the layout, identifies exposed bottleneck cards, applies failure ink marks (Vulnerable → Scarred → Cursed → Imperiled → Entombed), updates campaign persistence, and displays exact results in the <strong>Round Summary Modal</strong>.
+                    When a round ends in defeat (pyramid freeze), the game engine automatically scans the layout, identifies exposed bottleneck cards, applies failure ink marks (1 Scar Vulnerable → 2 Scars Scarred → 3 Scars Cursed → 4 Scars Imperiled → 5 Scars Entombed), updates campaign persistence, and displays exact results in the <strong>Round Summary Modal</strong>.
                   </p>
                 </div>
 

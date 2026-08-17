@@ -387,23 +387,23 @@ export function RoundSummaryModal({
                         : `Functional Value shifted -1 (now acts as rank ${fValStr})`;
 
                       if (stage === 1) {
-                        stageTitle = `Vulnerable (|${rLabel})`;
-                        description = '1st attrition line to the left of rank (No functional value shift yet)';
+                        stageTitle = `1 Scar - Vulnerable (|${rLabel})`;
+                        description = '1 red bar left of rank - no effect';
                       } else if (stage === 2) {
-                        stageTitle = isRed ? `Red Scar (|\\${rLabel} ${fValStr})` : `Black Scar (|\\${rLabel} ${fValStr})`;
+                        stageTitle = isRed ? `2 Scars - Red Scar (|\\${rLabel})` : `2 Scars - Black Scar (|\\${rLabel})`;
                         description = isRed
-                          ? `Functional Value shifted +1 (now acts as rank ${fValStr})`
-                          : `Functional Value shifted -1 (now acts as rank ${fValStr})`;
+                          ? `2 Scars: Backslash \\ across rank - value shifted +1 to ${fValStr}`
+                          : `2 Scars: Backslash \\ across rank - value shifted -1 to ${fValStr}`;
                       } else if (stage === 3) {
-                        stageTitle = isRed ? `Red Curse (|X ${fValStr})` : `Black Curse (|X ${fValStr})`;
+                        stageTitle = isRed ? `3 Scars - Red Curse (|X) (▼)` : `3 Scars - Black Curse (|X) (⏍)`;
                         description = isRed
-                          ? `Red Curse trap active (underlying cards dealt face-down) (FV: ${fValStr})`
-                          : `Black Curse weight active (paired partner reshuffled to Stock) (FV: ${fValStr})`;
+                          ? `3 Scars: X over rank - Red Curse locks next row face-down`
+                          : `3 Scars: X over rank - Black Curse partner to Stock`;
                       } else if (stage === 4) {
-                        stageTitle = isRed ? `Red Curse Imperiled (|X| ${fValStr})` : `Black Curse Imperiled (|X| ${fValStr})`;
+                        stageTitle = isRed ? `4 Scars - Red Curse Imperiled (|X|) (▼)` : `4 Scars - Black Curse Imperiled (|X|) (⏍)`;
                         description = isRed
-                          ? `Imperiled: 1 scar from Entombment! Red Curse trap active (FV: ${fValStr})`
-                          : `Imperiled: 1 scar from Entombment! Black Curse weight active (FV: ${fValStr})`;
+                          ? `4 Scars: Framed X - Imperiled (1 scar from Entombed)! Red Curse trap active`
+                          : `4 Scars: Framed X - Imperiled (1 scar from Entombed)! Black Curse weight active`;
                       }
 
                       return (

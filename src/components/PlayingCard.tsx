@@ -194,7 +194,7 @@ function SlashedRank({
             transform={`translate(${scarTransform.translateX}, ${scarTransform.translateY}) rotate(${scarTransform.rotateDeg} 50 50) scale(${scarTransform.scale})`}
             style={{ transformOrigin: '50px 50px' }}
           >
-            {/* Stage 1: Left vertical line with organic stroke wobble */}
+            {/* 1 Scar: Left bar | (Vulnerable) */}
             <path
               d="M 14 5 Q 6 50 12 95"
               stroke="#dc2626"
@@ -218,7 +218,7 @@ function SlashedRank({
               />
             )}
 
-            {/* 3 Scars: Forward slash / forming X (Cursed) */}
+            {/* 3 Scars: Forward slash / forming X (Cursed, 3 Scars) */}
             {stage >= 3 && (
               <path
                 d="M 10 96 C 34 66 66 34 90 4"
@@ -231,7 +231,7 @@ function SlashedRank({
               />
             )}
 
-            {/* 4 Scars: Right vertical bar framing X (Imperiled) */}
+            {/* 4 Scars: Right bar | framing X (Imperiled, still Cursed) */}
             {stage >= 4 && (
               <path
                 d="M 86 5 Q 94 50 88 95"
