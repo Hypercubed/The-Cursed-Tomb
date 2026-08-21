@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
 The Cursed Tomb (v0.0.9) -- Campaign Simulator
+The Cursed Tomb (v0.0.14) -- Campaign Simulator
 =============================================================
 
 Simulates full CAMPAIGNS (not single rounds) of the Cursed Tomb ruleset:
@@ -181,7 +182,8 @@ class RoundOutcome:
     moves: int = 0
     last_clear_type: str = None   # 'pair' | 'solo' | None
     last_clear_cards: tuple = None
-    leftover: int = None  # Stock+Waste+Vault remaining at win moment (for Stock Bounty); for freeze it's total leftovers
+    leftover: int = None  # Stock+Waste+Vault remaining at win moment (for The Descent); for freeze it's total leftovers
+    stock_phase_cleared: list = None  # CardState objects cleared post-pyramid in The Descent (both cards per pair)
 
 
 class GameState:
@@ -201,6 +203,7 @@ class GameState:
         self.progress_this_pass = False
         self.last_clear_type = None
         self.last_clear_cards = None
+        self.stock_phase_cleared: list = []  # cards cleared in Descent (post-pyramid) for Anchoring both
 
     def clone(self) -> GameState:
         rng_clone = None
@@ -488,7 +491,7 @@ class GameState:
                 card.attrition_stage += 1
 
 
-def play_round(pool, rng, max_redeals, flags, max_moves=300, full_registry=None, solver=None):
+def play_round(pool, rng, max_redeals, flags, max_moves=300, full_registry=None, solver=None, continue_after_pyramid=True):
     """Plays one round in-place against the persistent CardState objects in
     `pool` (mutating attrition/reward/blessed/temp_immune fields as events
     happen). `pool` must have length >= 28. Returns a RoundOutcome."""
@@ -519,8 +522,53 @@ def play_round(pool, rng, max_redeals, flags, max_moves=300, full_registry=None,
     while True:
         terminal, kind = state.is_terminal()
         if terminal:
-            leftover = len(state.stock) + len(state.waste) + len(state.vault) if kind in ('perfect_win', 'pyramid_clear') else (N_PYR - len(state.removed)) + len(state.stock) + len(state.waste) + len(state.vault)
-            return RoundOutcome(kind, state.moves_played, state.last_clear_type, state.last_clear_cards, leftover)
+            if kind == 'pyramid_clear' and continue_after_pyramid:
+                # The Descent: continue Stock+Waste+Vault with remaining redeals, no pyramid moves left
+                # Inline stock-phase loop with forced redeal priority (heuristic scores redeal 0)
+                while True:
+                    term2, kind2 = state.is_terminal()
+                    if kind2 == 'perfect_win':
+                        ro = RoundOutcome('perfect_win', state.moves_played, state.last_clear_type, state.last_clear_cards, 0)
+                        ro.stock_phase_cleared = list(getattr(state, 'stock_phase_cleared', []))
+                        return ro
+                    legal2 = state.get_legal_moves()
+                    if not legal2:
+                        leftover = len(state.stock) + len(state.waste) + len(state.vault)
+                        ro = RoundOutcome('pyramid_clear', state.moves_played, state.last_clear_type, state.last_clear_cards, leftover)
+                        ro.stock_phase_cleared = list(getattr(state, 'stock_phase_cleared', []))
+                        return ro
+                    stock_moves = [m for m in legal2 if m.kind in ('stock_waste', 'alone_single')]
+                    redeal_moves = [m for m in legal2 if m.kind == 'redeal']
+                    draw_moves = [m for m in legal2 if m.kind == 'draw']
+                    if stock_moves:
+                        mv = solver.select_move(state, stock_moves)
+                        if mv is None:
+                            mv = stock_moves[0]
+                    elif redeal_moves:
+                        mv = redeal_moves[0]
+                    elif draw_moves:
+                        mv = draw_moves[0]
+                    else:
+                        mv = solver.select_move(state, legal2)
+                        if mv is None:
+                            leftover = len(state.stock) + len(state.waste) + len(state.vault)
+                            ro = RoundOutcome('pyramid_clear', state.moves_played, state.last_clear_type, state.last_clear_cards, leftover)
+                            ro.stock_phase_cleared = list(getattr(state, 'stock_phase_cleared', []))
+                            return ro
+                    # Track cleared cards in Descent for anchoring both
+                    state.apply_move(mv)
+                    if mv.kind in ('stock_waste', 'alone_single') and state.last_clear_cards is not None:
+                        # was_cleared guard: exclude draws/redeals
+                        for c in state.last_clear_cards:
+                            state.stock_phase_cleared.append(c)
+                    elif mv.kind in ('stock_pyramid', 'pw') and state.last_clear_cards is not None:
+                        for c in state.last_clear_cards:
+                            state.stock_phase_cleared.append(c)
+            else:
+                leftover = len(state.stock) + len(state.waste) + len(state.vault) if kind in ('perfect_win', 'pyramid_clear') else (N_PYR - len(state.removed)) + len(state.stock) + len(state.waste) + len(state.vault)
+                ro = RoundOutcome(kind, state.moves_played, state.last_clear_type, state.last_clear_cards, leftover)
+                ro.stock_phase_cleared = list(getattr(state, 'stock_phase_cleared', []))
+                return ro
 
         legal_moves = state.get_legal_moves()
         if not legal_moves:
@@ -531,13 +579,18 @@ def play_round(pool, rng, max_redeals, flags, max_moves=300, full_registry=None,
             break
 
         state.apply_move(selected_move)
+        # Also track post-pyramid clears in main loop (if we hit 28 mid-loop)
+        # Handled via continue_after_pyramid inner loop, but keep was_cleared guard for completeness
+        # No-op here; Descent handled above
 
     if flags.attrition:
         state.apply_freeze_attrition()
 
     # Capture freeze leftover for callers that care (win path already handled)
     freeze_leftover = (N_PYR - len(state.removed)) + len(state.stock) + len(state.waste) + len(state.vault)
-    return RoundOutcome('freeze', state.moves_played, None, None, freeze_leftover)
+    ro = RoundOutcome('freeze', state.moves_played, None, None, freeze_leftover)
+    ro.stock_phase_cleared = []
+    return ro
 
 
 def _apply_survival_reward(last_clear_type, last_clear_cards, flags):
@@ -555,12 +608,23 @@ def _apply_survival_reward(last_clear_type, last_clear_cards, flags):
         if not blessed_this_win and flags.blessings and not lower.blessed and lower.attrition_stage < 3:
             lower.blessed = True
         # Wildcard Partner Rule: blessed clubs ♣ wildcard in pair is ineligible as primary; already handled via fallback (higher blessed? skip, lower gets it if eligible)
-        # Lower does NOT get automatic Anchor; Anchors come via Stock Bounty random draw below (1-3 per Win)
-        # Handle wildcard explicit: if one is ♣ blessed, it should have been skipped as primary already via blessed check; ensure partner was primary
-        # No additional logic needed here; blessing fallback covers it. If both are ♣ wildcards, both blessed -> no blessing awarded.
+        # 1B+1A: lower card of final pair gets one Anchor (replaces Stock Bounty N random)
+        prev_stage = lower.reward_stage
+        if lower.reward_stage < 2:
+            lower.reward_stage = min(2, lower.reward_stage + 1)
+            if lower.reward_stage == 2 and prev_stage < 2:
+                lower.anchor_absorption = 0
+        # No additional wildcard handling needed; If both are ♣ wildcards, both blessed -> no blessing but lower still gets Anchor.
         pass
     elif last_clear_type == 'solo':
-        # Solo King/13: no Blessing awarded; will still get Stock Bounty Anchors via random draw in run_campaign
+        # Solo King/13: no Blessing, but 1B+1A lower Anchor (the King itself)
+        card, = last_clear_cards
+        prev_stage = card.reward_stage
+        if card.reward_stage < 2:
+            card.reward_stage = min(2, card.reward_stage + 1)
+            if card.reward_stage == 2 and prev_stage < 2:
+                card.anchor_absorption = 0
+        pass
         pass
 
 
@@ -653,30 +717,15 @@ def run_campaign(rng, max_redeals, flags, max_rounds, deadlock_limit=None, solve
             if outcome.kind == 'perfect_win':
                 perfect_wins += 1
             _apply_survival_reward(outcome.last_clear_type, outcome.last_clear_cards, flags)
-            # Stock Bounty: 1-3 random Anchors drawn until N non-Shields (replaces lower-card Anchor)
-            leftover = getattr(outcome, 'leftover', None)
-            if leftover is None:
-                leftover = 52  # fallback: inefficient
-            if leftover == 0 or leftover <= 4:
-                N = 3
-            elif leftover <= 8:
-                N = 2
-            else:
-                N = 1
-            # Draw N random non-Shields from remaining active deck
-            pool = [c for c in registry if c.attrition_stage < flags.max_attrition_stage]
-            rng.shuffle(pool)
-            found = 0
-            for card in pool:
+            # The Descent: both cards per post-pyramid pair/solo (no N shuffle; order kept)
+            post_cleared = getattr(outcome, 'stock_phase_cleared', None) or []
+            for card in post_cleared:
                 if card.reward_stage >= 2:
-                    continue
+                    continue  # already Shield — skip
                 prev_stage = card.reward_stage
                 card.reward_stage = min(2, card.reward_stage + 1)
                 if card.reward_stage == 2 and prev_stage < 2:
                     card.anchor_absorption = 0
-                found += 1
-                if found >= N:
-                    break
             # Perfect Graveyard Return: 1 random Entombed X -> 4 Scars |X| Imperiled (still cursed, keeps ink)
             if outcome.kind == 'perfect_win':
                 graveyard = [c for c in registry if c.attrition_stage >= flags.max_attrition_stage]

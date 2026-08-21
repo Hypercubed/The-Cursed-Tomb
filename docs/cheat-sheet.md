@@ -3,6 +3,8 @@ title: "The Cursed Tomb"
 subtitle: "Campaign Cheat Sheet & Quick Reference"
 version: "0.0.13"
 date: "2026-08-16"
+version: "0.0.14"
+date: "2026-08-20"
 status: "draft"
 description: "Terse quick-reference cheat sheet covering campaign structure, scar track, shield, curse traps, hero blessings, and card anatomy for The Cursed Tomb."
 license: "CC-BY-SA-4.0"
@@ -72,17 +74,12 @@ When a round freezes (no legal moves left), all exposed **bottleneck cards** at 
 
 ---
 
-## 3. Hero Blessings & Stock Bounty
+## 3. Hero Blessings & The Descent
 
 Unlocked on **any Win** (Pyramid Clear 28 or Perfect 52). Compare the **final pair's Functional Values**:
 
 * **Blessing (1 per Win, with fallback):** Higher-value card is primary. Draw its suit icon (Blue, center face) if **not already blessed and <3 Scars** (not yet Cursed). If primary is ineligible (already blessed — e.g., vaulted Diamond `□` — or 3+ Scars), offer to the **lower card** instead if eligible. If both ineligible, **no Blessing**. Vaulting the last pyramid Diamond `♦` counts as a Win; the vaulted card is the hero (already blessed, so skipped) and only Anchors (§5 B) apply. Solo `K`/`13` gives no Blessing.
-* **Stock Bounty — 1–3 random Anchors (draw until `N` non-Shields):** After any Win, fan the remaining `Stock+Waste+Vault` (all Stock-origin cards not in Foundation/pyramid) together to count `leftover` (usually only Waste at end, Vault only if ♦):
-  * `0` (Perfect) → `N=3`
-  * `≤4` → `N=3`
-  * `≤8` → `N=2`
-  * `>8` → `N=1` mandatory
-  Shuffle the **remaining active deck** (<5 Scars) face-down, flip until you have **`N` cards that are *not* already a Shield (`+`, 2 Anchors)**. For each, add one blue **Anchor** (`—` → `+`, Shield with 0 blocks). If already a Shield, **skip and keep flipping** (no-op on `+`). Covers solo `K` clears.
+* **The Descent — Post-Pyramid Anchors (both cards):** The instant the pyramid hits 0, score `1B+1A` (higher Blessed if eligible, lower `—→+`; solo `K` `+`). Slide `Stock+Waste+Vault` to center — keep order, keep remaining redeals, no gather/shuffle. Continue `Stock top ↔ Waste/Vault top` pairing (§3) until freeze. **Each pair or solo cleared in the Descent adds one Anchor to both cards just cleared** (solo → that card; if already `+` skip). `0` after Descent = Perfect → Graveyard Return.
 
 ### Hero Blessings Lookup
 
@@ -100,7 +97,7 @@ Unlocked on **any Win** (Pyramid Clear 28 or Perfect 52). Compare the **final pa
 * **Wildcard Partner Rule:** If the final pair includes an existing ♣ Wildcard (`⊕`), it cannot receive another Blessing and is **not eligible as primary** — it may only be the fallback lower candidate. If both are Wildcards, **no Blessing**.
 
 ### C. Perfect Win Graveyard Return (§3/§7)
-* **On Perfect only (0 leftover):** After A–B Stock Bounty above, shuffle Graveyard (`X` 5-Scar Entombed cards) face-down, draw **1 random card**, return to active deck as **4 Scars `|X| 8` — Imperiled** (keeps prior Scar/Anchor/Blessing ink, still Cursed, one Scar from death). If empty, no effect. Sole way an `X` re-enters play; all marks remain permanent and additive.
+* **On Perfect only (0 leftover after Descent):** After A–B The Descent above, shuffle Graveyard (`X` 5-Scar Entombed cards) face-down, draw **1 random card**, return to active deck as **4 Scars `|X| 8` — Imperiled** (keeps prior Scar/Anchor/Blessing ink, still Cursed, one Scar from death). If empty, no effect. Sole way an `X` re-enters play; all marks remain permanent and additive.
 
 ---
 

@@ -440,12 +440,12 @@ export function RulesModal({ isOpen, onClose, initialTab = 'core-rules' }: Rules
                       </div>
 
                       <p className="m-0 text-game-text pt-1">
-                        <strong className="text-blue-300">2. Stock Bounty — 1-3 Random Anchors (replaces lower Anchor):</strong> Fan <code className="text-amber-200 font-mono">Stock+Waste+Vault</code> leftover: <code>0</code> or <code>≤4</code> → <code>3</code> Anchors, <code>≤8</code> → <code>2</code>, else <code>1</code> mandatory. Shuffle remaining active deck face-down, flip until <code>N</code> non-Shield (<code>+</code>) cards found; each gains one blue Anchor (<code>—</code> → <code>+</code> Shield with 4 blocks). Skip any already Shield. Covers solo <code>K</code> as well. Never erase.
+                        <strong className="text-blue-300">2. The Descent — Post-Pyramid Anchors (both cards per pair):</strong> The instant the 28th pyramid card clears, score <code>1B+1A</code> (higher Blessed if eligible &lt;3 Scars, lower <code>—→+</code>; solo <code>K</code> <code>+</code>). Slide <code>Stock+Waste+Vault</code> to center — keep order, keep remaining redeals, no gather/shuffle. Continue §3 pairing (<code>Stock top &lt;&gt; Waste/Vault top</code>) until freeze. Each pair/solo cleared in the Descent adds <code>—</code> to <strong>both</strong> cards just cleared (solo → that card; if already <code>+</code> skip). <code>0</code> after Descent = Perfect → Graveyard Return.
                       </p>
 
                       <div className="bg-[#120e0a] p-2.5 rounded border border-emerald-900/30 text-game-muted">
                         <strong className="text-emerald-400 block mb-0.5">♣ Wildcard & Blessing Fallback</strong><span className="sr-only">♣ Wildcard Partner Rule</span>
-                        If the final pair includes an existing ♣ Wildcard (<code>⊕</code>), it is ineligible as the primary Blessing candidate — offer Blessing to the partner if eligible (&lt;3 Scars, not already blessed). If the higher-value card is already blessed or 3+ Scars Cursed, offer Blessing to the lower card instead. If both ineligible, no Blessing. All Anchors now come from the Stock Bounty above (1-3 random until non-Shield).
+                        If the final pair includes an existing ♣ Wildcard (<code>⊕</code>), it is ineligible as the primary Blessing candidate — offer Blessing to the partner if eligible (&lt;3 Scars, not already blessed). If the higher-value card is already blessed or 3+ Scars Cursed, offer Blessing to the lower card instead. If both ineligible, no Blessing. Anchors come from the final-pair lower (<code>1A</code>) and the Descent (both cards per post pair).
                       </div>
                     </div>
                   </div>
@@ -455,7 +455,7 @@ export function RulesModal({ isOpen, onClose, initialTab = 'core-rules' }: Rules
                     <strong className="text-amber-300 font-display block">B. The Solo Clear (King / Value 13)</strong>
                     <div className="bg-[#18130e] p-3 rounded border border-[#251e16] space-y-1.5">
                       <p className="m-0 text-game-text">
-                        If the final card clearing the pyramid is played singly (a King or card with active Functional Value 13), <strong>no Blessing</strong> is awarded — but the same <strong>Stock Bounty 1-3 random Anchors</strong> (fan <code>Stock+Waste+Vault</code>, <code>0/≤4→3 ≤8→2 else 1</code>, shuffle remaining active deck face-down, flip until <code>N</code> non-Shield <code>+</code> cards) still applies.
+                        If the final card clearing the pyramid is played singly (a King or card with active Functional Value 13), <strong>no Blessing</strong> is awarded — but it gains <strong>one Anchor <code>—→+</code></strong> and the Descent (post-pyramid Stock pairs both <code>+</code>) still runs as above.
                       </p>
                       <p className="m-0 text-game-text">
                         On a <strong>Perfect Win</strong> (<code>0</code> leftover, 52 cards: pyramid + Stock+Waste+Vault empty), also shuffle the <strong>Graveyard Box</strong> face-down and draw <strong>one random <code>X</code> Entombed</strong> card; return it as <code>4 Scars |X| Imperiled</code> (keeps prior red/blue ink, still Cursed — one Scar from death). If Graveyard empty, no return. This is the sole way an <code>X</code> re-enters play.

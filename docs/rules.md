@@ -3,6 +3,8 @@ title: "The Cursed Tomb"
 subtitle: "Official Ruleset"
 version: "0.0.13"
 date: "2026-08-16"
+version: "0.0.14"
+date: "2026-08-20"
 status: "draft"
 description: "A persistent, mutating tactical card game played with a standard 52-card deck and fine-tip felt markers."
 license: "CC-BY-SA-4.0"
@@ -123,7 +125,7 @@ Unlocked suit blessings carry over permanently and trigger across all subsequent
 
 **Card-Specific Legacy Unlocks:** A suit blessing applies strictly to the individual physical card it is drawn upon. While multiple separate cards in your deck can acquire the same suit blessing over the course of the campaign (creating multiple distinct Hero cards), each instance triggers independently when that specific card is cleared.
 
-Identify the **pair that cleared the pyramid** (the 28th pyramid card — i.e., the last pair or solo card whose removal left the pyramid empty). On a Pyramid Clear this is the round's final play. On a Perfect Win this pair was the last *pyramid* play; you may continue pairing Stock/Waste/Vault cards until the deck is empty, but **set the pyramid-clear pair aside now as the Blessing candidate** (or mark its Blessing immediately) — it remains the Blessing pair even though the round continues. Apply its Blessing when the pyramid hits 0, then finish the Stock phase before the bounty (§5 B) and Graveyard Return (§5 C).
+Identify the **pair that cleared the pyramid** (the 28th pyramid card — i.e., the last pair or solo card whose removal left the pyramid empty). On a Pyramid Clear this is the round's final play. On a Perfect Win this pair was the last *pyramid* play; you may continue pairing Stock/Waste/Vault cards until the deck is empty, but **set the pyramid-clear pair aside now as the Blessing candidate** (or mark its Blessing immediately) — it remains the Blessing pair even though the round continues. Apply its Blessing when the pyramid hits 0, then finish the Descent (§5 B) with remaining redeals before Graveyard Return (§5 C).
 
 ### A. The Final Pyramid Pair
 Compare the final two cards' active Functional Values to determine the **primary Blessing candidate** (higher value) and the fallback. If the last pyramid Diamond (`♦`) was **vaulted** rather than cleared to the Foundation, that vault move *does* count as clearing the pyramid for the Win — the vaulted Diamond is the "hero" card (already Blessed `□`, so its Blessing is skipped and only Anchors apply) and the Blessing is offered to its paired partner or fallback per below, or not at all if both ineligible:
@@ -135,19 +137,15 @@ Compare the final two cards' active Functional Values to determine the **primary
     *   ♣ **Clubs (Universal Wildcard):** Circled Sun Cross (`⊕`). Cross out the rank digit in blue (`X`) at both corner indices. When pairing, it pairs with **ANY exposed card** (treated as combined 13 — effectively functional `0` through `12` to complement the partner's `13` through `1`); however, it **cannot be 13 by itself** — a Wildcard may not clear solo as a King (its functional value is `0–12` inclusive).
     *   **Wildcard Partner Rule:** If the final pair includes an existing **♣ Wildcard** (`⊕`), the Wildcard cannot receive another blessing and is **not eligible as the primary** — it will be considered only as the fallback lower candidate (which will fail if both are Wildcards). The partner card is the primary candidate.
 
-### B. Anchors: Stock Bounty
+### B. The Descent — Post-Pyramid Anchors
 
-1.  **Count leftover** — the remaining `Stock+Waste+Vault` cards (all Stock-origin cards not in Foundation/pyramid) at the moment the pyramid hit 0 (fan all three piles face-up together to count `leftover`; `0` is Perfect — usually only Waste remains at end since Stock is drawn out, Vault only if you have ♦). Determine `N`:
-    *   `0` (Perfect Win) → `N=3`
-    *   `≤4` leftover → `N=3`
-    *   `≤8` leftover → `N=2`
-    *   `>8` leftover → `N=1` mandatory
+The instant the 28th pyramid card clears, score the **Win**. The higher Functional Value of the final pair receives its suit Blessing `∩` / `□` / Shovel / `⊕` if eligible (`<3 Scars`, not already Blessed; fallback to lower if higher ineligible, none if both ineligible). **The lower card of the final pair receives one Anchor** `—` (`—` Fortified → `+` Shield with 0 blocks). Solo `13` (`K`) gets its one Anchor. A vaulted `□` Diamond skips Blessing — anchor its partner (§5 A).
 
-2.  **Random draw until `N` non-Shields:** Shuffle the **remaining active deck** (all cards with <5 Scars: active `<28` + pyramid `28`), face-down. Flip cards one-by-one until you have found **`N` cards that are *not* already a Shield** (`+`, 2 Anchors). For each such card, progress its Upper-Right **Anchor track** by one stroke: `—` (1 Anchor, Fortified) → `+` (2 Anchors, Shield) with 0 blocks. Completed Shields (`+`) thereafter absorb up to **4 Scars as red blocks** in the quadrants around the `+` (§5). If a flipped card is already a Shield (`+`), **skip it and keep flipping** (no-op on `+`, never waste the bounty). If you run out of non-Shield cards, stop — you may earn `<N` late in a Shield-heavy deck. Solo `K`/`13` clears also grant `N` random Anchors (no Blessing); the same fan-count → shuffle-and-flip applies.
+Slide `Stock+Waste+Vault` to the center as the **Descent**. Keep order, keep remaining redeals. Continue standard §3 pairing (`Stock` top may pair with `Waste` top / `Vault` top or clear solo on `13`; `Vault` FILO only top playable; Hearts `∩` / Spades Shovel still trigger if you clear a Blessed card in the Descent). Do **not** gather or shuffle the whole deck; do **not** start a new redeal; do **not** fan-count `leftover`.
 
-Valid at all Scar stages including `2-Scar Scarred` and `3-4-Scar Cursed/Imperiled` (§5) until 5 Scars Entombed. All marks additive red/blue ink, never erased.
+For each pair or solo you clear in the Descent, immediately add one Anchor `—` to **both cards just cleared** (if solo, that one card). If a card is already a `+` Shield, skip it — no double-ink. `Freeze` (no legal moves and no redeals) ends the Descent. `0` remaining after the Descent = **Perfect Win** — slide back, then Graveyard Return `X→|X| 4` (§5 C).
 
-*Anchor Progression & Shield:* Cards accumulate Anchors until Entombed (5 Scars). The Shield exception is as in §5 (4 blocks, then exhaust to 0 Anchors, Scars preserved).
+Valid at all Scar stages including `2-Scar Scarred` and `3-4-Scar Cursed/Imperiled` until `5 Scars` Entombed. All marks additive red/blue ink, never erased. Isolation is physical: you moved the pile, each clear pings ink on the cards in front of you.
 
 ### C. Perfect Win Graveyard Return
 

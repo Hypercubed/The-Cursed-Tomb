@@ -83,9 +83,9 @@ A campaign record reports:
 | Difficulty    | Redraws | Collapse | Timeout | Deadlock | Collapse Rate | Timeout Rate |
 | :------------ | :-----: | -------: | ------: | -------: | ------------: | -----------: |
 | Survivalist   |    0    |     1000 |       0 |        0 |       100.00% |        0.00% |
-| Archaeologist |    1    |      931 |      55 |       14 |        93.10% |        5.50% |
-| Explorer      |    3    |      783 |     163 |       54 |        78.30% |       16.30% |
-| Novice        |    5    |      780 |     164 |       56 |        78.00% |       16.40% |
+| Archaeologist |    1    |      933 |      44 |       23 |        93.30% |        4.40% |
+| Explorer      |    3    |      808 |     117 |       75 |        80.80% |       11.70% |
+| Novice        |    5    |      806 |     120 |       74 |        80.60% |       12.00% |
 <!-- END PART 3 TABLE 1 -->
 
 ### Endless scoring & survival
@@ -93,10 +93,10 @@ A campaign record reports:
 <!-- BEGIN PART 3 TABLE 2 -->
 | Difficulty    | Avg Rounds Survived | Avg Rounds to Collapse | Pyramids Cleared | Perfect Wins |
 | :------------ | ------------------: | ---------------------: | --------------: | -----------: |
-| Survivalist   | 153.4 ± 22.5 (median 150.5) | 153.4 ± 22.5 (median 150.5) | 0.1 ± 0.4 (median 0.0) max 4 | 0.01 (median 0.0) max 2 (14/1000 camps with >=1) |
-| Archaeologist | 250.2 ± 93.4 (median 220.0) | 234.0 ± 72.3 (median 216.0) | 9.0 ± 18.7 (median 3.0) max 96 | 0.27 (median 0.0) max 3 (233/1000 camps with >=1) |
-| Explorer      | 299.9 ± 131.1 (median 276.0) | 253.0 ± 102.7 (median 246.0) | 41.6 ± 37.1 (median 19.0) max 100 | 0.53 (median 0.0) max 4 (410/1000 camps with >=1) |
-| Novice        | 299.9 ± 131.5 (median 276.0) | 252.0 ± 102.6 (median 244.5) | 41.9 ± 37.2 (median 20.0) max 100 | 0.52 (median 0.0) max 4 (408/1000 camps with >=1) |
+| Survivalist   | 150.7 ± 21.6 (median 148.0) | 150.7 ± 21.6 (median 148.0) | 0.1 ± 0.4 (median 0.0) max 3 | 0.02 (median 0.0) max 1 (23/1000 camps with >=1) |
+| Archaeologist | 246.5 ± 92.0 (median 220.0) | 232.0 ± 73.7 (median 215.0) | 7.9 ± 14.2 (median 3.0) max 97 | 0.44 (median 0.0) max 5 (337/1000 camps with >=1) |
+| Explorer      | 269.3 ± 136.7 (median 246.0) | 226.1 ± 109.4 (median 214.0) | 33.4 ± 25.9 (median 28.0) max 120 | 1.14 (median 1.0) max 9 (639/1000 camps with >=1) |
+| Novice        | 268.6 ± 137.0 (median 245.0) | 225.1 ± 109.6 (median 213.0) | 33.6 ± 25.9 (median 28.0) max 120 | 1.15 (median 1.0) max 9 (643/1000 camps with >=1) |
 <!-- END PART 3 TABLE 2 -->
 
 ---
@@ -112,10 +112,10 @@ Same endless rules as Part 3 but capped at 300 rounds for faster sweeps. Starvat
 <!-- BEGIN PART 4 TABLE 1 -->
 | Difficulty    | Redraws | Mean Rounds Survived | Pyramids Cleared / Campaign | Perfect Wins / Campaign | Rank-Anchor Achievement |
 | :------------ | :-----: | -------------------: | --------------------------: | ----------------------: | ----------------------: |
-| Survivalist   |    0    |         153.4 ± 22.5 |                        0.1 |                     0.0 |                    0.0% |
-| Archaeologist |    1    |         226.7 ± 51.2 |                        8.4 |                     0.3 |                    3.9% |
-| Explorer      |    3    |         238.6 ± 66.0 |                       38.7 |                     0.5 |                   35.7% |
-| Novice        |    5    |         238.0 ± 66.1 |                       39.0 |                     0.5 |                   35.9% |
+| Survivalist   |    0    |         150.7 ± 21.6 |                        0.1 |                     0.0 |                    0.0% |
+| Archaeologist |    1    |         223.7 ± 51.4 |                        7.6 |                     0.4 |                    6.1% |
+| Explorer      |    3    |         218.8 ± 78.3 |                       31.7 |                     1.1 |                   47.1% |
+| Novice        |    5    |         218.2 ± 78.4 |                       31.8 |                     1.1 |                   47.3% |
 <!-- END PART 4 TABLE 1 -->
 
 ### End-type rates
@@ -124,9 +124,9 @@ Same endless rules as Part 3 but capped at 300 rounds for faster sweeps. Starvat
 | Difficulty    | Starvation | Deadlock | Round Cap |
 | :------------ | ---------: | -------: | --------: |
 | Survivalist   |     100.0% |     0.0% |      0.0% |
-| Archaeologist |      75.7% |     2.7% |     18.3% |
-| Explorer      |      26.4% |     9.3% |     34.5% |
-| Novice        |      26.1% |     9.5% |     34.1% |
+| Archaeologist |      74.5% |     4.0% |     17.4% |
+| Explorer      |      22.9% |    10.3% |     30.4% |
+| Novice        |      22.6% |     9.9% |     30.4% |
 <!-- END PART 4 TABLE 2 -->
 
 ---

@@ -8,6 +8,7 @@ See docs/LICENSE or https://creativecommons.org/licenses/by-sa/4.0/
 # The Cursed Tomb — Example of Play
 
 > Companion to `rules.md` (Ruleset v0.0.11). This is a scripted, annotated walkthrough — not a separate ruleset. All mechanics below follow Sections 1–7 of the official rules.
+> Companion to `rules.md` (Ruleset v0.0.14). This is a scripted, annotated walkthrough — not a separate ruleset. All mechanics below follow Sections 1–7 of the official rules.
 
 This example assumes **Archaeologist (1 Redeal)** and uses a single, invented shuffle so you can replay it at the table. Rank values: **A=1, 2–10 = face, J=11, Q=12, K=13**. Pairs must sum to **Functional Value 13** (§4). Kings (or any card whose Functional Value is 13) clear singly.
 

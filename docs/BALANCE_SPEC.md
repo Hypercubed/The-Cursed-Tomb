@@ -48,7 +48,7 @@ Per https://www.semicolon.com/Solitaire/Rules/Pyramid.html: count not-discarded 
 * **Per-round Classic Score** = `base(pass) - leftover`, where `base = 50` if pyramid cleared on pass 1, `35` on pass 2, `20` on pass 3, `10` beyond 3 (Novice infinite), `0` if pyramid not cleared. Higher is better. `50` = Perfect on pass 1; freezes are negative (`0 - ~30 = -30`).
 * **Campaign Best Classic Score** = *maximum* classic score across rounds (best round, higher better). For Archaeologist (max 2 passes), `35 - leftover` caps pyramid wins at 35 (plus Perfect bonus to 50 only on pass 1).
 * **Why it matters for difficulty:** The `50/35/20/10` ladder already prices `Survivalist 0→50` vs `Archaeologist 1→35` vs `Explorer 3→20` on one scale. A 35-point win on Archaeologist equals a 20-point win on Explorer in classic terms — useful when comparing chosen difficulty.
-* **Python:** `sim/cursed_tomb_sim.py:classic_base_score(pass, cleared)`, `classic_score(pass, cleared, leftover)`, `classic_bonus_stars(leftover, pass, cleared)` (≥40→3★, ≥25→2★, ≥12→1★) for Stock Bounty mapping.
+* **Python:** `sim/cursed_tomb_sim.py:classic_base_score(pass, cleared)`, `classic_score(pass, cleared, leftover)`, `classic_bonus_stars(leftover, pass, cleared)` (≥40→3★, ≥25→2★, ≥12→1★) for tier mapping (legacy).
 
 ### 3.3 What the sim shows (Archaeologist, 300 cap)
 
@@ -59,12 +59,12 @@ Per https://www.semicolon.com/Solitaire/Rules/Pyramid.html: count not-discarded 
 | `3/4/5` | Heuristic | 16.2 med7 | 214 | 1.5 med1 | 96% | 45% | 40.5 med43 31→49 |
 | `3/4/5` | Novice | 7.2 med5 | 160 | 1.9 med2 | 91% | 36% | 35.4 med35 27→47 |
 
-Best remaining is *similar* for Poor vs Excellent at 2/3/4 (both hit ≤4) — it does **not** separate skill well on its own. Classic Best adds a small skill gap (`32.5→26.4` at 2/3/4, `40.5→35.4` at 3/4/5) because it rewards pass-1 clears, but still far weaker than `wins`/`rounds` (wins `4.5→2.0` = 2.3×). That's why we keep **Poor→Excellent stretch as `wins` + `survived`**, with Best/Classic as supplementary bounty/tiebreaker.
+Best remaining is *similar* for Poor vs Excellent at 2/3/4 (both hit ≤4) — it does **not** separate skill well on its own. Classic Best adds a small skill gap (`32.5→26.4` at 2/3/4, `40.5→35.4` at 3/4/5) because it rewards pass-1 clears, but still far weaker than `wins`/`rounds` (wins `4.5→2.0` = 2.3×). That's why we keep **Poor→Excellent stretch as `wins` + `survived`**, with Best/Classic as supplementary. The Descent (`1B+1A + both cards per post pair`) replaces the old `N=1–3` bounty; post-pyramid averages `0.6` pairs/win Arch (`83%` 0, `1.1%` Perfect on clean `4`), `2.7` Explorer — Anchors now from in-hand cards, not `leftover` tiers.
 
 ### 3.4 Why Classic is tertiary, not primary
 
 * **Pyramids Cleared + Rounds Survived remain primary** — endurance + tally. Classic measures *peak pass-weighted efficiency* (one lucky early deal), not consistency.
-* Best/Classic is a **tiebreaker / bounty trigger**: e.g. Stock Bounty (§6) can grant `≤4 → 2 Anchors, ≤8 → 1 Anchor` (or `≥40→3★, ≥25→2★` via classic stars), targeting Best intervals. Using it as the main leaderboard would reward one early Perfect over 15 consistent wins.
+* Best/Classic is a **tiebreaker**: e.g. The Descent (§5B) grants Anchors from both cards per post-pyramid pair + `1B+1A`, not `≤4→2` tiers. Classic `≥40→3★, ≥25→2★` still targets Best intervals. Using it as the main leaderboard would reward one early Perfect over 15 consistent wins.
 * **Avg/Total Classic go negative** (`-20 to -23` per round, `-3000` total) — demoralizing as a headline metric.
 * Alternative **Total Foundation Cards** (`∑ (initial active - leftover per round)`) was considered but is collinear with `wins × 28 + stock cleared` — pyramids already captures it.
 
@@ -104,7 +104,7 @@ Current `3/4/5` @300: Heuristic 218 survived (high but okay), 18.2 wins (high), 
 
 * `Blessed vs Cursed @end` `0.3–1.0`
 * `Entombed 20–25/52` at 300 cap
-* `Stock Bounty` triggers on ~40% of Wins (`≤8`), ~20% (`≤4`) — rubberband is helpful catch-up but capped (bonus vs init `r≈-0.12` for absolute, not runaway).
+* `The Descent` averages `0.6` pairs/win Arch (`83%` 0 post, `1.1%` Perfect on 4), `2.7` Explorer — Anchors from both cards per post pair + `1B+1A` (`~1.6`/`~2.3` total Arch `1-per`/`2-per`).
 
 ---
 

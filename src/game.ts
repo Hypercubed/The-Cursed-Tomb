@@ -898,7 +898,7 @@ export function applyEndOfWeekLifecycle(campaign: CampaignState): CampaignState 
     }
   } else if (round.status === 'complete-victory' || round.status === 'partial-victory') {
     const lastPair = round.lastClearedPair ?? [];
-    // 2/3/5 + Stock Bounty: Blessing with fallback higher->lower->none, then random draw Anchors
+    // 2/3/5 + The Descent: Blessing with fallback higher->lower->none, 1B+1A lower + both cards per post-pyramid pair
     if (lastPair.length === 2) {
       const c1 = lastPair[0];
       const c2 = lastPair[1];
@@ -926,32 +926,51 @@ export function applyEndOfWeekLifecycle(campaign: CampaignState): CampaignState 
           masterDeck[lIdx].blessed = true;
         }
       }
-      // No automatic lower Anchor; Anchors come via Stock Bounty below (replaces old lower anchor).
+      // 1B+1A: lower Anchor handled below after Blessing (not replaced).
     } else if (lastPair.length === 1) {
-      // Solo King/13: no Blessing awarded; Stock Bounty will still apply below
-    }
-    // Stock Bounty: N=1-3 random non-Shield Anchors per Win (0/<=4->3 <=8->2 else 1)
-    if (round.status === 'complete-victory' || round.status === 'partial-victory') {
-      const leftover = round.drawPile.length + round.discardPile.length + round.vaultCards.length;
-      let N: number;
-      if (leftover === 0 || leftover <= 4) N = 3;
-      else if (leftover <= 8) N = 2;
-      else N = 1;
-      // Draw until N non-Shields from shuffled active deck
-      const pool = shuffle(masterDeck.filter((c) => c.attritionStage < 5));
-      let found = 0;
-      for (const card of pool) {
-        if (found >= N) break;
-        if (card.rewardStage >= 2) continue; // skip already Shield, keep flipping
-        const idx = masterDeck.findIndex((c) => c.id === card.id);
-        if (idx === -1) continue;
+      // Solo King/13: no Blessing, but lower Anchor (the King itself) — 1B+1A
+      const card = lastPair[0];
+      const idx = masterDeck.findIndex((c) => c.id === card.id);
+      if (idx !== -1 && masterDeck[idx].rewardStage < 2) {
         const prevStage = masterDeck[idx].rewardStage;
         const nextStage = Math.min(2, prevStage + 1) as RewardStage;
         masterDeck[idx].rewardStage = nextStage;
         if (nextStage === 2 && prevStage < 2) {
           masterDeck[idx].anchorAbsorption = 0;
         }
-        found += 1;
+      }
+    }
+    // 1B+1A lower Anchor for pair wins (if not solo)
+    if (lastPair.length === 2) {
+      const c1 = lastPair[0];
+      const c2 = lastPair[1];
+      const val1 = getFunctionalValue(c1, mode);
+      const val2 = getFunctionalValue(c2, mode);
+      const lower = val1 < val2 ? c1 : c2;
+      const lIdx = masterDeck.findIndex((c) => c.id === lower.id);
+      if (lIdx !== -1 && masterDeck[lIdx].rewardStage < 2) {
+        const prevStage = masterDeck[lIdx].rewardStage;
+        const nextStage = Math.min(2, prevStage + 1) as RewardStage;
+        masterDeck[lIdx].rewardStage = nextStage;
+        if (nextStage === 2 && prevStage < 2) {
+          masterDeck[lIdx].anchorAbsorption = 0;
+        }
+      }
+    }
+    // The Descent — Post-Pyramid Anchors (both cards per pair/solo, no N shuffle)
+    // round.stockPhaseCleared holds Card[] that left in Descent (both cards per stock pair)
+    {
+      const postCleared: Card[] = (round as unknown as { stockPhaseCleared?: Card[] }).stockPhaseCleared ?? [];
+      for (const pc of postCleared) {
+        const idx = masterDeck.findIndex((c) => c.id === pc.id);
+        if (idx === -1) continue;
+        if (masterDeck[idx].rewardStage >= 2) continue; // already Shield — skip
+        const prevStage = masterDeck[idx].rewardStage;
+        const nextStage = Math.min(2, prevStage + 1) as RewardStage;
+        masterDeck[idx].rewardStage = nextStage;
+        if (nextStage === 2 && prevStage < 2) {
+          masterDeck[idx].anchorAbsorption = 0;
+        }
       }
     }
     // Perfect Graveyard Return: 1 random Entombed -> 4 Scars |X| Imperiled (still cursed, keeps ink)

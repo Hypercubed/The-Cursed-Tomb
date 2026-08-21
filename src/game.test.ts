@@ -517,10 +517,9 @@ describe('Cursed Tomb campaign mechanics', () => {
 
     const updated = applyEndOfWeekLifecycle(campaign);
     const updatedHigh = updated.masterDeck.find((c: CursedCard) => c.id === cardHigh.id);
-    // Blessing with fallback: higher gets blessed; lower no longer auto-anchors (replaced by Stock Bounty 1-3 random Anchors)
+    // Blessing with fallback: higher gets blessed; lower gets 1B+1A Anchor (The Descent)
     expect(updatedHigh?.blessed).toBe(true);
-    // Lower no longer automatically anchored; Anchors now come via Stock Bounty (count Stock+Waste+Vault leftover)
-    // Verify at least one random active card got an Anchor (stock bounty 1-3)
+    // Lower automatically Anchored (1B+1A); post-pyramid Stock cards both get Anchored in The Descent
     const anchored = updated.masterDeck.filter((c) => c.rewardStage > 0);
     expect(anchored.length).toBeGreaterThanOrEqual(1);
     expect(anchored.length).toBeLessThanOrEqual(3);
@@ -537,14 +536,14 @@ describe('Cursed Tomb campaign mechanics', () => {
     campaign.currentRound.lastClearedPair = [cardHigh, cardLowStage1];
 
     const updatedStage1 = applyEndOfWeekLifecycle(campaign);
-    // Stock Bounty: 1-3 random non-Shield Anchors (not deterministic lower). Verify some active card got anchored.
+    // The Descent: lower Anchor + both cards per post-pyramid pair. Verify lower got anchored.
     const anchored1 = updatedStage1.masterDeck.filter((c) => !beforeDeck1.find((b) => b.id === c.id && b.rewardStage === c.rewardStage) && c.rewardStage > 0);
     expect(anchored1.length).toBeGreaterThanOrEqual(1);
 
     const effects1 = computeRoundLifecycleEffects(beforeDeck1, updatedStage1.masterDeck, campaign.currentRound);
     expect(effects1.clearDetails?.anchorBlockedByScar).toBe(false);
 
-    // Now test Stage 3 card (Scarred) - should also allow Anchors via Stock Bounty
+    // Now test Stage 3 card (Scarred) - should also allow Anchors via The Descent (lower) even at 3 Scars
     const campaignStage3 = createCampaign('cursed-tomb', 1);
     const cardHigh3 = campaignStage3.masterDeck.find((c) => c.rank === 10)!;
     const cardLowStage3 = campaignStage3.masterDeck.find((c) => c.rank === 2 && c.suit === '♥')!;
@@ -556,7 +555,7 @@ describe('Cursed Tomb campaign mechanics', () => {
 
     const updatedStage3 = applyEndOfWeekLifecycle(campaignStage3);
     const anchored3 = updatedStage3.masterDeck.filter((c) => !beforeDeck3.find((b) => b.id === c.id && b.rewardStage === c.rewardStage) && c.rewardStage > 0);
-    expect(anchored3.length).toBeGreaterThanOrEqual(1); // Still works at 3 Scars via Stock Bounty
+    expect(anchored3.length).toBeGreaterThanOrEqual(1); // Still Anchors at 3 Scars via 1B+1A lower
 
     const effects3 = computeRoundLifecycleEffects(beforeDeck3, updatedStage3.masterDeck, campaignStage3.currentRound);
     expect(effects3.clearDetails?.anchorBlockedByScar).toBe(false);
@@ -586,7 +585,7 @@ describe('Cursed Tomb campaign mechanics', () => {
     expect(pairResult.heroCard.id).toBe(partner.id);
     expect(pairResult.anchorCard.id).toBe(wildcard.id);
 
-    // applyEndOfWeekLifecycle check: Wildcard is ineligible as primary (blessed), but partner should get Blessing; Anchor now via Stock Bounty (not deterministic wildcard anchor)
+    // applyEndOfWeekLifecycle check: Wildcard is ineligible as primary (blessed), but partner should get Blessing; Anchor via 1B+1A lower
     campaign.currentRound.status = 'partial-victory';
     campaign.currentRound.lastClearedPair = [wildcard, partner];
 
@@ -594,7 +593,7 @@ describe('Cursed Tomb campaign mechanics', () => {
     const updatedPartner = updated.masterDeck.find((c: CursedCard) => c.id === partner.id);
 
     expect(updatedPartner?.blessed).toBe(true); // Partner becomes Blessed Hero (fallback from wildcard primary)
-    // Wildcard no longer automatically Anchored; Anchors are Stock Bounty random
+    // Wildcard: lower partner Anchored (1B+1A); post-pyramid both if cleared
     const anchored = updated.masterDeck.filter((c) => c.rewardStage > 0);
     expect(anchored.length).toBeGreaterThanOrEqual(1);
   });
@@ -622,7 +621,7 @@ describe('Cursed Tomb campaign mechanics', () => {
     expect(updatedHigh?.blessed).toBe(true); // stays blessed
   });
 
-  it('grants Stock Bounty Anchors via random draw on solo King clear (no Blessing)', () => {
+  it('grants Anchor on solo King clear (no Blessing) — 1B+1A lower', () => {
     const campaign = createCampaign('cursed-tomb', 1);
     const kCard = campaign.masterDeck.find((c) => c.rank === 13)!;
     kCard.attritionStage = 0;
@@ -630,12 +629,12 @@ describe('Cursed Tomb campaign mechanics', () => {
 
     campaign.currentRound.status = 'partial-victory';
     campaign.currentRound.lastClearedPair = [{ ...kCard, removed: true, selected: false }];
-    campaign.currentRound.drawPile = []; // force leftover small for N=3
+    campaign.currentRound.drawPile = []; // force Stock piles empty for solo 1B+1A
     campaign.currentRound.discardPile = [];
     campaign.currentRound.vaultCards = [];
 
     const updated = applyEndOfWeekLifecycle(campaign);
-    // Solo gives no Blessing but still 1-3 random Anchors via Stock Bounty
+    // Solo gives no Blessing but still 1 Anchor (1B+1A) + post both if cleared
     expect(updated.masterDeck.find((c) => c.id === kCard.id)?.blessed).toBe(false);
     const afterAnchored = updated.masterDeck.filter((c) => c.rewardStage >= 1).length;
     expect(afterAnchored).toBeGreaterThanOrEqual(beforeAnchored + 1);
