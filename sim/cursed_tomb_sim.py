@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """
 The Cursed Tomb (v0.0.9) -- Campaign Simulator
-The Cursed Tomb (v0.0.14) -- Campaign Simulator
 =============================================================
 
 Simulates full CAMPAIGNS (not single rounds) of the Cursed Tomb ruleset:
